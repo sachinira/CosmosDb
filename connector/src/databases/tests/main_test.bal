@@ -1,34 +1,155 @@
 import ballerina/io;
 import ballerina/test;
+import ballerina/http;
 
-# Before Suite Function
-@test:BeforeSuite
-function beforeSuiteFunc() {
-    io:println("I'm the before suite function!");
+
+@test:Config{
+    enable: false
+}
+function createDB(){
+
+  AuthConfig config = {
+        baseUrl: "https://sachinidbnewaccount.documents.azure.com:443/"
+    };
+
+    Databases openMapClient = new(config);
+    
+    var t = openMapClient.createDatabase("mydb",(),());
+
+
+    if t is http:Response{
+
+        //400 Bad Request
+        //409 Conflict  
+       if (t.statusCode == http:STATUS_CREATED) {
+
+            json payload = <json>t.getJsonPayload();
+            //json lat = <json>payload.coord.lat;
+            io:println(payload.id);
+
+            } else {
+            error err = error("error occurred while sending GET request\n");
+            io:println(err.message(),"Status code: ", t.statusCode,", reason: ", t.getTextPayload());
+
+        }
+
+    }else{
+        io:println(t);
+
+    }
+
 }
 
-# Before test function
-function beforeFunc() {
-    io:println("I'm the before function!");
+
+@test:Config{
+    enable: false
+
+}
+function listAllDB(){
+
+  AuthConfig config = {
+        baseUrl: "https://sachinidbnewaccount.documents.azure.com:443/"
+    };
+
+    Databases openMapClient = new(config);
+    
+    var t = openMapClient.listDatabases();
+
+
+    if t is http:Response{
+
+        //400 Bad Request
+        //409 Conflict  
+       if (t.statusCode == http:STATUS_OK) {
+
+            json payload = <json>t.getJsonPayload();
+            //json lat = <json>payload.coord.lat;
+            io:println(payload);
+
+            } else {
+            error err = error("error occurred while sending GET request\n");
+            io:println(err.message(),"Status code: ", t.statusCode,", reason: ", t.getTextPayload());
+
+        }
+
+    }else{
+        io:println(t);
+
+    }
+
 }
 
-# Test function
-@test:Config {
-    before: "beforeFunc",
-    after: "afterFunc"
+@test:Config{
+    enable: false
+
 }
-function testFunction() {
-    io:println("I'm in test function!");
-    test:assertTrue(true, msg = "Failed!");
+function listOneDB(){
+
+  AuthConfig config = {
+        baseUrl: "https://sachinidbnewaccount.documents.azure.com:443/"
+    };
+
+    Databases openMapClient = new(config);
+    
+    var t = openMapClient.listOneDatabase("mydb");
+
+
+    if t is http:Response{
+
+        //400 Bad Request
+        //409 Conflict  
+       if (t.statusCode == http:STATUS_OK) {
+
+            json payload = <json>t.getJsonPayload();
+            //json lat = <json>payload.coord.lat;
+            io:println(payload);
+
+            } else {
+            error err = error("error occurred while sending GET request\n");
+            io:println(err.message(),"Status code: ", t.statusCode,", reason: ", t.getTextPayload());
+
+        }
+
+    }else{
+        io:println(t);
+
+    }
+
 }
 
-# After test function
-function afterFunc() {
-    io:println("I'm the after function!");
-}
+@test:Config{
 
-# After Suite Function
-@test:AfterSuite {}
-function afterSuiteFunc() {
-    io:println("I'm the after suite function!");
+}
+function deleteDB(){
+
+  AuthConfig config = {
+        baseUrl: "https://sachinidbnewaccount.documents.azure.com:443/"
+    };
+
+    Databases openMapClient = new(config);
+    
+    var t = openMapClient.deleteDatabase("mydb");
+
+
+    if t is http:Response{
+
+        //404 Not Found        
+        //409 Conflict  
+       if (t.statusCode == http:STATUS_NO_CONTENT) {
+
+            json payload = <json>t.getJsonPayload();
+            //json lat = <json>payload.coord.lat;
+            io:println(payload);
+
+            } else {
+            error err = error("error occurred while sending GET request\n");
+            io:println(err.message(),"Status code: ", t.statusCode,", reason: ", t.getTextPayload());
+
+        }
+
+    }else{
+        io:println(t);
+
+    }
+
 }

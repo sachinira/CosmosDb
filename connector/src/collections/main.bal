@@ -323,9 +323,6 @@ public function getTime() returns string?|error{
     return timeString;
 }
 
-
-
-
 public type AuthConfig record {
     string baseUrl;    
 };
