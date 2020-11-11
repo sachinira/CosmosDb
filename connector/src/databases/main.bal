@@ -6,14 +6,22 @@ import ballerina/encoding;
 
 public class Databases{
     
-    public string baseUrl;
+    private string baseUrl;
     public http:Client basicClient;
     http:Request authRequest;
+    private string masterKey;
+    private string resourceType;
+    private string keyType;
+    private string tokenVersion;
 
 
 
     function init(AuthConfig opConf){
         self.baseUrl = opConf.baseUrl;
+        self.masterKey = opConf.masterKey;
+        self.resourceType = "dbs";
+        self.keyType = "master";
+        self.tokenVersion = "1.0";
 
         self.basicClient = new (self.baseUrl, {
             secureSocket: {
@@ -27,7 +35,6 @@ public class Databases{
 
         self.authRequest = new;
         self.authRequest.setHeader("x-ms-version","2016-07-11");
-        self.authRequest.setHeader("User-Agent","PostmanRuntime/7.26.8");
         self.authRequest.setHeader("Host","sachinidbnewaccount.documents.azure.com:443");
 
     }
@@ -36,17 +43,13 @@ public class Databases{
 
         string varb = "POST"; 
         //portion of the string identifies the type of resource that the request is for, Eg. "dbs", "colls", "docs".
-        string resourceType = "dbs";
         //portion of the string is the identity property of the resource that the request is directed at. ResourceLink must maintain its case for the ID of the resource. 
         //Example, for a collection it looks like: "dbs/MyDatabase/colls/MyCollection".
         string resourceId = "";
-        string keystring = "n2whnJ4vAsQ2KVXORsKakNsOqs6uvDkLJvETLt4K7AVzj2t06w8CxZ8JRoK984xq6kHtesfJ7KncIf9nqJr1lQ==";
-        string keyType = "master";
-        string tokenVersion = "1.0";
         string? date = check getTime();
 
         if date is string{
-            string? s = check generateToken(varb,resourceType,resourceId,keystring,keyType,tokenVersion,date);
+            string? s = check generateToken(varb,self.resourceType,resourceId,self.masterKey,self.keyType,self.tokenVersion,date);
             self.authRequest.setHeader("x-ms-date",date);
             if s is string{
                 self.authRequest.setHeader("Authorization",s);
@@ -64,7 +67,6 @@ public class Databases{
         //self.authRequest.setHeader("x-ms-cosmos-offer-autopilot-settings",autoscale);
         self.authRequest.setHeader("Accept","application/json");
         self.authRequest.setHeader("Connection","keep-alive");
-        self.authRequest.setHeader("Accept-Encoding","gzip, deflate, br");
 
         //http:Response? result = new;
         //result = <http:Response>self.basicClient->get("/dbs/tempdb/colls",self.authRequest);
@@ -84,17 +86,13 @@ public class Databases{
 
         string varb = "GET"; 
         //portion of the string identifies the type of resource that the request is for, Eg. "dbs", "colls", "docs".
-        string resourceType = "dbs";
         //portion of the string is the identity property of the resource that the request is directed at. ResourceLink must maintain its case for the ID of the resource. 
         //Example, for a collection it looks like: "dbs/MyDatabase/colls/MyCollection".
         string resourceId = "";
-        string keystring = "n2whnJ4vAsQ2KVXORsKakNsOqs6uvDkLJvETLt4K7AVzj2t06w8CxZ8JRoK984xq6kHtesfJ7KncIf9nqJr1lQ==";
-        string keyType = "master";
-        string tokenVersion = "1.0";
         string? date = check getTime();
 
         if date is string{
-            string? s = check generateToken(varb,resourceType,resourceId,keystring,keyType,tokenVersion,date);
+            string? s = check generateToken(varb,self.resourceType,resourceId,self.masterKey,self.keyType,self.tokenVersion,date);
             self.authRequest.setHeader("x-ms-date",date);
             if s is string{
                 self.authRequest.setHeader("Authorization",s);
@@ -112,7 +110,6 @@ public class Databases{
         //self.authRequest.setHeader("x-ms-cosmos-offer-autopilot-settings",autoscale);
         self.authRequest.setHeader("Accept","application/json");
         self.authRequest.setHeader("Connection","keep-alive");
-        self.authRequest.setHeader("Accept-Encoding","gzip, deflate, br");
 
         //http:Response? result = new;
         //result = <http:Response>self.basicClient->get("/dbs/tempdb/colls",self.authRequest);
@@ -129,17 +126,13 @@ public class Databases{
 
         string varb = "GET"; 
         //portion of the string identifies the type of resource that the request is for, Eg. "dbs", "colls", "docs".
-        string resourceType = "dbs";
         //portion of the string is the identity property of the resource that the request is directed at. ResourceLink must maintain its case for the ID of the resource. 
         //Example, for a collection it looks like: "dbs/MyDatabase/colls/MyCollection".
         string resourceId = string `dbs/${dbname}`;
-        string keystring = "n2whnJ4vAsQ2KVXORsKakNsOqs6uvDkLJvETLt4K7AVzj2t06w8CxZ8JRoK984xq6kHtesfJ7KncIf9nqJr1lQ==";
-        string keyType = "master";
-        string tokenVersion = "1.0";
         string? date = check getTime();
 
         if date is string{
-            string? s = check generateToken(varb,resourceType,resourceId,keystring,keyType,tokenVersion,date);
+            string? s = check generateToken(varb,self.resourceType,resourceId,self.masterKey,self.keyType,self.tokenVersion,date);
             self.authRequest.setHeader("x-ms-date",date);
             if s is string{
                 self.authRequest.setHeader("Authorization",s);
@@ -157,7 +150,6 @@ public class Databases{
         //self.authRequest.setHeader("x-ms-cosmos-offer-autopilot-settings",autoscale);
         self.authRequest.setHeader("Accept","application/json");
         self.authRequest.setHeader("Connection","keep-alive");
-        self.authRequest.setHeader("Accept-Encoding","gzip, deflate, br");
 
         //http:Response? result = new;
         //result = <http:Response>self.basicClient->get("/dbs/tempdb/colls",self.authRequest);
@@ -174,17 +166,13 @@ public class Databases{
 
         string varb = "DELETE"; 
         //portion of the string identifies the type of resource that the request is for, Eg. "dbs", "colls", "docs".
-        string resourceType = "dbs";
         //portion of the string is the identity property of the resource that the request is directed at. ResourceLink must maintain its case for the ID of the resource. 
         //Example, for a collection it looks like: "dbs/MyDatabase/colls/MyCollection".
         string resourceId = string `dbs/${dbname}`;
-        string keystring = "n2whnJ4vAsQ2KVXORsKakNsOqs6uvDkLJvETLt4K7AVzj2t06w8CxZ8JRoK984xq6kHtesfJ7KncIf9nqJr1lQ==";
-        string keyType = "master";
-        string tokenVersion = "1.0";
         string? date = check getTime();
 
         if date is string{
-            string? s = check generateToken(varb,resourceType,resourceId,keystring,keyType,tokenVersion,date);
+            string? s = check generateToken(varb,self.resourceType,resourceId,self.masterKey,self.keyType,self.tokenVersion,date);
             self.authRequest.setHeader("x-ms-date",date);
             if s is string{
                 self.authRequest.setHeader("Authorization",s);
@@ -202,7 +190,6 @@ public class Databases{
         //self.authRequest.setHeader("x-ms-cosmos-offer-autopilot-settings",autoscale);
         self.authRequest.setHeader("Accept","application/json");
         self.authRequest.setHeader("Connection","keep-alive");
-        self.authRequest.setHeader("Accept-Encoding","gzip, deflate, br");
 
         //http:Response? result = new;
         //result = <http:Response>self.basicClient->get("/dbs/tempdb/colls",self.authRequest);
@@ -263,4 +250,5 @@ public function getTime() returns string?|error{
 
 public type AuthConfig record {
     string baseUrl;    
+    string masterKey;
 };

@@ -3,18 +3,21 @@ import ballerina/test;
 import ballerina/http;
 
 
+AuthConfig config = {
+        baseUrl: BASE_URL,
+        masterKey: MASTER_KEY
+};
+
 @test:Config{
     enable: false
 }
 function createDB(){
 
-  AuthConfig config = {
-        baseUrl: "https://sachinidbnewaccount.documents.azure.com:443/"
-    };
+ 
 
     Databases openMapClient = new(config);
     
-    var t = openMapClient.createDatabase("mydb",(),());
+    var t = openMapClient.createDatabase("hi",(),());
 
 
     if t is http:Response{
@@ -46,10 +49,6 @@ function createDB(){
 
 }
 function listAllDB(){
-
-  AuthConfig config = {
-        baseUrl: "https://sachinidbnewaccount.documents.azure.com:443/"
-    };
 
     Databases openMapClient = new(config);
     
@@ -85,10 +84,6 @@ function listAllDB(){
 }
 function listOneDB(){
 
-  AuthConfig config = {
-        baseUrl: "https://sachinidbnewaccount.documents.azure.com:443/"
-    };
-
     Databases openMapClient = new(config);
     
     var t = openMapClient.listOneDatabase("mydb");
@@ -122,13 +117,10 @@ function listOneDB(){
 }
 function deleteDB(){
 
-  AuthConfig config = {
-        baseUrl: "https://sachinidbnewaccount.documents.azure.com:443/"
-    };
 
     Databases openMapClient = new(config);
     
-    var t = openMapClient.deleteDatabase("mydb");
+    var t = openMapClient.deleteDatabase("Hellodb");
 
 
     if t is http:Response{
@@ -137,9 +129,9 @@ function deleteDB(){
         //409 Conflict  
        if (t.statusCode == http:STATUS_NO_CONTENT) {
 
-            json payload = <json>t.getJsonPayload();
+            //json payload = <json>t.getJsonPayload();
             //json lat = <json>payload.coord.lat;
-            io:println(payload);
+            io:println(t.statusCode);
 
             } else {
             error err = error("error occurred while sending GET request\n");
