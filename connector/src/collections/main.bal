@@ -9,11 +9,18 @@ public class Collections{
     public string baseUrl;
     public http:Client basicClient;
     http:Request authRequest;
-
+    private string apiKey;
+    private string resourceType;
+    private string keyType;
+    private string tokenVersion;
 
 
     function init(AuthConfig opConf){
         self.baseUrl = opConf.baseUrl;
+        self.apiKey = opConf.masterKey;
+        self.resourceType = "colls";
+        self.keyType = "master";
+        self.tokenVersion = "1.0";
 
         self.basicClient = new (self.baseUrl, {
             secureSocket: {
@@ -26,29 +33,24 @@ public class Collections{
 
 
         self.authRequest = new;
-        self.authRequest.setHeader("x-ms-version","2016-07-11");
-        self.authRequest.setHeader("User-Agent","PostmanRuntime/7.26.8");
+        self.authRequest.setHeader("x-ms-version","2018-12-31");
         self.authRequest.setHeader("Host","sachinidbnewaccount.documents.azure.com:443");
 
     }
 
 
     //create a collection
-    public function createCollection(string dbname,string colname,int? throughput,json? autoscale) returns error?|http:Response{
+    public function createCollection(string dbname,string colname,json? indexingpolicy,json partitionkey,string? throughput) returns error?|http:Response{
 
         string varb = "POST"; 
         //portion of the string identifies the type of resource that the request is for, Eg. "dbs", "colls", "docs".
-        string resourceType = "colls";
         //portion of the string is the identity property of the resource that the request is directed at. ResourceLink must maintain its case for the ID of the resource. 
         //Example, for a collection it looks like: "dbs/MyDatabase/colls/MyCollection".
         string resourceId = string `dbs/${dbname}`;
-        string keystring = "n2whnJ4vAsQ2KVXORsKakNsOqs6uvDkLJvETLt4K7AVzj2t06w8CxZ8JRoK984xq6kHtesfJ7KncIf9nqJr1lQ==";
-        string keyType = "master";
-        string tokenVersion = "1.0";
         string? date = check getTime();
 
          if date is string{
-            string? s = check generateToken(varb,resourceType,resourceId,keystring,keyType,tokenVersion,date);
+            string? s = check generateToken(varb,self.resourceType,resourceId,self.apiKey,self.keyType,self.tokenVersion,date);
             self.authRequest.setHeader("x-ms-date",date);
             if s is string{
                 self.authRequest.setHeader("Authorization",s);
@@ -56,22 +58,77 @@ public class Collections{
             }else{
 
                 io:println("token is null");
+                            //return the error
+
 
             }
         }else{
             io:println("date is null");
+                        //return the error
+
         }
         
-        //self.authRequest.setHeader("x-ms-offer-throughput",throughput);
-        //self.authRequest.setHeader("x-ms-cosmos-offer-autopilot-settings",autoscale);
+        if throughput is string{
+            self.authRequest.setHeader("x-ms-offer-throughput",throughput);
+        } 
+       
         self.authRequest.setHeader("Accept","application/json");
         self.authRequest.setHeader("Connection","keep-alive");
-        self.authRequest.setHeader("Accept-Encoding","gzip, deflate, br");
 
         //http:Response? result = new;
         //result = <http:Response>self.basicClient->get("/dbs/tempdb/colls",self.authRequest);
         json body = {
-            id: colname
+            id: colname,
+            partitionKey: partitionkey
+        };
+
+
+        self.authRequest.setJsonPayload(body);
+        var result = self.basicClient->post(string `/dbs/${dbname}/colls`,self.authRequest);
+
+        return result;
+        
+    }
+
+    //public function createCollectionWithIndexingPolicy(string dbname,string colname,json? indexingpolicy,json partitionkey,string? throughput) returns error?|http:Response{
+
+    public function createCollectionWithAutoscale(string dbname,string colname,json? indexingpolicy,json partitionkey,json autoscale) returns error?|http:Response{
+
+        string varb = "POST"; 
+        //portion of the string identifies the type of resource that the request is for, Eg. "dbs", "colls", "docs".
+        //portion of the string is the identity property of the resource that the request is directed at. ResourceLink must maintain its case for the ID of the resource. 
+        //Example, for a collection it looks like: "dbs/MyDatabase/colls/MyCollection".
+        string resourceId = string `dbs/${dbname}`;
+        string? date = check getTime();
+
+         if date is string{
+            string? s = check generateToken(varb,self.resourceType,resourceId,self.apiKey,self.keyType,self.tokenVersion,date);
+            self.authRequest.setHeader("x-ms-date",date);
+            if s is string{
+                self.authRequest.setHeader("Authorization",s);
+
+            }else{
+
+                io:println("token is null");
+                            //return the error
+
+
+            }
+        }else{
+            io:println("date is null");
+                        //return the error
+
+        }
+
+        self.authRequest.setHeader("x-ms-cosmos-offer-autopilot-settings",autoscale.toString());
+        self.authRequest.setHeader("Accept","application/json");
+        self.authRequest.setHeader("Connection","keep-alive");
+
+        //http:Response? result = new;
+        //result = <http:Response>self.basicClient->get("/dbs/tempdb/colls",self.authRequest);
+        json body = {
+            "id": colname,
+            "partitionKey": partitionkey
         };
 
         self.authRequest.setJsonPayload(body);
@@ -81,20 +138,15 @@ public class Collections{
         
     }
 
-
     //List Collections returns an array of collections within the specified database.
     public function getAllCollections(string dbname) returns error?|http:Response{
 
         string varb = "GET"; 
-        string resourceType = "colls";
         string resourceId = string `dbs/${dbname}`;
-        string keystring = "n2whnJ4vAsQ2KVXORsKakNsOqs6uvDkLJvETLt4K7AVzj2t06w8CxZ8JRoK984xq6kHtesfJ7KncIf9nqJr1lQ==";
-        string keyType = "master";
-        string tokenVersion = "1.0";
         string? date = check getTime();
 
         if date is string{
-            string? s = check generateToken(varb,resourceType,resourceId,keystring,keyType,tokenVersion,date);
+            string? s = check generateToken(varb,self.resourceType,resourceId,self.apiKey,self.keyType,self.tokenVersion,date);
             self.authRequest.setHeader("x-ms-date",date);
             if s is string{
                 self.authRequest.setHeader("Authorization",s);
@@ -110,7 +162,6 @@ public class Collections{
         
         self.authRequest.setHeader("Accept","application/json");
         self.authRequest.setHeader("Connection","keep-alive");
-        self.authRequest.setHeader("Accept-Encoding","gzip, deflate, br");
 
         //http:Response? result = new;
         //result = <http:Response>self.basicClient->get("/dbs/tempdb/colls",self.authRequest);
@@ -124,19 +175,14 @@ public class Collections{
     public function getOneCollection(string dbname,string colname) returns error?|http:Response{
 
         string varb = "GET"; 
-        string resourceType = "colls";
         string resourceId = string `dbs/${dbname}/colls/${colname}`;
-        string keystring = "n2whnJ4vAsQ2KVXORsKakNsOqs6uvDkLJvETLt4K7AVzj2t06w8CxZ8JRoK984xq6kHtesfJ7KncIf9nqJr1lQ==";
-        string keyType = "master";
-        string tokenVersion = "1.0";
         string? date = check getTime();
 
         self.authRequest.setHeader("Accept","application/json");
         self.authRequest.setHeader("Connection","keep-alive");
-        self.authRequest.setHeader("Accept-Encoding","gzip, deflate, br");
 
         if date is string{
-            string? s = check generateToken(varb,resourceType,resourceId,keystring,keyType,tokenVersion,date);
+            string? s = check generateToken(varb,self.resourceType,resourceId,self.apiKey,self.keyType,self.tokenVersion,date);
             self.authRequest.setHeader("x-ms-date",date);
             if s is string{
                 self.authRequest.setHeader("Authorization",s);
@@ -161,19 +207,14 @@ public class Collections{
     public function deleteCollection(string dbname,string colname) returns error?|http:Response{
 
         string varb = "DELETE"; 
-        string resourceType = "colls";
         string resourceId = string `dbs/${dbname}/colls/${colname}`;
-        string keystring = "n2whnJ4vAsQ2KVXORsKakNsOqs6uvDkLJvETLt4K7AVzj2t06w8CxZ8JRoK984xq6kHtesfJ7KncIf9nqJr1lQ==";
-        string keyType = "master";
-        string tokenVersion = "1.0";
         string? date = check getTime();
 
         self.authRequest.setHeader("Accept","application/json");
         self.authRequest.setHeader("Connection","keep-alive");
-        self.authRequest.setHeader("Accept-Encoding","gzip, deflate, br");
 
         if date is string{
-            string? s = check generateToken(varb,resourceType,resourceId,keystring,keyType,tokenVersion,date);
+            string? s = check generateToken(varb,self.resourceType,resourceId,self.apiKey,self.keyType,self.tokenVersion,date);
             self.authRequest.setHeader("x-ms-date",date);
             if s is string{
                 self.authRequest.setHeader("Authorization",s);
@@ -201,19 +242,14 @@ public class Collections{
     public function ReplaceCollection(string dbname,string colname,json? indexingPol,json? partitionKey) returns error?|http:Response{
 
         string varb = "PUT"; 
-        string resourceType = "colls";
         string resourceId = string `dbs/${dbname}/colls/${colname}`;
-        string keystring = "n2whnJ4vAsQ2KVXORsKakNsOqs6uvDkLJvETLt4K7AVzj2t06w8CxZ8JRoK984xq6kHtesfJ7KncIf9nqJr1lQ==";
-        string keyType = "master";
-        string tokenVersion = "1.0";
         string? date = check getTime();
 
         self.authRequest.setHeader("Accept","application/json");
         self.authRequest.setHeader("Connection","keep-alive");
-        self.authRequest.setHeader("Accept-Encoding","gzip, deflate, br");
 
         if date is string{
-            string? s = check generateToken(varb,resourceType,resourceId,keystring,keyType,tokenVersion,date);
+            string? s = check generateToken(varb,self.resourceType,resourceId,self.apiKey,self.keyType,self.tokenVersion,date);
             self.authRequest.setHeader("x-ms-date",date);
             if s is string{
                 self.authRequest.setHeader("Authorization",s);
@@ -229,6 +265,7 @@ public class Collections{
 
         json body = {
             id: colname,
+            partitionKey:"",
             indexingPolicy: indexingPol
         };
         //http:Response? result = new;
@@ -244,19 +281,14 @@ public class Collections{
     public function getPKRanges(string dbname,string colname) returns error?|http:Response{
 
         string varb = "GET"; 
-        string resourceType = "colls";
         string resourceId = string `dbs/${dbname}/colls/${colname}/pkranges`;
-        string keystring = "n2whnJ4vAsQ2KVXORsKakNsOqs6uvDkLJvETLt4K7AVzj2t06w8CxZ8JRoK984xq6kHtesfJ7KncIf9nqJr1lQ==";
-        string keyType = "master";
-        string tokenVersion = "1.0";
         string? date = check getTime();
 
         self.authRequest.setHeader("Accept","application/json");
         self.authRequest.setHeader("Connection","keep-alive");
-        self.authRequest.setHeader("Accept-Encoding","gzip, deflate, br");
 
         if date is string{
-            string? s = check generateToken(varb,resourceType,resourceId,keystring,keyType,tokenVersion,date);
+            string? s = check generateToken(varb,self.resourceType,resourceId,self.apiKey,self.keyType,self.tokenVersion,date);
             self.authRequest.setHeader("x-ms-date",date);
             if s is string{
                 self.authRequest.setHeader("Authorization",s);
@@ -324,5 +356,6 @@ public function getTime() returns string?|error{
 }
 
 public type AuthConfig record {
-    string baseUrl;    
+    string baseUrl;  
+    string masterKey;  
 };
