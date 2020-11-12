@@ -32,6 +32,9 @@ public class Collections{
         });
 
 
+    //If we are creating a collection with autoscale we should pass a partition key in the body of the request. 
+    //Passing partition key is essentail in API 2018-12-31
+    //and throughput and autoscale headers cannot be set at the same time
         self.authRequest = new;
         self.authRequest.setHeader("x-ms-version","2018-12-31");
         self.authRequest.setHeader("Host","sachinidbnewaccount.documents.azure.com:443");
@@ -43,9 +46,6 @@ public class Collections{
     public function createCollection(string dbname,string colname,json? indexingpolicy,json partitionkey,string? throughput) returns error?|http:Response{
 
         string varb = "POST"; 
-        //portion of the string identifies the type of resource that the request is for, Eg. "dbs", "colls", "docs".
-        //portion of the string is the identity property of the resource that the request is directed at. ResourceLink must maintain its case for the ID of the resource. 
-        //Example, for a collection it looks like: "dbs/MyDatabase/colls/MyCollection".
         string resourceId = string `dbs/${dbname}`;
         string? date = check getTime();
 
@@ -75,29 +75,24 @@ public class Collections{
         self.authRequest.setHeader("Accept","application/json");
         self.authRequest.setHeader("Connection","keep-alive");
 
-        //http:Response? result = new;
-        //result = <http:Response>self.basicClient->get("/dbs/tempdb/colls",self.authRequest);
         json body = {
-            id: colname,
-            partitionKey: partitionkey
+            "id": colname,
+            "partitionKey": partitionkey
         };
 
+        json finalc = check body.mergeJson(indexingpolicy);
 
-        self.authRequest.setJsonPayload(body);
+
+        self.authRequest.setJsonPayload(finalc);
         var result = self.basicClient->post(string `/dbs/${dbname}/colls`,self.authRequest);
 
         return result;
         
     }
-
-    //public function createCollectionWithIndexingPolicy(string dbname,string colname,json? indexingpolicy,json partitionkey,string? throughput) returns error?|http:Response{
-
+  
     public function createCollectionWithAutoscale(string dbname,string colname,json? indexingpolicy,json partitionkey,json autoscale) returns error?|http:Response{
 
         string varb = "POST"; 
-        //portion of the string identifies the type of resource that the request is for, Eg. "dbs", "colls", "docs".
-        //portion of the string is the identity property of the resource that the request is directed at. ResourceLink must maintain its case for the ID of the resource. 
-        //Example, for a collection it looks like: "dbs/MyDatabase/colls/MyCollection".
         string resourceId = string `dbs/${dbname}`;
         string? date = check getTime();
 
@@ -124,14 +119,14 @@ public class Collections{
         self.authRequest.setHeader("Accept","application/json");
         self.authRequest.setHeader("Connection","keep-alive");
 
-        //http:Response? result = new;
-        //result = <http:Response>self.basicClient->get("/dbs/tempdb/colls",self.authRequest);
         json body = {
             "id": colname,
             "partitionKey": partitionkey
         };
 
-        self.authRequest.setJsonPayload(body);
+        json finalc = check body.mergeJson(indexingpolicy);
+
+        self.authRequest.setJsonPayload(finalc);
         var result = self.basicClient->post(string `/dbs/${dbname}/colls`,self.authRequest);
 
         return result;
@@ -163,9 +158,6 @@ public class Collections{
         self.authRequest.setHeader("Accept","application/json");
         self.authRequest.setHeader("Connection","keep-alive");
 
-        //http:Response? result = new;
-        //result = <http:Response>self.basicClient->get("/dbs/tempdb/colls",self.authRequest);
-
         var result = self.basicClient->get(string `/dbs/${dbname}/colls`,self.authRequest);
 
 
@@ -196,9 +188,6 @@ public class Collections{
             io:println("date is null");
         }
 
-        //http:Response? result = new;
-        //result = <http:Response>self.basicClient->get("/dbs/tempdb/colls",self.authRequest);
-
         var result = self.basicClient->get(string `/dbs/${dbname}/colls/${colname}`,self.authRequest);
 
         return result;
@@ -227,9 +216,6 @@ public class Collections{
         }else{
             io:println("date is null");
         }
-
-        //http:Response? result = new;
-        //result = <http:Response>self.basicClient->get("/dbs/tempdb/colls",self.authRequest);
 
         var result = self.basicClient->delete(string `/dbs/${dbname}/colls/${colname}`,self.authRequest);
 
@@ -268,8 +254,6 @@ public class Collections{
             partitionKey:"",
             indexingPolicy: indexingPol
         };
-        //http:Response? result = new;
-        //result = <http:Response>self.basicClient->get("/dbs/tempdb/colls",self.authRequest);
 
         self.authRequest.setJsonPayload(body);
         var result = self.basicClient->put(string `/dbs/${dbname}/colls/${colname}`,self.authRequest);
@@ -302,9 +286,6 @@ public class Collections{
         }else{
             io:println("date is null");
         }
-
-        //http:Response? result = new;
-        //result = <http:Response>self.basicClient->get("/dbs/tempdb/colls",self.authRequest);
 
         var result = self.basicClient->get(string `/dbs/${dbname}/colls/${colname}/pkranges`,self.authRequest);
 

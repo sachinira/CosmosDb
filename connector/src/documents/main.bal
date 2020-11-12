@@ -34,7 +34,7 @@ public class Documents{
 
         self.authRequest = new;
 
-        //********we have to specify the paertition key in the header for the api higher than 2018-12-31
+        //********we have to specify the paertition key in the header for the api higher than 2018-12-31*******************
         self.authRequest.setHeader("x-ms-version","2018-09-17");
         self.authRequest.setHeader("Host","sachinidbnewaccount.documents.azure.com:443");
 
@@ -84,18 +84,14 @@ public class Documents{
         self.authRequest.setHeader("Accept","application/json");
         self.authRequest.setHeader("Connection","keep-alive");
 
-        //http:Response? result = new;
-        //result = <http:Response>self.basicClient->get("/dbs/tempdb/colls",self.authRequest);
-
-        
-
-
         self.authRequest.setJsonPayload(document);
         var result = self.basicClient->post(string `/dbs/${dbname}/colls/${colname}/docs`,self.authRequest);
 
         return result;
         
     }
+
+
 
      
 

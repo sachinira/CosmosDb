@@ -33,18 +33,16 @@ public class Databases{
         });
 
 
+        //Autoscaling policy and the throughput policices are same as the collections
         self.authRequest = new;
-        self.authRequest.setHeader("x-ms-version","2016-07-11");
+        self.authRequest.setHeader("x-ms-version","2018-12-31");
         self.authRequest.setHeader("Host","sachinidbnewaccount.documents.azure.com:443");
 
     }
     //create a database
-    public function createDatabase(string dbname,int? throughput,json? autoscale) returns error?|http:Response{
+    public function createDatabase(string dbname,string? throughput,json? autoscale) returns error?|http:Response{
 
         string varb = "POST"; 
-        //portion of the string identifies the type of resource that the request is for, Eg. "dbs", "colls", "docs".
-        //portion of the string is the identity property of the resource that the request is directed at. ResourceLink must maintain its case for the ID of the resource. 
-        //Example, for a collection it looks like: "dbs/MyDatabase/colls/MyCollection".
         string resourceId = "";
         string? date = check getTime();
 
@@ -68,8 +66,6 @@ public class Databases{
         self.authRequest.setHeader("Accept","application/json");
         self.authRequest.setHeader("Connection","keep-alive");
 
-        //http:Response? result = new;
-        //result = <http:Response>self.basicClient->get("/dbs/tempdb/colls",self.authRequest);
         json body = {
             id: dbname
         };
@@ -85,9 +81,6 @@ public class Databases{
     public function listDatabases() returns error?|http:Response{
 
         string varb = "GET"; 
-        //portion of the string identifies the type of resource that the request is for, Eg. "dbs", "colls", "docs".
-        //portion of the string is the identity property of the resource that the request is directed at. ResourceLink must maintain its case for the ID of the resource. 
-        //Example, for a collection it looks like: "dbs/MyDatabase/colls/MyCollection".
         string resourceId = "";
         string? date = check getTime();
 
@@ -105,14 +98,9 @@ public class Databases{
         }else{
             io:println("date is null");
         }
-        
-        //self.authRequest.setHeader("x-ms-offer-throughput",throughput);
-        //self.authRequest.setHeader("x-ms-cosmos-offer-autopilot-settings",autoscale);
+ 
         self.authRequest.setHeader("Accept","application/json");
         self.authRequest.setHeader("Connection","keep-alive");
-
-        //http:Response? result = new;
-        //result = <http:Response>self.basicClient->get("/dbs/tempdb/colls",self.authRequest);
         
 
         var result = self.basicClient->get("/dbs",self.authRequest);
@@ -125,9 +113,6 @@ public class Databases{
     public function listOneDatabase(string dbname) returns error?|http:Response{
 
         string varb = "GET"; 
-        //portion of the string identifies the type of resource that the request is for, Eg. "dbs", "colls", "docs".
-        //portion of the string is the identity property of the resource that the request is directed at. ResourceLink must maintain its case for the ID of the resource. 
-        //Example, for a collection it looks like: "dbs/MyDatabase/colls/MyCollection".
         string resourceId = string `dbs/${dbname}`;
         string? date = check getTime();
 
@@ -146,14 +131,9 @@ public class Databases{
             io:println("date is null");
         }
         
-        //self.authRequest.setHeader("x-ms-offer-throughput",throughput);
-        //self.authRequest.setHeader("x-ms-cosmos-offer-autopilot-settings",autoscale);
+
         self.authRequest.setHeader("Accept","application/json");
         self.authRequest.setHeader("Connection","keep-alive");
-
-        //http:Response? result = new;
-        //result = <http:Response>self.basicClient->get("/dbs/tempdb/colls",self.authRequest);
-        
 
         var result = self.basicClient->get(string `/dbs/${dbname}`,self.authRequest);
 
@@ -165,9 +145,6 @@ public class Databases{
     public function deleteDatabase(string dbname) returns error?|http:Response{
 
         string varb = "DELETE"; 
-        //portion of the string identifies the type of resource that the request is for, Eg. "dbs", "colls", "docs".
-        //portion of the string is the identity property of the resource that the request is directed at. ResourceLink must maintain its case for the ID of the resource. 
-        //Example, for a collection it looks like: "dbs/MyDatabase/colls/MyCollection".
         string resourceId = string `dbs/${dbname}`;
         string? date = check getTime();
 
@@ -185,14 +162,9 @@ public class Databases{
         }else{
             io:println("date is null");
         }
-        
-        //self.authRequest.setHeader("x-ms-offer-throughput",throughput);
-        //self.authRequest.setHeader("x-ms-cosmos-offer-autopilot-settings",autoscale);
+
         self.authRequest.setHeader("Accept","application/json");
         self.authRequest.setHeader("Connection","keep-alive");
-
-        //http:Response? result = new;
-        //result = <http:Response>self.basicClient->get("/dbs/tempdb/colls",self.authRequest);
         
 
         var result = self.basicClient->delete(string `/dbs/${dbname}`,self.authRequest);
