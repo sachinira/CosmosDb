@@ -5,42 +5,24 @@ import ballerina/http;
 
 AuthConfig config = {
         baseUrl: BASE_URL,
-        masterKey: MASTER_KEY
+        masterKey: MASTER_KEY,
+        host: HOST,
+        apiVersion:API_VERSION
 };
 
 @test:Config{
-    enable: false
 }
 function createDB(){
 
- 
-
-    Databases openMapClient = new(config);
+    Databases AzureCosmosClient = new(config);
     
-    var t = openMapClient.createDatabase("hi",(),());
+    var result = AzureCosmosClient->createDatabase("hikall",(),());
 
-
-    if t is http:Response{
-
-        //400 Bad Request
-        //409 Conflict  
-       if (t.statusCode == http:STATUS_CREATED) {
-
-            json payload = <json>t.getJsonPayload();
-            //json lat = <json>payload.coord.lat;
-            io:println(payload.id);
-
-            } else {
-            error err = error("error occurred while sending GET request\n");
-            io:println(err.message(),"Status code: ", t.statusCode,", reason: ", t.getTextPayload());
-
-        }
-
-    }else{
-        io:println(t);
-
+     if (result is Database) {
+        io:println(result);
+    } else {
+        test:assertFail(msg = result.message());
     }
-
 }
 
 
@@ -52,7 +34,7 @@ function listAllDB(){
 
     Databases openMapClient = new(config);
     
-    var t = openMapClient.listDatabases();
+    var t = openMapClient->listDatabases();
 
 
     if t is http:Response{
@@ -86,7 +68,7 @@ function listOneDB(){
 
     Databases openMapClient = new(config);
     
-    var t = openMapClient.listOneDatabase("mydb");
+    var t = openMapClient->listOneDatabase("mydb");
 
 
     if t is http:Response{
@@ -113,6 +95,7 @@ function listOneDB(){
 }
 
 @test:Config{
+    enable: false
 
 }
 function deleteDB(){
@@ -120,7 +103,7 @@ function deleteDB(){
 
     Databases openMapClient = new(config);
     
-    var t = openMapClient.deleteDatabase("Hellodb");
+    var t = openMapClient->deleteDatabase("Hellodb");
 
 
     if t is http:Response{

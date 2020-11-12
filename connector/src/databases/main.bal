@@ -1,15 +1,14 @@
 import ballerina/http;
-import ballerina/time;
-import ballerina/io;
-import ballerina/crypto;
-import ballerina/encoding;
 
-public class Databases{
+public  client class Databases{
     
-    private string baseUrl;
+    public string baseUrl;
+    public string masterKey;
+    public string host;
+    public string apiVersion;
+    
     public http:Client basicClient;
-    http:Request authRequest;
-    private string masterKey;
+
     private string resourceType;
     private string keyType;
     private string tokenVersion;
@@ -19,6 +18,9 @@ public class Databases{
     function init(AuthConfig opConf){
         self.baseUrl = opConf.baseUrl;
         self.masterKey = opConf.masterKey;
+        self.host = opConf.host;
+        self.apiVersion = opConf.apiVersion;
+
         self.resourceType = "dbs";
         self.keyType = "master";
         self.tokenVersion = "1.0";
@@ -33,145 +35,88 @@ public class Databases{
         });
 
 
-        //Autoscaling policy and the throughput policices are same as the collections
-        self.authRequest = new;
-        self.authRequest.setHeader("x-ms-version","2018-12-31");
-        self.authRequest.setHeader("Host","sachinidbnewaccount.documents.azure.com:443");
+        //Autoscaling policy and the throughput policices are same as the collections        
 
     }
     //create a database
-    public function createDatabase(string dbname,string? throughput,json? autoscale) returns error?|http:Response{
+    public remote function createDatabase(string dbname,string? throughput,json? autoscale) returns @tainted Database|error{
 
-        string varb = "POST"; 
+        http:Request req = new;
+
+        string verb = "POST"; 
         string resourceId = "";
-        string? date = check getTime();
+        string requestPath = string `/dbs`;
 
-        if date is string{
-            string? s = check generateToken(varb,self.resourceType,resourceId,self.masterKey,self.keyType,self.tokenVersion,date);
-            self.authRequest.setHeader("x-ms-date",date);
-            if s is string{
-                self.authRequest.setHeader("Authorization",s);
+        req = check setHeaders(req,self.apiVersion,self.host,verb,self.resourceType,resourceId,self.masterKey,self.keyType,self.tokenVersion);
 
-            }else{
 
-                io:println("token is null");
-
-            }
-        }else{
-            io:println("date is null");
-        }
         
         //self.authRequest.setHeader("x-ms-offer-throughput",throughput);
         //self.authRequest.setHeader("x-ms-cosmos-offer-autopilot-settings",autoscale);
-        self.authRequest.setHeader("Accept","application/json");
-        self.authRequest.setHeader("Connection","keep-alive");
+        
 
         json body = {
             id: dbname
         };
 
-        self.authRequest.setJsonPayload(body);
-        var result = self.basicClient->post(string `/dbs`,self.authRequest);
+        req.setJsonPayload(body);
 
-        return result;
+        var response = self.basicClient->post(requestPath,req);
+
+        json jsonreponse = check parseResponseToJson(response);
+
+        return mapJsonToDatabase(jsonreponse);
         
 
     }
 
-    public function listDatabases() returns error?|http:Response{
+    public remote function listDatabases() returns error?|http:Response{
 
-        string varb = "GET"; 
+        http:Request req = new;
+
+        string verb = "GET"; 
         string resourceId = "";
-        string? date = check getTime();
+       
+        req = check setHeaders(req,self.apiVersion,self.host,verb,self.resourceType,resourceId,self.masterKey,self.keyType,self.tokenVersion);
 
-        if date is string{
-            string? s = check generateToken(varb,self.resourceType,resourceId,self.masterKey,self.keyType,self.tokenVersion,date);
-            self.authRequest.setHeader("x-ms-date",date);
-            if s is string{
-                self.authRequest.setHeader("Authorization",s);
 
-            }else{
-
-                io:println("token is null");
-
-            }
-        }else{
-            io:println("date is null");
-        }
- 
-        self.authRequest.setHeader("Accept","application/json");
-        self.authRequest.setHeader("Connection","keep-alive");
-        
-
-        var result = self.basicClient->get("/dbs",self.authRequest);
+        var result = self.basicClient->get("/dbs",req);
 
         return result;
         
 
     }
 
-    public function listOneDatabase(string dbname) returns error?|http:Response{
+    public remote function listOneDatabase(string dbname) returns error?|http:Response{
 
-        string varb = "GET"; 
+        http:Request req = new;
+
+        string verb = "GET"; 
         string resourceId = string `dbs/${dbname}`;
-        string? date = check getTime();
+       
+        req = check setHeaders(req,self.apiVersion,self.host,verb,self.resourceType,resourceId,self.masterKey,self.keyType,self.tokenVersion);
 
-        if date is string{
-            string? s = check generateToken(varb,self.resourceType,resourceId,self.masterKey,self.keyType,self.tokenVersion,date);
-            self.authRequest.setHeader("x-ms-date",date);
-            if s is string{
-                self.authRequest.setHeader("Authorization",s);
 
-            }else{
-
-                io:println("token is null");
-
-            }
-        }else{
-            io:println("date is null");
-        }
-        
-
-        self.authRequest.setHeader("Accept","application/json");
-        self.authRequest.setHeader("Connection","keep-alive");
-
-        var result = self.basicClient->get(string `/dbs/${dbname}`,self.authRequest);
+        var result = self.basicClient->get(string `/dbs/${dbname}`,req);
 
         return result;
         
 
     }
 
-    public function deleteDatabase(string dbname) returns error?|http:Response{
+    public remote function deleteDatabase(string dbname) returns error?|http:Response{
 
-        string varb = "DELETE"; 
+        http:Request req = new;
+
+        string verb = "DELETE"; 
         string resourceId = string `dbs/${dbname}`;
-        string? date = check getTime();
-
-        if date is string{
-            string? s = check generateToken(varb,self.resourceType,resourceId,self.masterKey,self.keyType,self.tokenVersion,date);
-            self.authRequest.setHeader("x-ms-date",date);
-            if s is string{
-                self.authRequest.setHeader("Authorization",s);
-
-            }else{
-
-                io:println("token is null");
-
-            }
-        }else{
-            io:println("date is null");
-        }
-
-        self.authRequest.setHeader("Accept","application/json");
-        self.authRequest.setHeader("Connection","keep-alive");
         
+        req = check setHeaders(req,self.apiVersion,self.host,verb,self.resourceType,resourceId,self.masterKey,self.keyType,self.tokenVersion);
 
-        var result = self.basicClient->delete(string `/dbs/${dbname}`,self.authRequest);
+
+        var result = self.basicClient->delete(string `/dbs/${dbname}`,req);
 
         return result;
-        
-
     }
 }
 
@@ -179,48 +124,11 @@ public class Databases{
  
 
 
-public function generateToken(string verb, string resourceType, string resourceId, string keys, string keyType, string tokenVersion, string date) returns string?|error{
-        
-    string authorization;
-
-    string payload = verb.toLowerAscii()+"\n" 
-        +resourceType.toLowerAscii()+"\n"
-        +resourceId+"\n"
-        +date.toLowerAscii()+"\n"
-        +""+"\n";
-
-
-    var decoded = encoding:decodeBase64Url(keys);
-        
-    if decoded is byte[]{
-
-        byte[] k = crypto:hmacSha256(payload.toBytes(),decoded);
-        string  t = k.toBase16();
-
-        string signature = encoding:encodeBase64Url(k);
-
-        authorization = check encoding:encodeUriComponent(string `type=${keyType}&ver=${tokenVersion}&sig=${signature}=`, "UTF-8");
-            
-        return authorization;
-
-    }else{
-            
-        io:println("Decoding error");
-    }
-
-}
-
-public function getTime() returns string?|error{
-
-    time:Time time1 = time:currentTime();
-    var time2 = check time:toTimeZone(time1, "Europe/London");
-
-    string|error timeString = time:format(time2, "EEE, dd MMM yyyy HH:mm:ss z");
-    return timeString;
-}
 
 
 public type AuthConfig record {
     string baseUrl;    
     string masterKey;
+    string host;
+    string apiVersion;
 };
