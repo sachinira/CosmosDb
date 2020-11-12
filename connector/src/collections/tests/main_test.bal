@@ -52,7 +52,9 @@ function createCollection(){
 
 
 @test:Config{
+        enable: false
 }
+
 function createCollectionWithAutoscale(){
 
     Collections openMapClient = new(config);
@@ -244,7 +246,6 @@ function replceCollection(){
 }
 
 @test:Config{
-    enable: false
 }
 function GetPartitionKeyRanges(){
 
@@ -259,7 +260,7 @@ function GetPartitionKeyRanges(){
 
             json payload = <json>t.getJsonPayload();
             //json lat = <json>payload.coord.lat;
-            io:println(payload._rid);
+            io:println(payload);
 
             } else {
             error err = error("error occurred while sending GET request\n");

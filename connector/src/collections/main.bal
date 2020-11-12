@@ -281,14 +281,15 @@ public class Collections{
     public function getPKRanges(string dbname,string colname) returns error?|http:Response{
 
         string varb = "GET"; 
-        string resourceId = string `dbs/${dbname}/colls/${colname}/pkranges`;
+        string reType = "pkranges";
+        string resourceId = string `dbs/${dbname}/colls/${colname}`;
         string? date = check getTime();
 
         self.authRequest.setHeader("Accept","application/json");
         self.authRequest.setHeader("Connection","keep-alive");
 
         if date is string{
-            string? s = check generateToken(varb,self.resourceType,resourceId,self.apiKey,self.keyType,self.tokenVersion,date);
+            string? s = check generateToken(varb,reType,resourceId,self.apiKey,self.keyType,self.tokenVersion,date);
             self.authRequest.setHeader("x-ms-date",date);
             if s is string{
                 self.authRequest.setHeader("Authorization",s);
