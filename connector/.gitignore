@@ -1,3 +1,4 @@
 target
 src/databases/tests/constants.bal
 src/collections/tests/constants.bal
+src/documents/tests/constants.bal

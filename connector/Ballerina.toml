@@ -7,3 +7,9 @@ observability-included=true
 
 [dependencies]
 
+[platform]
+target = "java8"
+
+    [[platform.libraries]]
+    path = "./src/databases/javalibs/CosmosConnectRest-1.0-SNAPSHOT.jar"
+    modules = ["databases"]

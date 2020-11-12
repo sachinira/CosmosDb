@@ -18,6 +18,31 @@ org_name = "ballerina"
 name = "log"
 version = "1.0.0"
 
+[[imports."sachini/collections:0.1.0"]]
+org_name = "ballerina"
+name = "http"
+version = "1.0.0"
+
+[[imports."sachini/collections:0.1.0"]]
+org_name = "ballerina"
+name = "time"
+version = "1.0.1"
+
+[[imports."sachini/collections:0.1.0"]]
+org_name = "ballerina"
+name = "io"
+version = "0.5.0"
+
+[[imports."sachini/collections:0.1.0"]]
+org_name = "ballerina"
+name = "crypto"
+version = "1.0.0"
+
+[[imports."sachini/collections:0.1.0"]]
+org_name = "ballerina"
+name = "encoding"
+version = "1.0.2"
+
 [[imports."ballerina/http:1.0.0"]]
 org_name = "ballerina"
 name = "auth"
@@ -77,31 +102,6 @@ version = "1.0.0"
 org_name = "ballerina"
 name = "mime"
 version = "1.0.0"
-
-[[imports."sachini/databases:0.1.0"]]
-org_name = "ballerina"
-name = "http"
-version = "1.0.0"
-
-[[imports."sachini/databases:0.1.0"]]
-org_name = "ballerina"
-name = "time"
-version = "1.0.1"
-
-[[imports."sachini/databases:0.1.0"]]
-org_name = "ballerina"
-name = "io"
-version = "0.5.0"
-
-[[imports."sachini/databases:0.1.0"]]
-org_name = "ballerina"
-name = "crypto"
-version = "1.0.0"
-
-[[imports."sachini/databases:0.1.0"]]
-org_name = "ballerina"
-name = "encoding"
-version = "1.0.2"
 
 [[imports."ballerina/auth:1.0.0"]]
 org_name = "ballerina"
