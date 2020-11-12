@@ -4,6 +4,10 @@ import ballerina/http;
 function parseResponseToJson(http:Response|http:ClientError httpResponse) returns @tainted json|error {
     if (httpResponse is http:Response) {
         var jsonResponse = httpResponse.getJsonPayload();
+
+        if(httpResponse.statusCode == http:STATUS_NO_CONTENT){
+            return jsonResponse;
+        }
         
         if (jsonResponse is json) {
             if (httpResponse.statusCode != http:STATUS_OK && httpResponse.statusCode != http:STATUS_CREATED) {

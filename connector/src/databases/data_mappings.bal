@@ -1,6 +1,6 @@
 
 
-function mapJsonToDatabase(json jsonPayload) returns Database {
+function mapJsonToDatabaseType(json jsonPayload) returns Database {
 
     Database db = {};
     db.id = jsonPayload.id.toString();
@@ -13,3 +13,22 @@ function mapJsonToDatabase(json jsonPayload) returns Database {
 
     return db;
 }
+
+function mapJsonToDbList(json jsonPayload) returns @tainted DBList{
+    DBList dbl = {};
+    dbl._rid =jsonPayload._rid.toString();
+    dbl.Databases =  convertToDatabaseArray(<json[]>jsonPayload.Databases);
+    
+    return dbl;
+}
+
+function convertToDatabaseArray(json[] sourceMessageArrayJsonObject) returns @tainted Database[] {
+    Database[] databases = [];
+    int i = 0;
+    foreach json jsonDatabase in sourceMessageArrayJsonObject {
+        databases[i] = mapJsonToDatabaseType(jsonDatabase);
+        i = i + 1;
+    }
+    return databases;
+}
+

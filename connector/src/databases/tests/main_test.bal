@@ -1,6 +1,6 @@
 import ballerina/io;
 import ballerina/test;
-import ballerina/http;
+//import ballerina/http;
 
 
 AuthConfig config = {
@@ -11,6 +11,8 @@ AuthConfig config = {
 };
 
 @test:Config{
+        enable: false
+
 }
 function createDB(){
 
@@ -32,32 +34,15 @@ function createDB(){
 }
 function listAllDB(){
 
-    Databases openMapClient = new(config);
+    Databases AzureCosmosClient = new(config);
     
-    var t = openMapClient->listDatabases();
+    var result = AzureCosmosClient->listDatabases();
 
-
-    if t is http:Response{
-
-        //400 Bad Request
-        //409 Conflict  
-       if (t.statusCode == http:STATUS_OK) {
-
-            json payload = <json>t.getJsonPayload();
-            //json lat = <json>payload.coord.lat;
-            io:println(payload);
-
-            } else {
-            error err = error("error occurred while sending GET request\n");
-            io:println(err.message(),"Status code: ", t.statusCode,", reason: ", t.getTextPayload());
-
-        }
-
-    }else{
-        io:println(t);
-
+    if (result is DBList) {
+        io:println(result);
+    } else {
+        test:assertFail(msg = result.message());
     }
-
 }
 
 @test:Config{
@@ -66,65 +51,28 @@ function listAllDB(){
 }
 function listOneDB(){
 
-    Databases openMapClient = new(config);
+    Databases AzureCosmosClient = new(config);
     
-    var t = openMapClient->listOneDatabase("mydb");
+    var result = AzureCosmosClient->listOneDatabase("tempdb");
 
-
-    if t is http:Response{
-
-        //400 Bad Request
-        //409 Conflict  
-       if (t.statusCode == http:STATUS_OK) {
-
-            json payload = <json>t.getJsonPayload();
-            //json lat = <json>payload.coord.lat;
-            io:println(payload);
-
-            } else {
-            error err = error("error occurred while sending GET request\n");
-            io:println(err.message(),"Status code: ", t.statusCode,", reason: ", t.getTextPayload());
-
-        }
-
-    }else{
-        io:println(t);
-
+    if (result is Database) {
+        io:println(result);
+    } else {
+        test:assertFail(msg = result.message());
     }
 
 }
 
 @test:Config{
-    enable: false
 
 }
 function deleteDB(){
 
-
-    Databases openMapClient = new(config);
+    Databases AzureCosmosClient = new(config);
     
-    var t = openMapClient->deleteDatabase("Hellodb");
+    var result = AzureCosmosClient->deleteDatabase("tempdb2");
 
-
-    if t is http:Response{
-
-        //404 Not Found        
-        //409 Conflict  
-       if (t.statusCode == http:STATUS_NO_CONTENT) {
-
-            //json payload = <json>t.getJsonPayload();
-            //json lat = <json>payload.coord.lat;
-            io:println(t.statusCode);
-
-            } else {
-            error err = error("error occurred while sending GET request\n");
-            io:println(err.message(),"Status code: ", t.statusCode,", reason: ", t.getTextPayload());
-
-        }
-
-    }else{
-        io:println(t);
-
-    }
+    io:println(result);
+   
 
 }

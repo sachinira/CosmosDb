@@ -35,11 +35,12 @@ public  client class Databases{
         });
 
 
-        //Autoscaling policy and the throughput policices are same as the collections        
-
     }
-    //create a database
+
+    //Create a database
     public remote function createDatabase(string dbname,string? throughput,json? autoscale) returns @tainted Database|error{
+
+        //Autoscaling policy and the throughput policices are same as the collections        
 
         http:Request req = new;
 
@@ -49,8 +50,6 @@ public  client class Databases{
 
         req = check setHeaders(req,self.apiVersion,self.host,verb,self.resourceType,resourceId,self.masterKey,self.keyType,self.tokenVersion);
 
-
-        
         //self.authRequest.setHeader("x-ms-offer-throughput",throughput);
         //self.authRequest.setHeader("x-ms-cosmos-offer-autopilot-settings",autoscale);
         
@@ -65,12 +64,11 @@ public  client class Databases{
 
         json jsonreponse = check parseResponseToJson(response);
 
-        return mapJsonToDatabase(jsonreponse);
+        return mapJsonToDatabaseType(jsonreponse);
         
-
     }
 
-    public remote function listDatabases() returns error?|http:Response{
+    public remote function listDatabases() returns @tainted DBList|error{
 
         http:Request req = new;
 
@@ -79,15 +77,15 @@ public  client class Databases{
        
         req = check setHeaders(req,self.apiVersion,self.host,verb,self.resourceType,resourceId,self.masterKey,self.keyType,self.tokenVersion);
 
+        var response = self.basicClient->get("/dbs",req);
 
-        var result = self.basicClient->get("/dbs",req);
+        json jsonresponse = check parseResponseToJson(response);
 
-        return result;
+        return mapJsonToDbList(jsonresponse);
         
-
     }
 
-    public remote function listOneDatabase(string dbname) returns error?|http:Response{
+    public remote function listOneDatabase(string dbname) returns @tainted Database|error{
 
         http:Request req = new;
 
@@ -96,15 +94,15 @@ public  client class Databases{
        
         req = check setHeaders(req,self.apiVersion,self.host,verb,self.resourceType,resourceId,self.masterKey,self.keyType,self.tokenVersion);
 
+        var response = self.basicClient->get(string `/dbs/${dbname}`,req);
 
-        var result = self.basicClient->get(string `/dbs/${dbname}`,req);
+        json jsonresponse = check parseResponseToJson(response);
 
-        return result;
+        return mapJsonToDatabaseType(jsonresponse);
         
-
     }
 
-    public remote function deleteDatabase(string dbname) returns error?|http:Response{
+    public remote function deleteDatabase(string dbname) returns @tainted json|error{
 
         http:Request req = new;
 
@@ -113,18 +111,13 @@ public  client class Databases{
         
         req = check setHeaders(req,self.apiVersion,self.host,verb,self.resourceType,resourceId,self.masterKey,self.keyType,self.tokenVersion);
 
+        var response = self.basicClient->delete(string `/dbs/${dbname}`,req);
 
-        var result = self.basicClient->delete(string `/dbs/${dbname}`,req);
+        json jsonresponse = check parseResponseToJson(response);
 
-        return result;
+        return jsonresponse;
     }
 }
-
-
- 
-
-
-
 
 public type AuthConfig record {
     string baseUrl;    

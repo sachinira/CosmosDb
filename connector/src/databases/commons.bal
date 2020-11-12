@@ -3,7 +3,7 @@ import ballerina/io;
 import ballerina/crypto;
 import ballerina/encoding;
 import ballerina/http;
-import ballerina/java;
+//import ballerina/java;
 
 public function generateToken(string verb, string resourceType, string resourceId, string keys, string keyType, string tokenVersion, string date) returns string?|error{
         
@@ -79,9 +79,3 @@ public function setHeaders(http:Request req,string apiversion,string host,string
     return req;
 }
 
-
-
-function createToken() returns handle = @java:Method {
-    name: "getServerTime",
-    'class: "com.company.cosmosrest.commons.TokenCreate"
-} external;

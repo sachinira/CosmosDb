@@ -9,5 +9,10 @@ public type Database record {
     string _users = "";
 };
 
+public type DBList record {
+    string _rid = "";
+    Database[] Databases = [];
+};
+
 public type AzureError distinct error;
 
