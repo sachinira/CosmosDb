@@ -40,7 +40,7 @@ public  client class Databases{
     //Create a database
     public remote function createDatabase(string dbname,string? throughput,json? autoscale) returns @tainted Database|error{
 
-        //Autoscaling policy and the throughput policices are same as the collections        
+        //Autoscaling policy and the throughput policices are same as the collections they must be implemented  
 
         http:Request req = new;
 
@@ -116,6 +116,39 @@ public  client class Databases{
         json jsonresponse = check parseResponseToJson(response);
 
         return jsonresponse;
+    }
+
+
+    //*********************************************
+
+    //Collections
+
+    public remote function createCollection(string dbname,string colname,json? indexingpolicy,json partitionkey,string? throughput) returns @tainted error?|http:Response{
+
+        http:Request req = new;
+
+        string verb = "POST"; 
+        string resourceId = string `dbs/${dbname}`;
+
+        req = check setHeaders(req,self.apiVersion,self.host,verb,self.resourceType,resourceId,self.masterKey,self.keyType,self.tokenVersion);
+
+
+        json body = {
+            "id": colname,
+            "partitionKey": partitionkey
+        };
+
+        json finalc = check body.mergeJson(indexingpolicy);
+
+
+        req.setJsonPayload(finalc);
+
+        var response = self.basicClient->post(string `/dbs/${dbname}/colls`,req);
+
+        json jsonresponse = check parseResponseToJson(response);
+
+
+        return response;
     }
 }
 

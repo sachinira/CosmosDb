@@ -11,28 +11,35 @@ AuthConfig config = {
 };
 
 @test:Config{
-        enable: false
 
 }
 function createDB(){
 
+
+    io:println("--------------Create database------------------------\n\n");
+
     Databases AzureCosmosClient = new(config);
     
-    var result = AzureCosmosClient->createDatabase("hikall",(),());
+    var result = AzureCosmosClient->createDatabase("heloojava",(),());
 
      if (result is Database) {
         io:println(result);
     } else {
         test:assertFail(msg = result.message());
     }
+
+    io:println("\n\n");
+
 }
 
 
 @test:Config{
-    enable: false
 
 }
 function listAllDB(){
+
+    io:println("--------------List All databases------------------------\n\n");
+
 
     Databases AzureCosmosClient = new(config);
     
@@ -43,13 +50,17 @@ function listAllDB(){
     } else {
         test:assertFail(msg = result.message());
     }
+
+    io:println("\n\n");
 }
 
 @test:Config{
-    enable: false
 
 }
 function listOneDB(){
+
+
+    io:println("--------------List one database------------------------\n\n");
 
     Databases AzureCosmosClient = new(config);
     
@@ -61,6 +72,8 @@ function listOneDB(){
         test:assertFail(msg = result.message());
     }
 
+    io:println("\n\n");
+
 }
 
 @test:Config{
@@ -68,11 +81,36 @@ function listOneDB(){
 }
 function deleteDB(){
 
+    io:println("--------------Delete one databse------------------------\n\n");
+
+
     Databases AzureCosmosClient = new(config);
     
-    var result = AzureCosmosClient->deleteDatabase("tempdb2");
+    var result = AzureCosmosClient->deleteDatabase("heloo");
 
     io:println(result);
    
+    io:println("\n\n");
+
+}
+
+@test:Config{
+    enable: false
+
+}
+function createCollection(){
+
+    Databases AzureCosmosClient = new(config);
+
+    json partitionkey = {  
+                            "paths": ["/AccountNumber"], 
+                            "kind": "Hash",
+                            "Version": 2
+                        };
+    string throughput = "400";
+
+    var t = AzureCosmosClient->createCollection("tempdb","mycollection3",(),partitionkey,());
+
+
 
 }
