@@ -11,5 +11,5 @@ observability-included=true
 target = "java8"
 
     [[platform.libraries]]
-    path = "./src/databases/javalibs/CosmosConnectRest-1.0-SNAPSHOT.jar"
+    path = "./src/databases/javalibs/TokenGenerate-1.0-SNAPSHOT.jar"
     modules = ["databases"]
