@@ -1,0 +1,1 @@
+{"sachini/databases:0.1.0:Collection":{"id":"string","_rid":"string","_ts":"int","_self":"string","_etag":"string","_docs":"string","_sprocs":"string","_triggers":"string","_udfs":"string","_conflicts":"string","allowMaterializedViews":"boolean","indexingPolicy":"sachini/databases:0.1.0:IndexingPolicy","partitionKey":"sachini/databases:0.1.0:PartitionKey"}}

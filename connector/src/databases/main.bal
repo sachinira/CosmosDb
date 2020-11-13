@@ -9,7 +9,9 @@ public  client class Databases{
     
     public http:Client basicClient;
 
-    private string resourceType;
+    private string resourceTypedb;
+    private string resourceTypecoll;
+
     private string keyType;
     private string tokenVersion;
 
@@ -21,7 +23,8 @@ public  client class Databases{
         self.host = opConf.host;
         self.apiVersion = opConf.apiVersion;
 
-        self.resourceType = "dbs";
+        self.resourceTypedb = "dbs";
+        self.resourceTypecoll= "colls";
         self.keyType = "master";
         self.tokenVersion = "1.0";
 
@@ -40,7 +43,6 @@ public  client class Databases{
     //Create a database
     public remote function createDatabase(string dbname,string? throughput,json? autoscale) returns @tainted Database|error{
 
-        //Autoscaling policy and the throughput policices are same as the collections they must be implemented  
 
         http:Request req = new;
 
@@ -48,7 +50,7 @@ public  client class Databases{
         string resourceId = "";
         string requestPath = string `/dbs`;
 
-        req = check setHeaders(req,self.apiVersion,self.host,verb,self.resourceType,resourceId,self.masterKey,self.keyType,self.tokenVersion);
+        req = check setHeaders(req,self.apiVersion,self.host,verb,self.resourceTypedb,resourceId,self.masterKey,self.keyType,self.tokenVersion);
 
         //self.authRequest.setHeader("x-ms-offer-throughput",throughput);
         //self.authRequest.setHeader("x-ms-cosmos-offer-autopilot-settings",autoscale);
@@ -75,7 +77,7 @@ public  client class Databases{
         string verb = "GET"; 
         string resourceId = "";
        
-        req = check setHeaders(req,self.apiVersion,self.host,verb,self.resourceType,resourceId,self.masterKey,self.keyType,self.tokenVersion);
+        req = check setHeaders(req,self.apiVersion,self.host,verb,self.resourceTypedb,resourceId,self.masterKey,self.keyType,self.tokenVersion);
 
         var response = self.basicClient->get("/dbs",req);
 
@@ -92,7 +94,7 @@ public  client class Databases{
         string verb = "GET"; 
         string resourceId = string `dbs/${dbname}`;
        
-        req = check setHeaders(req,self.apiVersion,self.host,verb,self.resourceType,resourceId,self.masterKey,self.keyType,self.tokenVersion);
+        req = check setHeaders(req,self.apiVersion,self.host,verb,self.resourceTypedb,resourceId,self.masterKey,self.keyType,self.tokenVersion);
 
         var response = self.basicClient->get(string `/dbs/${dbname}`,req);
 
@@ -102,35 +104,36 @@ public  client class Databases{
         
     }
 
-    public remote function deleteDatabase(string dbname) returns @tainted json|error{
+    public remote function deleteDatabase(string dbname) returns @tainted string|error{
 
         http:Request req = new;
 
         string verb = "DELETE"; 
         string resourceId = string `dbs/${dbname}`;
         
-        req = check setHeaders(req,self.apiVersion,self.host,verb,self.resourceType,resourceId,self.masterKey,self.keyType,self.tokenVersion);
+        req = check setHeaders(req,self.apiVersion,self.host,verb,self.resourceTypedb,resourceId,self.masterKey,self.keyType,self.tokenVersion);
 
         var response = self.basicClient->delete(string `/dbs/${dbname}`,req);
 
-        json jsonresponse = check parseResponseToJson(response);
+        string res = check getDeleteResponse(response);
 
-        return jsonresponse;
+        return res;
     }
 
+    //Autoscaling policy and the throughput policices are same as the collections they must be implemented  
 
     //*********************************************
 
     //Collections
 
-    public remote function createCollection(string dbname,string colname,json? indexingpolicy,json partitionkey,string? throughput) returns @tainted error?|http:Response{
+    public remote function createCollection(string dbname,string colname,json? indexingpolicy,json partitionkey,string? throughput) returns @tainted Collection|error{
 
         http:Request req = new;
 
         string verb = "POST"; 
         string resourceId = string `dbs/${dbname}`;
 
-        req = check setHeaders(req,self.apiVersion,self.host,verb,self.resourceType,resourceId,self.masterKey,self.keyType,self.tokenVersion);
+        req = check setHeaders(req,self.apiVersion,self.host,verb,self.resourceTypecoll,resourceId,self.masterKey,self.keyType,self.tokenVersion);
 
 
         json body = {
@@ -148,8 +151,85 @@ public  client class Databases{
         json jsonresponse = check parseResponseToJson(response);
 
 
-        return response;
+        return mapJsonToCollectionType(jsonresponse);
     }
+
+
+    public remote function getAllCollections(string dbname) returns @tainted CollectionList|error{
+
+
+        http:Request req = new;
+
+        string verb = "GET"; 
+        string resourceId = string `dbs/${dbname}`;
+
+        req = check setHeaders(req,self.apiVersion,self.host,verb,self.resourceTypecoll,resourceId,self.masterKey,self.keyType,self.tokenVersion);
+
+
+        var response = self.basicClient->get(string `/dbs/${dbname}/colls`,req);
+
+        json jsonresponse = check parseResponseToJson(response);
+
+        return mapJsonToCollectionListType(jsonresponse);
+    }
+
+    public remote function getOneCollection(string dbname,string colname) returns @tainted Collection|error{
+
+
+        http:Request req = new;
+
+        string verb = "GET"; 
+        string resourceId = string `dbs/${dbname}/colls/${colname}`;
+
+        req = check setHeaders(req,self.apiVersion,self.host,verb,self.resourceTypecoll,resourceId,self.masterKey,self.keyType,self.tokenVersion);
+
+
+        var response = self.basicClient->get(string `/dbs/${dbname}/colls/${colname}`,req);
+
+        json jsonresponse = check parseResponseToJson(response);
+
+        return mapJsonToCollectionType(jsonresponse);
+    }
+
+     public function deleteCollection(string dbname,string colname) returns @tainted string|error{
+
+        http:Request req = new;
+
+        string verb = "DELETE"; 
+        string resourceId = string `dbs/${dbname}/colls/${colname}`;
+
+        req = check setHeaders(req,self.apiVersion,self.host,verb,self.resourceTypecoll,resourceId,self.masterKey,self.keyType,self.tokenVersion);
+
+
+        var response = self.basicClient->delete(string `/dbs/${dbname}/colls/${colname}`,req);
+
+        
+        string resp = check getDeleteResponse(response);
+
+        return resp;
+    }
+
+    public function getPartitionKeyRanges(string dbname,string colname) returns @tainted PartitionKeyList|error{
+
+        http:Request req = new;
+
+        string verb = "GET"; 
+        string reType = "pkranges";
+        string resourceId = string `dbs/${dbname}/colls/${colname}`;
+        
+        req = check setHeaders(req,self.apiVersion,self.host,verb,reType,resourceId,self.masterKey,self.keyType,self.tokenVersion);
+
+        var response = self.basicClient->get(string `/dbs/${dbname}/colls/${colname}/pkranges`,req);
+
+
+        json jsonresponse = check parseResponseToJson(response);
+
+        return mapJsonToPartitionKeyType(jsonresponse);
+    }
+
+        //Replace Collection supports changing the indexing policy of a collection after creation.
+        //Create collection with autoscale
+
 }
 
 public type AuthConfig record {
