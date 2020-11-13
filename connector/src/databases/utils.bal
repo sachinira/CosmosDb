@@ -10,10 +10,6 @@ function parseResponseToJson(http:Response|http:ClientError httpResponse) return
     if (httpResponse is http:Response) {
         var jsonResponse = httpResponse.getJsonPayload();
 
-        if(httpResponse.statusCode == http:STATUS_NO_CONTENT){
-            return jsonResponse;
-        }
-        
         if (jsonResponse is json) {
             if (httpResponse.statusCode != http:STATUS_OK && httpResponse.statusCode != http:STATUS_CREATED) {
                 string code = "";
@@ -37,6 +33,23 @@ function parseResponseToJson(http:Response|http:ClientError httpResponse) return
         }
     } else {
         return prepareError("Error occurred while invoking the REST API");
+    }
+}
+
+function getDeleteResponse(http:Response|http:ClientError httpResponse) returns @tainted string|error{
+
+    if (httpResponse is http:Response) {
+
+        if(httpResponse.statusCode == http:STATUS_NO_CONTENT){
+                return string `Deleted Sucessfully ${httpResponse.statusCode}`;
+        }else{
+            return prepareError(string `Error occurred while invoking the REST API"${httpResponse.statusCode}`);
+
+        }
+
+    }else{
+        return prepareError("Error occurred while invoking the REST API");
+
     }
 }
 

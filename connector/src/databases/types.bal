@@ -2,7 +2,7 @@
 public type Database record {
     string id = "";
     string _rid = "";
-    string _ts = "";
+    int _ts = 0;
     string _self = "";
     string _etag = "";
     string _colls = "";
@@ -14,17 +14,20 @@ public type DBList record {
     Database[] Databases = [];
 };
 
+
+//conflict rresolution policy must be included
 public type Collection record {
     string id = "";
     string _rid = "";
-    string _ts = "";
+    int _ts = 0;
     string _self = "";
     string _etag = "";
-    string _doc = "";
+    string _docs = "";
     string _sprocs = "";
     string _triggers ="";
     string _udfs="";
     string _conflicts="";
+    boolean allowMaterializedViews?;
     IndexingPolicy indexingPolicy?;
     PartitionKey partitionKey?;
 
@@ -33,12 +36,13 @@ public type Collection record {
 public type IndexingPolicy record {|
     string indexingMode = "";
     boolean automatic = true;
-    IncludedPath[] includedPaths = [];
+    IncludedPath[] includedPaths?;
+    IncludedPath[] excludedPaths = [];
 |};
 
 public  type IncludedPath record {|
     string path = "";
-    Index[] indexes = [];
+    Index[] indexes?;
 |};
 
 public  type ExcludedPath record {|
@@ -54,7 +58,37 @@ public type Index record {|
 public type PartitionKey record {|
     string[] paths = [];
     string kind = "";
-    string 'version?;
+    int 'version?;
+|};
+
+public type ConflictResolutionPolicyType record {|
+    string mode = "";
+    string conflictResolutionPath = "";
+    string conflictResolutionProcedure = "";
+|};
+
+public type CollectionList record {|
+    string _rid = "";
+    Collection[] DocumentCollections = [];
+    int _count = 0;
+|};
+
+public type PartitionKeyList record {|
+    string _rid = "";
+    PartitionKeyRanges[] PartitionKeyRanges = [];
+|};
+
+public type PartitionKeyRanges record {|
+    string _rid = "";
+    string id = "";
+    string _etag = "";
+    string minInclusive = "";
+    string maxExclusive = "";
+    int ridPrefix?;
+    string _self = "";
+    int throughputFraction?;
+    string status = "";
+    int _ts = 0;
 |};
 
 public type AzureError distinct error;

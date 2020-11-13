@@ -1,11 +1,11 @@
-
+//import ballerina/io;
 
 function mapJsonToDatabaseType(json jsonPayload) returns Database {
 
     Database db = {};
     db.id = jsonPayload.id.toString();
     db._rid = jsonPayload._rid.toString();
-    db._ts  = jsonPayload._ts.toString();
+    db._ts = convertToInt(jsonPayload._ts);
     db._self  =jsonPayload._self.toString();
     db._etag  = jsonPayload._etag.toString();
     db._colls  = jsonPayload._colls.toString();
@@ -28,33 +28,44 @@ function mapJsonToCollectionType(json jsonPayload)returns @tainted Collection{
 
     coll.id = jsonPayload.id.toString();
     coll._rid = jsonPayload._rid.toString();
-    coll._ts = jsonPayload._ts.toString();
+    coll._ts = convertToInt(jsonPayload._ts);
     coll._self = jsonPayload._self.toString();
     coll._etag = jsonPayload._etag.toString();
-    coll._doc = jsonPayload._doc.toString();
+    coll._docs = jsonPayload._docs.toString();
     coll._sprocs = jsonPayload._sprocs.toString();
     coll._triggers =jsonPayload._triggers.toString();
     coll._udfs=jsonPayload._udfs.toString();
     coll._conflicts=jsonPayload._conflicts.toString();
-    
+    coll.allowMaterializedViews = convertToBoolean(jsonPayload.allowMaterializedViews);
+    coll.indexingPolicy = mapJsonToIndexingPolicy(<json>jsonPayload.indexingPolicy);
+    coll.partitionKey = convertJsonToPartitionKey(<json>jsonPayload.partitionKey);
     return coll;
 }
 
 
-function mapJsonToIndexingPolicy(json jsonPayload){
+function mapJsonToIndexingPolicy(json jsonPayload) returns @tainted IndexingPolicy{
 
     IndexingPolicy indp = {};
 
     indp.indexingMode = jsonPayload.indexingMode.toString();
-    indp.automatic = convertToBoolean(jsonPayload.indexingMode);
-    //indp.includedPaths = 
+    indp.automatic = convertToBoolean(jsonPayload.automatic);
+    indp.includedPaths =  convertToIncludedPathsArray(<json[]>jsonPayload.includedPaths);
+    indp.excludedPaths =  convertToIncludedPathsArray(<json[]>jsonPayload.excludedPaths);
+    return indp;
 }
 
 function mapJsonToIncludedPathsType(json jsonPayload) returns @tainted IncludedPath{
     IncludedPath ip = {};
 
     ip.path = jsonPayload.path.toString();
-    ip.indexes = convertToIndexArray(<json[]> jsonPayload.indexes);
+
+    if jsonPayload.indexes is error{
+            return ip;
+
+    }else{
+
+        ip.indexes = convertToIndexArray(<json[]>jsonPayload.indexes);
+    }
 
     return ip;
 }
@@ -70,6 +81,61 @@ function mapJsonToIndexType(json jsonPayload) returns Index{
     
 }
 
+function convertJsonToPartitionKey(json jsonPayload) returns @tainted PartitionKey{
+    PartitionKey pk = {};
+
+    pk.paths = convertToStringArray(<json[]>jsonPayload.paths);
+    pk.kind = jsonPayload.kind.toString();
+    pk.'version = convertToInt(jsonPayload.'version);
+
+    return pk;
+}
+
+function mapJsonToCollectionListType(json jsonPayload) returns @tainted CollectionList{
+
+    CollectionList cll = {};
+    cll._rid = jsonPayload._rid.toString();
+    cll._count = convertToInt(jsonPayload._count);
+    cll.DocumentCollections = convertToCollectionArray(<json[]>jsonPayload.DocumentCollections);
+
+    return cll;
+}
+
+function mapJsonToPartitionKeyType(json jsonPayload) returns @tainted PartitionKeyList{
+    
+    PartitionKeyList pkl = {};
+
+    pkl._rid = jsonPayload._rid.toString();
+    pkl.PartitionKeyRanges = convertToPartitionKeyRangeArray(<json[]>jsonPayload.PartitionKeyRanges);
+
+    return pkl;
+
+}
+
+function mapJsonToPartitionKeyRange(json jsonPayload) returns @tainted PartitionKeyRanges{
+    
+    PartitionKeyRanges pkr = {};
+
+    pkr._rid = jsonPayload._rid.toString();
+    pkr.id = jsonPayload.id.toString();
+    pkr._etag = jsonPayload._etag.toString();
+    pkr.minInclusive = jsonPayload.minInclusive.toString();
+    pkr.maxExclusive = jsonPayload.maxExclusive.toString();
+    pkr._self = jsonPayload._self.toString();
+    pkr.status = jsonPayload.status.toString();
+    pkr._ts = convertToInt(jsonPayload._ts);
+
+    return pkr;
+
+}
+
+
+
+
+
+
+//**********************convert to arrays
+
 function convertToDatabaseArray(json[] sourceDatabaseArrayJsonObject) returns @tainted Database[] {
     Database[] databases = [];
     int i = 0;
@@ -84,7 +150,8 @@ function convertToIncludedPathsArray(json[] sourcePathArrayJsonObject) returns @
     IncludedPath[] includedpaths = [];
     int i = 0;
     foreach json jsonPath in sourcePathArrayJsonObject {
-        includedpaths[i] = mapJsonToIncludedPathsType(jsonPath);
+
+        includedpaths[i] = <IncludedPath>mapJsonToIncludedPathsType(jsonPath);
         i = i + 1;
     }
     return includedpaths;
@@ -99,3 +166,35 @@ function convertToIndexArray(json[] sourcePathArrayJsonObject) returns @tainted 
     }
     return indexes;
 }
+
+function convertToStringArray(json[] sourcePathArrayJsonObject) returns @tainted string[]{
+    string[] strings = [];
+    int i = 0;
+    foreach json str in sourcePathArrayJsonObject {
+        strings[i] = str.toString();
+        i = i + 1;
+    }
+    return strings;
+}
+
+function convertToCollectionArray(json[] sourceCollectionArrayJsonObject) returns @tainted Collection[] {
+    Collection[] collections = [];
+    int i = 0;
+    foreach json jsonCollection in sourceCollectionArrayJsonObject {
+        collections[i] = mapJsonToCollectionType(jsonCollection);
+        i = i + 1;
+    }
+    return collections;
+}
+
+function convertToPartitionKeyRangeArray(json[] sourceCollectionArrayJsonObject) returns @tainted PartitionKeyRanges[]{
+    PartitionKeyRanges[] pkranges = [];
+    int i = 0;
+    foreach json jsonCollection in sourceCollectionArrayJsonObject {
+        pkranges[i] = mapJsonToPartitionKeyRange(jsonCollection);
+        i = i + 1;
+    }
+    return pkranges;
+}
+
+

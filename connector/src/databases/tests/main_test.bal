@@ -11,6 +11,7 @@ AuthConfig config = {
 };
 
 @test:Config{
+    enable: false
 
 }
 function createDB(){
@@ -34,6 +35,7 @@ function createDB(){
 
 
 @test:Config{
+    enable: false
 
 }
 function listAllDB(){
@@ -55,6 +57,7 @@ function listAllDB(){
 }
 
 @test:Config{
+    enable: false
 
 }
 function listOneDB(){
@@ -77,6 +80,7 @@ function listOneDB(){
 }
 
 @test:Config{
+    enable: false
 
 }
 function deleteDB(){
@@ -100,6 +104,9 @@ function deleteDB(){
 }
 function createCollection(){
 
+    io:println("--------------Create Collection-----------------------\n\n");
+
+
     Databases AzureCosmosClient = new(config);
 
     json partitionkey = {  
@@ -109,7 +116,100 @@ function createCollection(){
                         };
     string throughput = "400";
 
-    var t = AzureCosmosClient->createCollection("tempdb","mycollection3",(),partitionkey,());
+    var result = AzureCosmosClient->createCollection("hikall","mycollection1",(),partitionkey,());
+
+
+    if (result is Collection) {
+        io:println(result);
+    } else {
+        test:assertFail(msg = result.message());
+    }   
+    io:println("\n\n");
+
+}
+
+
+@test:Config{
+    enable: false
+
+}
+function getAllCollections(){
+
+    io:println("--------------Get All collections-----------------------\n\n");
+
+
+    Databases AzureCosmosClient = new(config);
+
+    var result = AzureCosmosClient->getAllCollections("hikall");
+
+    if (result is CollectionList) {
+        io:println(result);
+    } else {
+        test:assertFail(msg = result.message());
+    }
+   
+    io:println("\n\n");
+
+}
+
+@test:Config{
+        enable: false
+}
+function getOneCollection(){
+
+    io:println("--------------Get One collections-----------------------\n\n");
+
+
+    Databases AzureCosmosClient = new(config);
+
+    var result = AzureCosmosClient->getOneCollection("tempdb","tempcoll");
+
+    if (result is Collection) {
+        io:println(result);
+    } else {
+        test:assertFail(msg = result.message());
+    }
+   
+    io:println("\n\n");
+
+}
+
+@test:Config{
+        enable: false
+
+}
+function deleteCollection(){
+
+    io:println("--------------Delete one collection------------------------\n\n");
+
+
+    Databases AzureCosmosClient = new(config);
+    
+    var result = AzureCosmosClient->deleteCollection("tempdb","tempcoll5");
+
+    io:println(result);
+   
+    io:println("\n\n");
+
+}
+
+@test:Config{
+}
+function GetPartitionKeyRanges(){
+
+   io:println("--------------Get partition key------------------------\n\n");
+
+
+    Databases AzureCosmosClient = new(config);
+    
+    var result = AzureCosmosClient->getPartitionKeyRanges("tempdb","tempcoll");
+
+    if (result is PartitionKeyList) {
+        io:println(result);
+    } else {
+        test:assertFail(msg = result.message());
+    }   
+    io:println("\n\n");
 
 
 
