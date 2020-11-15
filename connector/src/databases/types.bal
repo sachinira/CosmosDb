@@ -91,5 +91,21 @@ public type PartitionKeyRanges record {|
     int _ts = 0;
 |};
 
+public type Document record {|
+    string id = "";
+    any document?;
+    string _rid = "";
+    int _ts = 0;
+    string _self = "";
+    string _etag = "";
+    string _attachments = "";
+|};
+
+public type DocumentList record {|
+    string _rid= "";
+    Document[] documents = [];
+    int _count = 0;
+|};
+
 public type AzureError distinct error;
 

@@ -1,4 +1,5 @@
 import ballerina/http;
+import ballerina/io;
 
 public  client class Databases{
     
@@ -11,6 +12,7 @@ public  client class Databases{
 
     private string resourceTypedb;
     private string resourceTypecoll;
+    private string resourceTypedoc;
 
     private string keyType;
     private string tokenVersion;
@@ -25,6 +27,8 @@ public  client class Databases{
 
         self.resourceTypedb = "dbs";
         self.resourceTypecoll= "colls";
+        self.resourceTypedoc = "docs";
+
         self.keyType = "master";
         self.tokenVersion = "1.0";
 
@@ -115,9 +119,7 @@ public  client class Databases{
 
         var response = self.basicClient->delete(string `/dbs/${dbname}`,req);
 
-        string res = check getDeleteResponse(response);
-
-        return res;
+        return check getDeleteResponse(response);
     }
 
     //Autoscaling policy and the throughput policices are same as the collections they must be implemented  
@@ -191,7 +193,7 @@ public  client class Databases{
         return mapJsonToCollectionType(jsonresponse);
     }
 
-     public function deleteCollection(string dbname,string colname) returns @tainted string|error{
+    public remote function deleteCollection(string dbname,string colname) returns @tainted string|error{
 
         http:Request req = new;
 
@@ -204,12 +206,10 @@ public  client class Databases{
         var response = self.basicClient->delete(string `/dbs/${dbname}/colls/${colname}`,req);
 
         
-        string resp = check getDeleteResponse(response);
-
-        return resp;
+        return check getDeleteResponse(response);
     }
 
-    public function getPartitionKeyRanges(string dbname,string colname) returns @tainted PartitionKeyList|error{
+    public remote function getPartitionKeyRanges(string dbname,string colname) returns @tainted PartitionKeyList|error{
 
         http:Request req = new;
 
@@ -229,6 +229,131 @@ public  client class Databases{
 
         //Replace Collection supports changing the indexing policy of a collection after creation.
         //Create collection with autoscale
+
+
+    public remote function createDocument(string dbname,string colname,json document,boolean? upsert,string? indexingdir,json partitionkey) returns @tainted Document|error{
+        
+        http:Request req = new;
+
+        string verb = "POST"; 
+        string resourceId = string `dbs/${dbname}/colls/${colname}`;
+        
+        req = check setHeaders(req,self.apiVersion,self.host,verb,self.resourceTypedoc,resourceId,self.masterKey,self.keyType,self.tokenVersion);
+        req = check setPartitionKeyHeader(req,partitionkey);
+
+        if indexingdir is string {
+            req = check setIndexingHeader(req,indexingdir);
+        }
+       
+        if upsert == true {
+            req = check setUpsertHeader(req,upsert);
+        }
+
+
+        req.setJsonPayload(document);
+        var response = self.basicClient->post(string `/dbs/${dbname}/colls/${colname}/docs`,req);
+
+        json jsonresponse = check parseResponseToJson(response);
+
+        
+        return mapJsonToDocument(jsonresponse);
+    }
+
+    public remote function listAllDocuments(string dbname,string colname) returns @tainted DocumentList|error{
+        
+        http:Request req = new;
+
+        string verb = "GET"; 
+        string resourceId = string `dbs/${dbname}/colls/${colname}`;
+        
+        req = check setHeaders(req,self.apiVersion,self.host,verb,self.resourceTypedoc,resourceId,self.masterKey,self.keyType,self.tokenVersion);
+
+
+        var response = self.basicClient->get(string `/dbs/${dbname}/colls/${colname}/docs`,req);
+
+        json jsonresponse = check parseResponseToJson(response);
+
+        
+        return mapJsonToDocumentList(jsonresponse);
+    }
+
+    public remote function listOneDocument(string dbname,string colname,string id,any partitionkey) returns @tainted Document|error{
+        
+        http:Request req = new;
+
+        string verb = "GET"; 
+        string resourceId = string `dbs/${dbname}/colls/${colname}/docs/${id}`;
+        
+        req = check setHeaders(req,self.apiVersion,self.host,verb,self.resourceTypedoc,resourceId,self.masterKey,self.keyType,self.tokenVersion);
+        req = check setPartitionKeyHeader(req,partitionkey);
+
+
+        var response = self.basicClient->get(string `/dbs/${dbname}/colls/${colname}/docs/${id}`,req);
+
+        json jsonresponse = check parseResponseToJson(response);
+
+        
+        return mapJsonToDocument(jsonresponse);
+    }
+
+    public remote function replaceDocument(string dbname,string colname,json document,string docid,any partitionkeyvalue) returns @tainted Document|error{
+        
+        http:Request req = new;
+
+        string verb = "PUT"; 
+        string resourceId = string `dbs/${dbname}/colls/${colname}/docs/${docid}`;
+        
+        req = check setHeaders(req,self.apiVersion,self.host,verb,self.resourceTypedoc,resourceId,self.masterKey,self.keyType,self.tokenVersion);
+        req = check setPartitionKeyHeader(req,partitionkeyvalue);
+
+        req.setJsonPayload(document);
+
+        var response = self.basicClient->put(string `/dbs/${dbname}/colls/${colname}/docs/${docid}`,req);
+
+        json jsonresponse = check parseResponseToJson(response);
+
+        
+        return mapJsonToDocument(jsonresponse);
+    }
+
+    public remote function deleteDocument(string dbname,string colname,string docid,any partitionkeyvalue) returns @tainted string|error{
+        
+        http:Request req = new;
+
+        string verb = "DELETE"; 
+        string resourceId = string `dbs/${dbname}/colls/${colname}/docs/${docid}`;
+        
+        req = check setHeaders(req,self.apiVersion,self.host,verb,self.resourceTypedoc,resourceId,self.masterKey,self.keyType,self.tokenVersion);
+        req = check setPartitionKeyHeader(req,partitionkeyvalue);
+
+
+        var response = self.basicClient->delete(string `/dbs/${dbname}/colls/${colname}/docs/${docid}`,req);
+        
+        return getDeleteResponse(response);
+    }
+
+
+    public remote function queryDocument(string dbname,string colname,json query,any partitionkeyvalue) returns @tainted json|error{
+        
+        http:Request req = new;
+
+        string verb = "POST"; 
+        string resourceId = string `dbs/${dbname}/colls/${colname}`;
+
+        req = check setHeadersForQuery(req);
+        req = check setHeaders(req,self.apiVersion,self.host,verb,self.resourceTypedoc,resourceId,self.masterKey,self.keyType,self.tokenVersion);
+        req = check setPartitionKeyHeader(req,partitionkeyvalue);
+
+        req.setJsonPayload(query);
+
+        var response = self.basicClient->post(string `/dbs/${dbname}/colls/${colname}/docs`,req);
+
+        json jsonresponse = check parseResponseToJson(response);
+
+                io:println(jsonresponse);
+
+        return (jsonresponse);
+    }
 
 }
 

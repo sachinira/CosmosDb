@@ -129,9 +129,32 @@ function mapJsonToPartitionKeyRange(json jsonPayload) returns @tainted Partition
 
 }
 
+function mapJsonToDocument(json jsonPayload) returns @tainted Document|error{
+    
+    Document doc = {};
 
+    doc.id = jsonPayload.id.toString();
+    doc._rid = jsonPayload._rid.toString();
+    doc._ts = convertToInt(jsonPayload._ts);
+    doc._self  =jsonPayload._self.toString();
+    doc._etag  = jsonPayload._etag.toString();
+    doc._attachments  = jsonPayload._attachments.toString();
 
+    doc.document = check jsonPayload.cloneWithType(anydata);
 
+    return doc;
+
+}
+
+function mapJsonToDocumentList(json jsonPayload) returns @tainted DocumentList|error{
+    DocumentList documentlist = {};
+
+    documentlist._rid = jsonPayload._rid.toString();
+    documentlist._count = convertToInt(jsonPayload._count);
+    documentlist.documents = convertToDocumentArray(<json[]>jsonPayload.Documents);
+
+    return documentlist;
+} 
 
 
 //**********************convert to arrays
@@ -195,6 +218,16 @@ function convertToPartitionKeyRangeArray(json[] sourceCollectionArrayJsonObject)
         i = i + 1;
     }
     return pkranges;
+}
+
+function convertToDocumentArray(json[] sourceDocumentArrayJsonObject) returns @tainted Document[] {
+    Document[] documents = [];
+    int i = 0;
+    foreach json doc in sourceDocumentArrayJsonObject { 
+        documents[i] = <Document>mapJsonToDocument(doc);
+        i = i + 1;
+    }
+    return documents;
 }
 
 
