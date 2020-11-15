@@ -169,9 +169,24 @@ public function setUpsertHeader(http:Request req,boolean? upsert) returns http:R
     return req;
 }
 
-public function setAtupilotThroughputHeader(http:Request req,string option) returns http:Request|error{
 
-    req.setHeader("x-ms-indexing-directive",option);
+public function setThroughputOrAutopilotHeader(http:Request req,int? throughput,json? option) returns http:Request|error{
+
+
+    if throughput is int &&  option is (){
+            //validate throughput The minimum is 400 up to 1,000,000 (or higher by requesting a limit increase).
+        req.setHeader("x-ms-offer-throughput",option.toString());
+
+    }else if throughput is () &&  option != (){
+
+        req.setHeader("x-ms-cosmos-offer-autopilot-settings",option.toString());
+
+    }else if throughput is int &&  option != (){
+        
+        return prepareError("Cannot set both x-ms-offer-throughput and x-ms-cosmos-offer-autopilot-settings headers at once");
+    }
+
+
     return req;
 }
 

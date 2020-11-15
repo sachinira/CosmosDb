@@ -33,6 +33,8 @@ function createDB(){
 
 }
 
+//create db with throughput / autoscale
+
 
 @test:Config{
     enable: false
@@ -116,7 +118,7 @@ function createCollection(){
                         };
     string throughput = "400";
 
-    var result = AzureCosmosClient->createCollection("tempdb","mycollection1",(),partitionkey,());
+    var result = AzureCosmosClient->createCollection("tempdb","mycollection1",partitionkey,(),(),());
 
 
     if (result is Collection) {
@@ -127,6 +129,8 @@ function createCollection(){
     io:println("\n\n");
 
 }
+
+//create collection with autoscale indexing policy and throughput
 
 
 @test:Config{
@@ -283,6 +287,8 @@ function createDocument(){
             io:println("\n\n");
     }
 }
+
+//with indexing or upsert headers
 
 
 @test:Config{

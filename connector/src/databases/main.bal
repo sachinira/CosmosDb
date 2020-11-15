@@ -45,7 +45,7 @@ public  client class Databases{
     }
 
     //Create a database
-    public remote function createDatabase(string dbname,string? throughput,json? autoscale) returns @tainted Database|error{
+    public remote function createDatabase(string dbname,int? throughput,json? autoscale) returns @tainted Database|error{
 
 
         http:Request req = new;
@@ -55,10 +55,7 @@ public  client class Databases{
         string requestPath = string `/dbs`;
 
         req = check setHeaders(req,self.apiVersion,self.host,verb,self.resourceTypedb,resourceId,self.masterKey,self.keyType,self.tokenVersion);
-
-        //self.authRequest.setHeader("x-ms-offer-throughput",throughput);
-        //self.authRequest.setHeader("x-ms-cosmos-offer-autopilot-settings",autoscale);
-        
+        req = check setThroughputOrAutopilotHeader(req,throughput,autoscale);
 
         json body = {
             id: dbname
@@ -128,7 +125,7 @@ public  client class Databases{
 
     //Collections
 
-    public remote function createCollection(string dbname,string colname,json? indexingpolicy,json partitionkey,string? throughput) returns @tainted Collection|error{
+    public remote function createCollection(string dbname,string colname,json partitionkey,json? indexingpolicy,int? throughput,json? autoscale) returns @tainted Collection|error{
 
         http:Request req = new;
 
@@ -136,6 +133,7 @@ public  client class Databases{
         string resourceId = string `dbs/${dbname}`;
 
         req = check setHeaders(req,self.apiVersion,self.host,verb,self.resourceTypecoll,resourceId,self.masterKey,self.keyType,self.tokenVersion);
+        req = check setThroughputOrAutopilotHeader(req,throughput,autoscale);
 
 
         json body = {
@@ -144,7 +142,6 @@ public  client class Databases{
         };
 
         json finalc = check body.mergeJson(indexingpolicy);
-
 
         req.setJsonPayload(finalc);
 
