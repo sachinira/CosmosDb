@@ -128,35 +128,113 @@ public function setHeaders(http:Request req,string apiversion,string host,string
 
     req.setHeader("x-ms-version",apiversion);
     req.setHeader("Host",host);
-    req.setHeader("Accept","application/json");
+    req.setHeader("Accept","*/*");
     req.setHeader("Connection","keep-alive");
 
     string? date = check getTime();
 
-    //var uuid = createRandomUUID();
- 
-    //io:println(uuid);
+
     
     if date is string{
             //string? s = check generateToken(verb,resourceType,resourceId,keys,keyType,tokenVersion,date);
 
-            string? s = generateTokenNew(verb,resourceType,resourceId,keys,keyType,tokenVersion);
+        string? s = generateTokenNew(verb,resourceType,resourceId,keys,keyType,tokenVersion);
 
-            req.setHeader("x-ms-date",date);
-            if s is string{
-                req.setHeader("Authorization",s);
+        req.setHeader("x-ms-date",date);
+        if s is string{
+            req.setHeader("Authorization",s);
 
-            }else{
-
-                io:println("token is null");
-
-            }
         }else{
-            io:println("date is null");
+
+            io:println("token is null");
+
         }
+    }else{
+        io:println("date is null");
+    }
 
     return req;
 }
+
+
+public function setIndexingHeader(http:Request req,string indexingDirectory) returns http:Request|error{
+
+    req.setHeader("x-ms-indexing-directive",indexingDirectory);
+    return req;
+}
+
+public function setUpsertHeader(http:Request req,boolean? upsert) returns http:Request|error{
+
+    req.setHeader("x-ms-documentdb-is-upsert",upsert.toString());
+    return req;
+}
+
+
+public function setThroughputOrAutopilotHeader(http:Request req,int? throughput,json? option) returns http:Request|error{
+
+
+    if throughput is int &&  option is (){
+            //validate throughput The minimum is 400 up to 1,000,000 (or higher by requesting a limit increase).
+        req.setHeader("x-ms-offer-throughput",option.toString());
+
+    }else if throughput is () &&  option != (){
+
+        req.setHeader("x-ms-cosmos-offer-autopilot-settings",option.toString());
+
+    }else if throughput is int &&  option != (){
+        
+        return prepareError("Cannot set both x-ms-offer-throughput and x-ms-cosmos-offer-autopilot-settings headers at once");
+    }
+
+
+    return req;
+}
+
+public function setPartitionKeyHeader(http:Request req,any pk) returns http:Request|error{
+
+    req.setHeader("x-ms-documentdb-partitionkey",string `[${pk.toString()}]`);
+    return req;
+}
+
+public function ignorePartitionKeyHeader(http:Request req,boolean isignore) returns http:Request|error{
+
+    req.setHeader("x-ms-documentdb-query-enablecrosspartition",isignore.toString());
+    return req;
+}
+
+public function setHeadersforDocumentCount(http:Request req,int? maxitemcount,string? continuation,string? consistancylevel) returns http:Request|error{
+
+    req.setHeader("x-ms-max-item-count",maxitemcount.toString());
+    req.setHeader("x-ms-continuation",continuation.toString());
+    
+    return req;
+}
+
+public function setHeadersForConsistancy(http:Request req,string? consistancylevel,string? sessiontoken) returns http:Request|error{
+
+    req.setHeader("x-ms-consistency-level",consistancylevel.toString());
+    req.setHeader("x-ms-session-token",sessiontoken.toString());
+    return req;
+}
+
+public function setHeadersForChangeFeed(http:Request req,string? aim,string? nonmatch) returns http:Request|error{
+
+    req.setHeader("A-IM",aim.toString());
+    req.setHeader("If-None-Match",nonmatch.toString());
+    return req;
+}
+
+public function setHeadersForQuery(http:Request req) returns http:Request|error{
+    
+    req.setHeader("Content-Type","application/query+json");
+    req.setHeader("x-ms-documentdb-isquery","True");
+    //req.setHeader("x-ms-documentdb-query-enablecrosspartition","True");
+
+    return req;
+
+}
+//x-ms-documentdb-partitionkeyrangeid
+//x-ms-documentdb-query-enablecrosspartition
 
 public function generateTokenNew(string verb, string resourceType, string resourceId, string keys, string keyType, string tokenVersion) returns string?{
     var token = generateTokenJ(java:fromString(verb),java:fromString(resourceType),java:fromString(resourceId),java:fromString(keys),java:fromString(keyType),java:fromString(tokenVersion));
