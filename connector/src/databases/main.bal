@@ -464,7 +464,7 @@ public  client class Databases{
         
     }
 
-     public remote function deleteStoredProcedure(string dbname,string colname,string sprocid) returns @tainted json|error{
+    public remote function deleteStoredProcedure(string dbname,string colname,string sprocid) returns @tainted json|error{
 
         http:Request req = new;
 
@@ -478,6 +478,28 @@ public  client class Databases{
         return getDeleteResponse(response);
         
     }
+
+    public remote function executeStoredProcedure(string dbname,string colname,string sprocid,any[]? parameters) returns @tainted json|error{
+
+        http:Request req = new;
+
+        string verb = "POST"; 
+        string resourceId = string `dbs/${dbname}/colls/${colname}/sprocs/${sprocid}`;
+
+        req = check setHeaders(req,self.apiVersion,self.host,verb,self.resourceTypesproc,resourceId,self.masterKey,self.keyType,self.tokenVersion);
+        req.setTextPayload(parameters.toString());
+
+        var response = self.basicClient->post(string `/dbs/${dbname}/colls/${colname}/sprocs/${sprocid}`,req);
+
+       // string s =  check response.getContentType();
+
+        json jsonreponse = check parseResponseToJson(response);
+
+        return jsonreponse;
+        
+    }
+
+    
 
 }
 

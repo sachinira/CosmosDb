@@ -493,8 +493,8 @@ function replaceSproc(){
 
 
     Databases AzureCosmosClient = new(config);
-    string sprocid = "sproc-a0b8c160-3efd-484b-a4e9-445e3dd25528";
-    string sproc = "function tax(income) {\r\n    if(income == undefined) \r\n        throw 'no input';\r\n    if (income < 1000) \r\n        return income * 0.1;\r\n    else if (income < 10000) \r\n        return income * 0.2;\r\n    else\r\n        return income * 0.4;\r\n}"; 
+    string sprocid = "sproc-561d47d6-36d2-4fd5-b20e-143550737f55";
+    string sproc = "function tax(income) {\r\n    if(income == undefined) \r\n        return 'no input';\r\n    if (income < 1000) \r\n        return income * 0.1;\r\n    else if (income < 10000) \r\n        return income * 0.2;\r\n    else\r\n        return income * 0.4;\r\n}"; 
 
     var result = AzureCosmosClient->replaceStoredProcedure("hikall","mycollection1",sproc,sprocid);
        
@@ -530,7 +530,7 @@ function getAllSprocs(){
 }
 
 @test:Config{
-   // enable: false
+   enable: false
 }
 function deleteOneSproc(){
 
@@ -541,6 +541,29 @@ function deleteOneSproc(){
     string sprocid = "sproc-fe221415-47ce-4cf5-a633-59875c3c4b5d";
 
     var result = AzureCosmosClient->deleteStoredProcedure("hikall","mycollection1",sprocid);
+       
+        if result is json {
+            io:println(result);
+        } else {
+        test:assertFail(msg = result.message());
+        }   
+            io:println("\n\n");
+    
+}
+
+@test:Config{
+   //enable: false
+}
+function executeOneSproc(){
+
+   io:println("-----------------Execute Stored Procedure-----------------------\n\n");
+
+
+    Databases AzureCosmosClient = new(config);
+    string sprocid = "sproc-561d47d6-36d2-4fd5-b20e-143550737f55";
+    int[] array = [500];
+
+    var result = AzureCosmosClient->executeStoredProcedure("hikall","mycollection1",sprocid,array);
        
         if result is json {
             io:println(result);
