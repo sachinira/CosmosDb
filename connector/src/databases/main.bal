@@ -14,6 +14,7 @@ public  client class Databases{
     private string resourceTypecoll;
     private string resourceTypedoc;
     private string resourceTypeattchment;
+    private string resourceTypesproc;
 
     private string keyType;
     private string tokenVersion;
@@ -30,6 +31,7 @@ public  client class Databases{
         self.resourceTypecoll= "colls";
         self.resourceTypedoc = "docs";
         self.resourceTypeattchment = "attachments";
+        self.resourceTypesproc = "sprocs";
 
         self.keyType = "master";
         self.tokenVersion = "1.0";
@@ -397,6 +399,31 @@ public  client class Databases{
 
     //------------------------------Stored Procedures------------------------------------------
 
+     public remote function createStoredProcedure(string dbname,string colname,string sproc,string sprocid) returns @tainted StoredProcedure|error{
+
+
+        http:Request req = new;
+
+        string verb = "POST"; 
+        string resourceId = string `dbs/${dbname}/colls/${colname}`;
+        //string requestPath = string `/dbs`;
+
+        req = check setHeaders(req,self.apiVersion,self.host,verb,self.resourceTypesproc,resourceId,self.masterKey,self.keyType,self.tokenVersion);
+
+        json spbody = {
+            id: sprocid,
+            body:sproc
+        };
+
+        req.setJsonPayload(spbody);
+
+        var response = self.basicClient->post(string `/dbs/${dbname}/colls/${colname}/sprocs`,req);
+
+        json jsonreponse = check parseResponseToJson(response);
+
+        return mapJsonToSproc(jsonreponse);
+        
+    }
 
 }
 

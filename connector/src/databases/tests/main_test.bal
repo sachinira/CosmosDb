@@ -11,7 +11,7 @@ AuthConfig config = {
 };
 
 @test:Config{
-
+    enable: false
 }
 function createDB(){
 
@@ -36,8 +36,7 @@ function createDB(){
 
 
 @test:Config{
-    //enable: false
-
+    enable: false
 }
 function listAllDB(){
 
@@ -58,8 +57,7 @@ function listAllDB(){
 }
 
 @test:Config{
-    //enable: false
-
+    enable: false
 }
 function listOneDB(){
 
@@ -82,7 +80,6 @@ function listOneDB(){
 
 @test:Config{
     enable: false
-
 }
 function deleteDB(){
 
@@ -100,8 +97,7 @@ function deleteDB(){
 }
 
 @test:Config{
-           // enable: false
-
+    enable: false
 }
 function createCollection(){
 
@@ -133,7 +129,7 @@ function createCollection(){
 
 
 @test:Config{
-   // enable: false
+   enable: false
 
 }
 function getAllCollections(){
@@ -156,7 +152,7 @@ function getAllCollections(){
 }
 
 @test:Config{
-       // enable: false
+    enable: false
 }
 function getOneCollection(){
 
@@ -178,9 +174,7 @@ function getOneCollection(){
 }
 
 @test:Config{
-
     enable: false
-
 }
 function deleteCollection(){
 
@@ -198,8 +192,7 @@ function deleteCollection(){
 }
 
 @test:Config{
-   // enable: false
-
+   enable: false
 }
 function GetPartitionKeyRanges(){
 
@@ -221,8 +214,7 @@ function GetPartitionKeyRanges(){
 
 
 @test:Config{
-  //  enable: false
-
+  enable: false
 }
 function createDocument(){
 
@@ -293,8 +285,7 @@ function createDocument(){
 
 
 @test:Config{
-   // enable: false
-
+   enable: false
 }
 function GetDocumentList(){
 
@@ -316,7 +307,6 @@ function GetDocumentList(){
 
 @test:Config{
     enable: false
-
 }
 function GetOneDocument(){
 
@@ -431,7 +421,7 @@ function deleteDocument(){
 }
 
 @test:Config{
-        enable: false
+    enable: false
 }
 function queryDocument(){
 
@@ -467,6 +457,31 @@ function queryDocument(){
     
 }
 
+
+@test:Config{
+   // enable: false
+}
+function createSproc(){
+
+
+   io:println("--------------Query one document-----------------------\n\n");
+
+
+    Databases AzureCosmosClient = new(config);
+    var uuid = createRandomUUID();
+    string sprocid = string `sproc-${uuid.toString()}`;
+    string sproc = "function () {\r\n    var context = getContext();\r\n    var response = context.getResponse();\r\n\r\n    response.setBody(\"Hello, World\");\r\n}"; 
+
+    var result = AzureCosmosClient->createStoredProcedure("hikall","mycollection1",sproc,sprocid);
+       
+        if result is StoredProcedure {
+            io:println(result);
+        } else {
+        test:assertFail(msg = result.message());
+        }   
+            io:println("\n\n");
+    
+}
 
 function createRandomUUID() returns handle = @java:Method {
     name: "randomUUID",

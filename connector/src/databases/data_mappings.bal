@@ -1,5 +1,16 @@
 //import ballerina/java.arrays;
 
+function mapCommonElements(json jsonPayload)returns @tainted Common|error{
+
+    Common comm = {};
+    comm._rid = jsonPayload._rid.toString();
+    comm._ts = convertToInt(jsonPayload._ts);
+    comm._self  =jsonPayload._self.toString();
+    comm._etag  = jsonPayload._etag.toString();
+
+    return comm;
+}
+
 function mapJsonToDatabaseType(json jsonPayload) returns Database {
 
     Database db = {};
@@ -155,6 +166,17 @@ function mapJsonToDocumentList(json jsonPayload) returns @tainted DocumentList|e
 
     return documentlist;
 } 
+
+function mapJsonToSproc(json jsonPayload)returns @tainted StoredProcedure|error{
+
+    StoredProcedure sproc = {};
+
+    sproc.body = jsonPayload.body.toString();
+    sproc.id = jsonPayload.id.toString();
+    sproc.common = check mapCommonElements(jsonPayload);
+
+    return sproc;
+}
 
 
 //**********************convert to arrays

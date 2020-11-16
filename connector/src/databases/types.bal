@@ -107,7 +107,18 @@ public type DocumentList record {|
     int _count = 0;
 |};
 
+public type StoredProcedure record {
+    string body = "";
+    string id = "";
+    Common common = {};
+};
 
+public type Common record {|
+    string _rid = "";
+    int _ts = 0;
+    string _self = "";
+    string _etag = "";
+|};
 
 public type AzureError distinct error;
 
