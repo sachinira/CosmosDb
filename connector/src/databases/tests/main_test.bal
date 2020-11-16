@@ -493,8 +493,8 @@ function replaceSproc(){
 
 
     Databases AzureCosmosClient = new(config);
-    string sprocid = "sproc-561d47d6-36d2-4fd5-b20e-143550737f55";
-    string sproc = "function tax(income) {\r\n    if(income == undefined) \r\n        return 'no input';\r\n    if (income < 1000) \r\n        return income * 0.1;\r\n    else if (income < 10000) \r\n        return income * 0.2;\r\n    else\r\n        return income * 0.4;\r\n}"; 
+    string sprocid = "sproc-50c4f0df-b25d-48ef-b936-d31a55798193";
+    string sproc = "function (personToGreet) {\r\n    var context = getContext();\r\n    var response = context.getResponse();\r\n\r\n    response.setBody(\"Hello, \" + personToGreet);\r\n}"; 
 
     var result = AzureCosmosClient->replaceStoredProcedure("hikall","mycollection1",sproc,sprocid);
        
@@ -560,8 +560,8 @@ function executeOneSproc(){
 
 
     Databases AzureCosmosClient = new(config);
-    string sprocid = "sproc-561d47d6-36d2-4fd5-b20e-143550737f55";
-    int[] array = [500];
+    string sprocid = "sproc-50c4f0df-b25d-48ef-b936-d31a55798193";
+    string[] array = ["Sachi"];
 
     var result = AzureCosmosClient->executeStoredProcedure("hikall","mycollection1",sprocid,array);
        
