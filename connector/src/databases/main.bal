@@ -13,6 +13,7 @@ public  client class Databases{
     private string resourceTypedb;
     private string resourceTypecoll;
     private string resourceTypedoc;
+    private string resourceTypeattchment;
 
     private string keyType;
     private string tokenVersion;
@@ -28,6 +29,7 @@ public  client class Databases{
         self.resourceTypedb = "dbs";
         self.resourceTypecoll= "colls";
         self.resourceTypedoc = "docs";
+        self.resourceTypeattchment = "attachments";
 
         self.keyType = "master";
         self.tokenVersion = "1.0";
@@ -44,7 +46,8 @@ public  client class Databases{
 
     }
 
-    //Create a database
+    //--------------------------------------Databases --------------------------------------
+
     public remote function createDatabase(string dbname,int? throughput,json? autoscale) returns @tainted Database|error{
 
 
@@ -119,11 +122,9 @@ public  client class Databases{
         return check getDeleteResponse(response);
     }
 
-    //Autoscaling policy and the throughput policices are same as the collections they must be implemented  
 
-    //*********************************************
 
-    //Collections
+    //-----------------------------------------Collections--------------------------------------------
 
     public remote function createCollection(string dbname,string colname,json partitionkey,json? indexingpolicy,int? throughput,json? autoscale) returns @tainted Collection|error{
 
@@ -226,6 +227,8 @@ public  client class Databases{
 
         //Replace Collection supports changing the indexing policy of a collection after creation.
 
+
+    //------------------------------Documents------------------------------------------
 
     public remote function createDocument(string dbname,string colname,json document,boolean? upsert,string? indexingdir,json partitionkey) returns @tainted Document|error{
         
@@ -391,6 +394,35 @@ public  client class Databases{
 
         return (jsonresponse);
     }
+
+
+    //--------------------------Attachments-----------------------------------
+
+    public remote function createAttachment(string dbname,string colname,string documentid,string? attachmentid,string? contenttype,string? path) returns @tainted Attachment|error{
+        
+        http:Request req = new;
+
+        string verb = "POST"; 
+        string resourceId = string `dbs/${dbname}/colls/${colname}/docs/${documentid}`;
+        
+        req = check setHeaders(req,self.apiVersion,self.host,verb,self.resourceTypeattchment,resourceId,self.masterKey,self.keyType,self.tokenVersion);
+
+
+        json attachment = {
+            id : attachmentid,
+            contentType:contenttype,
+            Media:path
+        };
+
+        req.setJsonPayload(attachment);
+        var response = self.basicClient->post(string `/dbs/${dbname}/colls/${colname}/docs/${documentid}/attachments`,req);
+
+        json jsonresponse = check parseResponseToJson(response);
+
+        
+        return mapJsonToAttachment(jsonresponse);
+    }
+
 
 }
 

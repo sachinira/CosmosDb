@@ -156,6 +156,20 @@ function mapJsonToDocumentList(json jsonPayload) returns @tainted DocumentList|e
     return documentlist;
 } 
 
+function mapJsonToAttachment(json jsonPayload) returns @tainted Attachment|error{
+
+    Attachment attachment = {};
+
+    attachment.id = jsonPayload.id.toString();
+    attachment.contentType = jsonPayload.contentType.toString();
+    attachment.media = jsonPayload.media.toString();
+    attachment._rid = jsonPayload._rid.toString();
+    attachment._ts = convertToInt(jsonPayload._ts);
+    attachment._self = jsonPayload._self.toString();
+    attachment._etag = jsonPayload._etag.toString();
+
+    return attachment;
+}
 
 //**********************convert to arrays
 
