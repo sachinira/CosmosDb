@@ -11,7 +11,6 @@ AuthConfig config = {
 };
 
 @test:Config{
-    enable: false
 
 }
 function createDB(){
@@ -21,7 +20,7 @@ function createDB(){
 
     Databases AzureCosmosClient = new(config);
     
-    var result = AzureCosmosClient->createDatabase("heloojava",(),());
+    var result = AzureCosmosClient->createDatabase("heloo",(),());
 
      if (result is Database) {
         io:println(result);
@@ -37,7 +36,7 @@ function createDB(){
 
 
 @test:Config{
-    enable: false
+    //enable: false
 
 }
 function listAllDB(){
@@ -59,7 +58,7 @@ function listAllDB(){
 }
 
 @test:Config{
-    enable: false
+    //enable: false
 
 }
 function listOneDB(){
@@ -69,7 +68,7 @@ function listOneDB(){
 
     Databases AzureCosmosClient = new(config);
     
-    var result = AzureCosmosClient->listOneDatabase("tempdb");
+    var result = AzureCosmosClient->listOneDatabase("heloo");
 
     if (result is Database) {
         io:println(result);
@@ -101,7 +100,7 @@ function deleteDB(){
 }
 
 @test:Config{
-            enable: false
+           // enable: false
 
 }
 function createCollection(){
@@ -118,7 +117,7 @@ function createCollection(){
                         };
     string throughput = "400";
 
-    var result = AzureCosmosClient->createCollection("tempdb","mycollection1",partitionkey,(),(),());
+    var result = AzureCosmosClient->createCollection("heloo","mycollection1",partitionkey,(),(),());
 
 
     if (result is Collection) {
@@ -134,7 +133,7 @@ function createCollection(){
 
 
 @test:Config{
-    enable: false
+   // enable: false
 
 }
 function getAllCollections(){
@@ -144,7 +143,7 @@ function getAllCollections(){
 
     Databases AzureCosmosClient = new(config);
 
-    var result = AzureCosmosClient->getAllCollections("hikall");
+    var result = AzureCosmosClient->getAllCollections("heloo");
 
     if (result is CollectionList) {
         io:println(result);
@@ -157,7 +156,7 @@ function getAllCollections(){
 }
 
 @test:Config{
-        enable: false
+       // enable: false
 }
 function getOneCollection(){
 
@@ -166,7 +165,7 @@ function getOneCollection(){
 
     Databases AzureCosmosClient = new(config);
 
-    var result = AzureCosmosClient->getOneCollection("tempdb","tempcoll");
+    var result = AzureCosmosClient->getOneCollection("heloo","mycollection1");
 
     if (result is Collection) {
         io:println(result);
@@ -199,7 +198,7 @@ function deleteCollection(){
 }
 
 @test:Config{
-    enable: false
+   // enable: false
 
 }
 function GetPartitionKeyRanges(){
@@ -209,7 +208,7 @@ function GetPartitionKeyRanges(){
 
     Databases AzureCosmosClient = new(config);
     
-    var result = AzureCosmosClient->getPartitionKeyRanges("tempdb","tempcoll");
+    var result = AzureCosmosClient->getPartitionKeyRanges("heloo","mycollection1");
 
     if (result is PartitionKeyList) {
         io:println(result);
@@ -222,7 +221,7 @@ function GetPartitionKeyRanges(){
 
 
 @test:Config{
-    enable: false
+  //  enable: false
 
 }
 function createDocument(){
@@ -279,7 +278,7 @@ function createDocument(){
 
     if finalj is json{
 
-        var result = AzureCosmosClient->createDocument("hikall","mycollection1",finalj,true,(),<json>custom.AccountNumber);
+        var result = AzureCosmosClient->createDocument("heloo","mycollection1",finalj,true,(),<json>custom.AccountNumber);
        
         if result is Document {
             io:println(result);
@@ -294,7 +293,7 @@ function createDocument(){
 
 
 @test:Config{
-    enable: false
+   // enable: false
 
 }
 function GetDocumentList(){
@@ -304,7 +303,7 @@ function GetDocumentList(){
 
     Databases AzureCosmosClient = new(config);
     
-    var result = AzureCosmosClient->listAllDocuments("tempdb","tempcoll",());
+    var result = AzureCosmosClient->listAllDocuments("heloo","mycollection1",());
 
     if (result is DocumentList) {
         io:println(result);
@@ -328,7 +327,7 @@ function GetOneDocument(){
 
     Databases AzureCosmosClient = new(config);
     
-    var result = AzureCosmosClient->listOneDocument("hikall","mycollection1",documentid,partitionkey);
+    var result = AzureCosmosClient->listOneDocument("heloo","mycollection1",documentid,partitionkey);
 
     if (result is Document) {
         io:println(result);
@@ -469,6 +468,8 @@ function queryDocument(){
 }
 
 @test:Config{
+            enable: false
+
 
 }
 function CreateAttachment(){

@@ -396,7 +396,7 @@ public  client class Databases{
     }
 
 
-    //--------------------------Attachments-----------------------------------
+    //-----------------------------------------------Attachments-----------------------------------
 
     public remote function createAttachment(string dbname,string colname,string documentid,string? attachmentid,string? contenttype,string? path) returns @tainted Attachment|error{
         
@@ -409,9 +409,9 @@ public  client class Databases{
 
 
         json attachment = {
-            id : attachmentid,
-            contentType:contenttype,
-            Media:path
+            "id" : attachmentid,
+            "contentType":contenttype,
+            "Media":path
         };
 
         req.setJsonPayload(attachment);
@@ -423,7 +423,30 @@ public  client class Databases{
         return mapJsonToAttachment(jsonresponse);
     }
 
+    public remote function replaceAttachment(string dbname,string colname,string documentid,string attachmentid,string? contenttype,string? path) returns @tainted Attachment|error{
+        
+        http:Request req = new;
 
+        string verb = "PUT"; 
+        string resourceId = string `dbs/${dbname}/colls/${colname}/docs/${documentid}`;
+        
+        req = check setHeaders(req,self.apiVersion,self.host,verb,self.resourceTypeattchment,resourceId,self.masterKey,self.keyType,self.tokenVersion);
+
+
+        json attachment = {
+            id : attachmentid,
+            contentType:contenttype,
+            Media:path
+        };
+
+        req.setJsonPayload(attachment);
+        var response = self.basicClient->put(string `/dbs/${dbname}/colls/${colname}/docs/${documentid}/attachments`,req);
+
+        json jsonresponse = check parseResponseToJson(response);
+
+        
+        return mapJsonToAttachment(jsonresponse);
+    }
 }
 
 public type AuthConfig record {
