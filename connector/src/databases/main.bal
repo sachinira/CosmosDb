@@ -401,7 +401,6 @@ public  client class Databases{
 
     public remote function createStoredProcedure(string dbname,string colname,string sproc,string sprocid) returns @tainted StoredProcedure|error{
 
-
         http:Request req = new;
 
         string verb = "POST"; 
@@ -445,6 +444,23 @@ public  client class Databases{
         json jsonreponse = check parseResponseToJson(response);
 
         return mapJsonToSproc(jsonreponse);
+        
+    }
+
+    public remote function listStoredProcedures(string dbname,string colname) returns @tainted StoredProcedureList|error{
+
+        http:Request req = new;
+
+        string verb = "GET"; 
+        string resourceId = string `dbs/${dbname}/colls/${colname}`;
+
+        req = check setHeaders(req,self.apiVersion,self.host,verb,self.resourceTypesproc,resourceId,self.masterKey,self.keyType,self.tokenVersion);
+
+        var response = self.basicClient->get(string `/dbs/${dbname}/colls/${colname}/sprocs`,req);
+
+        json jsonreponse = check parseResponseToJson(response);
+
+        return mapJsonToSprocList(jsonreponse);
         
     }
 

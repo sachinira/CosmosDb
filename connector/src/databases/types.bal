@@ -113,6 +113,12 @@ public type StoredProcedure record {
     Common common = {};
 };
 
+public type StoredProcedureList record {
+    string _rid = "";
+    StoredProcedure[] storedprocedures = [];
+    int _count = 0;
+};
+
 public type Common record {|
     string _rid = "";
     int _ts = 0;

@@ -178,6 +178,17 @@ function mapJsonToSproc(json jsonPayload)returns @tainted StoredProcedure|error{
     return sproc;
 }
 
+function mapJsonToSprocList(json jsonPayload)returns @tainted StoredProcedureList|error{
+
+    StoredProcedureList sproclist = {};
+
+    sproclist._rid = jsonPayload._rid.toString();
+    sproclist.storedprocedures = convertToSprocArray(<json[]>jsonPayload.StoredProcedures);
+    sproclist._count = convertToInt(jsonPayload._count);
+
+    return sproclist;
+}
+
 
 //**********************convert to arrays
 
@@ -250,6 +261,16 @@ function convertToDocumentArray(json[] sourceDocumentArrayJsonObject) returns @t
         i = i + 1;
     }
     return documents;
+}
+
+function convertToSprocArray(json[] sourceSprocArrayJsonObject) returns @tainted StoredProcedure[] {
+    StoredProcedure[] sprocs = [];
+    int i = 0;
+    foreach json sproc in sourceSprocArrayJsonObject { 
+        sprocs[i] = <StoredProcedure>mapJsonToSproc(sproc);
+        i = i + 1;
+    }
+    return sprocs;
 }
 
 

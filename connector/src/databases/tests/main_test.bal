@@ -485,7 +485,7 @@ function createSproc(){
 
 
 @test:Config{
-   // enable: false
+   enable: false
 }
 function replaceSproc(){
 
@@ -499,6 +499,28 @@ function replaceSproc(){
     var result = AzureCosmosClient->replaceStoredProcedure("hikall","mycollection1",sproc,sprocid);
        
         if result is StoredProcedure {
+            io:println(result);
+        } else {
+        test:assertFail(msg = result.message());
+        }   
+            io:println("\n\n");
+    
+}
+
+@test:Config{
+   // enable: false
+}
+function getAllSprocs(){
+
+   io:println("-----------------Get All Stored Procedures-----------------------\n\n");
+
+
+    Databases AzureCosmosClient = new(config);
+   
+
+    var result = AzureCosmosClient->listStoredProcedures("hikall","mycollection1");
+       
+        if result is StoredProcedureList {
             io:println(result);
         } else {
         test:assertFail(msg = result.message());
