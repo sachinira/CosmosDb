@@ -107,15 +107,7 @@ public type DocumentList record {|
     int _count = 0;
 |};
 
-public type Attachment record {|
-    string id = "";
-    string contentType = "";
-    string media = "";
-    string _rid = "";
-    int _ts = 0;
-    string _self = "";
-    string _etag = "";
-|};
+
 
 public type AzureError distinct error;
 

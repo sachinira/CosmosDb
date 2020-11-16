@@ -467,31 +467,6 @@ function queryDocument(){
     
 }
 
-@test:Config{
-            enable: false
-
-
-}
-function CreateAttachment(){
-
-   io:println("--------------CreateOne Attachment------------------------\n\n");
-
-    string documentid = "d0513dd9-dcf7-46c4-becc-0a533c93258a";
-    var uuid = createRandomUUID();
-
-
-    Databases AzureCosmosClient = new(config);
-    
-    var result = AzureCosmosClient->createAttachment("hikall","mycollection1",documentid,uuid.toString(),"image/jpg","www.bing.com");
-
-    if (result is Attachment) {
-        io:println(result);
-    } else {
-        test:assertFail(msg = result.message());
-    }   
-    io:println("\n\n");
-
-}
 
 function createRandomUUID() returns handle = @java:Method {
     name: "randomUUID",
