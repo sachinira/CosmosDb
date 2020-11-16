@@ -223,7 +223,7 @@ function createDocument(){
     Databases AzureCosmosClient = new(config);
 
     var uuid = createRandomUUID();
-
+    string docid = uuid.toString();
  
     json custom = {
         "LastName": "keeeeeee",  
@@ -261,7 +261,7 @@ function createDocument(){
 
 
     json body = {
-            id: uuid.toString()    
+            id: docid    
     };
         
 
@@ -459,12 +459,12 @@ function queryDocument(){
 
 
 @test:Config{
-   // enable: false
+   enable: false
 }
 function createSproc(){
 
 
-   io:println("--------------Query one document-----------------------\n\n");
+   io:println("-----------------Create stored procedure-----------------------\n\n");
 
 
     Databases AzureCosmosClient = new(config);
@@ -473,6 +473,30 @@ function createSproc(){
     string sproc = "function () {\r\n    var context = getContext();\r\n    var response = context.getResponse();\r\n\r\n    response.setBody(\"Hello, World\");\r\n}"; 
 
     var result = AzureCosmosClient->createStoredProcedure("hikall","mycollection1",sproc,sprocid);
+       
+        if result is StoredProcedure {
+            io:println(result);
+        } else {
+        test:assertFail(msg = result.message());
+        }   
+            io:println("\n\n");
+    
+}
+
+
+@test:Config{
+   // enable: false
+}
+function replaceSproc(){
+
+   io:println("-----------------Replace stored procedure-----------------------\n\n");
+
+
+    Databases AzureCosmosClient = new(config);
+    string sprocid = "sproc-a0b8c160-3efd-484b-a4e9-445e3dd25528";
+    string sproc = "function tax(income) {\r\n    if(income == undefined) \r\n        throw 'no input';\r\n    if (income < 1000) \r\n        return income * 0.1;\r\n    else if (income < 10000) \r\n        return income * 0.2;\r\n    else\r\n        return income * 0.4;\r\n}"; 
+
+    var result = AzureCosmosClient->replaceStoredProcedure("hikall","mycollection1",sproc,sprocid);
        
         if result is StoredProcedure {
             io:println(result);

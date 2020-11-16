@@ -399,14 +399,13 @@ public  client class Databases{
 
     //------------------------------Stored Procedures------------------------------------------
 
-     public remote function createStoredProcedure(string dbname,string colname,string sproc,string sprocid) returns @tainted StoredProcedure|error{
+    public remote function createStoredProcedure(string dbname,string colname,string sproc,string sprocid) returns @tainted StoredProcedure|error{
 
 
         http:Request req = new;
 
         string verb = "POST"; 
         string resourceId = string `dbs/${dbname}/colls/${colname}`;
-        //string requestPath = string `/dbs`;
 
         req = check setHeaders(req,self.apiVersion,self.host,verb,self.resourceTypesproc,resourceId,self.masterKey,self.keyType,self.tokenVersion);
 
@@ -418,6 +417,30 @@ public  client class Databases{
         req.setJsonPayload(spbody);
 
         var response = self.basicClient->post(string `/dbs/${dbname}/colls/${colname}/sprocs`,req);
+
+        json jsonreponse = check parseResponseToJson(response);
+
+        return mapJsonToSproc(jsonreponse);
+        
+    }
+
+    public remote function replaceStoredProcedure(string dbname,string colname,string sproc,string previousid) returns @tainted StoredProcedure|error{
+
+        http:Request req = new;
+
+        string verb = "PUT"; 
+        string resourceId = string `dbs/${dbname}/colls/${colname}/sprocs/${previousid}`;
+
+        req = check setHeaders(req,self.apiVersion,self.host,verb,self.resourceTypesproc,resourceId,self.masterKey,self.keyType,self.tokenVersion);
+
+        json spbody = {
+            id: previousid,
+            body:sproc
+        };
+
+        req.setJsonPayload(spbody);
+
+        var response = self.basicClient->put(string `/dbs/${dbname}/colls/${colname}/sprocs/${previousid}`,req);
 
         json jsonreponse = check parseResponseToJson(response);
 
