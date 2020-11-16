@@ -508,7 +508,7 @@ function replaceSproc(){
 }
 
 @test:Config{
-   // enable: false
+   enable: false
 }
 function getAllSprocs(){
 
@@ -521,6 +521,28 @@ function getAllSprocs(){
     var result = AzureCosmosClient->listStoredProcedures("hikall","mycollection1");
        
         if result is StoredProcedureList {
+            io:println(result);
+        } else {
+        test:assertFail(msg = result.message());
+        }   
+            io:println("\n\n");
+    
+}
+
+@test:Config{
+   // enable: false
+}
+function deleteOneSproc(){
+
+   io:println("-----------------Delete Stored Procedure-----------------------\n\n");
+
+
+    Databases AzureCosmosClient = new(config);
+    string sprocid = "sproc-fe221415-47ce-4cf5-a633-59875c3c4b5d";
+
+    var result = AzureCosmosClient->deleteStoredProcedure("hikall","mycollection1",sprocid);
+       
+        if result is json {
             io:println(result);
         } else {
         test:assertFail(msg = result.message());

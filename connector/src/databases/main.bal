@@ -464,6 +464,21 @@ public  client class Databases{
         
     }
 
+     public remote function deleteStoredProcedure(string dbname,string colname,string sprocid) returns @tainted json|error{
+
+        http:Request req = new;
+
+        string verb = "DELETE"; 
+        string resourceId = string `dbs/${dbname}/colls/${colname}/sprocs/${sprocid}`;
+
+        req = check setHeaders(req,self.apiVersion,self.host,verb,self.resourceTypesproc,resourceId,self.masterKey,self.keyType,self.tokenVersion);
+
+        var response = self.basicClient->delete(string `/dbs/${dbname}/colls/${colname}/sprocs/${sprocid}`,req);
+
+        return getDeleteResponse(response);
+        
+    }
+
 }
 
 public type AuthConfig record {
