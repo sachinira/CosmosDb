@@ -227,6 +227,8 @@ function GetPartitionKeyRanges(){
 }
 function createDocument(){
 
+   io:println("--------------Create One document------------------------\n\n");
+
     Databases AzureCosmosClient = new(config);
 
     var uuid = createRandomUUID();
@@ -297,12 +299,12 @@ function createDocument(){
 }
 function GetDocumentList(){
 
-   io:println("--------------Get all documents------------------------\n\n");
+   io:println("--------------Get all documents in a collection------------------------\n\n");
 
 
     Databases AzureCosmosClient = new(config);
     
-    var result = AzureCosmosClient->listAllDocuments("tempdb","tempcoll");
+    var result = AzureCosmosClient->listAllDocuments("tempdb","tempcoll",());
 
     if (result is DocumentList) {
         io:println(result);
@@ -341,6 +343,9 @@ function GetOneDocument(){
     enable: false
 }
 function replaceDocument(){
+
+
+   io:println("--------------Replace document------------------------\n\n");
 
     Databases AzureCosmosClient = new(config);
 
@@ -405,6 +410,9 @@ function replaceDocument(){
 }
 function deleteDocument(){
 
+    io:println("--------------Delete one document------------------------\n\n");
+
+
     Databases AzureCosmosClient = new(config);
 
 
@@ -427,6 +435,9 @@ function deleteDocument(){
 }
 function queryDocument(){
 
+
+   io:println("--------------Query one document-----------------------\n\n");
+
     Databases AzureCosmosClient = new(config);
 
     int partitionkey = 1234;
@@ -444,9 +455,6 @@ function queryDocument(){
             }  
         ]  
     };   
-
-    
-
 
     var result = AzureCosmosClient->queryDocument("hikall","mycollection1",query,partitionkey);
        

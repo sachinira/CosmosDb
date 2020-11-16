@@ -83,6 +83,13 @@ function convertToInt(json|error value) returns int {
     return -1;
 }
 
+function mergeTwoArrays(any[] array1,any[] array2) returns any[]{
+    foreach any element in array2 {
+       array1.push(element);
+    }
+    return array1;
+}
+
 public function generateToken(string verb, string resourceType, string resourceId, string keys, string keyType, string tokenVersion, string date) returns string?|error{
         
     string authorization;
@@ -196,23 +203,37 @@ public function setPartitionKeyHeader(http:Request req,any pk) returns http:Requ
     return req;
 }
 
-public function ignorePartitionKeyHeader(http:Request req,boolean isignore) returns http:Request|error{
+//----
 
-    req.setHeader("x-ms-documentdb-query-enablecrosspartition",isignore.toString());
+public function setHeadersforItemCount(http:Request req,int? maxitemcount) returns http:Request|error{
+
+    req.setHeader("x-ms-max-item-count",maxitemcount.toString()); 
     return req;
 }
 
-public function setHeadersforDocumentCount(http:Request req,int? maxitemcount,string? continuation,string? consistancylevel) returns http:Request|error{
+public function setHeadersforContinuation(http:Response resp) returns http:Request|error{
+//default amount of results is 100
+// we can set max count to 10
+//we can findout if there are more than the returned results using existance of continuation header;
+//
 
-    req.setHeader("x-ms-max-item-count",maxitemcount.toString());
-    req.setHeader("x-ms-continuation",continuation.toString());
+    json jsonresponse = check parseResponseToJson(resp);
+    DocumentList l = check mapJsonToDocumentList(jsonresponse);
+
+    if resp.hasHeader("x-ms-continuation") {
+        
+        req.setHeader("x-ms-continuation",continuation);
+    }
     
     return req;
 }
 
 public function setHeadersForConsistancy(http:Request req,string? consistancylevel,string? sessiontoken) returns http:Request|error{
 
+    //The override must be the same or weaker than the account’s configured consistency level.
     req.setHeader("x-ms-consistency-level",consistancylevel.toString());
+
+    //Clients must echo the latest read value of this header during read requests for session consistency.
     req.setHeader("x-ms-session-token",sessiontoken.toString());
     return req;
 }
@@ -224,17 +245,32 @@ public function setHeadersForChangeFeed(http:Request req,string? aim,string? non
     return req;
 }
 
+public function enableCrossPartitionKeyHeader(http:Request req,boolean isignore) returns http:Request|error{
+
+    req.setHeader("x-ms-documentdb-query-enablecrosspartition",isignore.toString());
+    return req;
+}
+
+//PartitionKeyRanges this can be used for incremental readfeed with the x-ms-documentdb-partitionkeyrangeid header.
+//x-ms-documentdb-partitionkeyrangeid
+
+//x-ms-documentdb-query-enablecrosspartition
+
+
+//If-Match
+//---------------
+
 public function setHeadersForQuery(http:Request req) returns http:Request|error{
     
     req.setHeader("Content-Type","application/query+json");
     req.setHeader("x-ms-documentdb-isquery","True");
-    //req.setHeader("x-ms-documentdb-query-enablecrosspartition","True");
 
     return req;
 
 }
-//x-ms-documentdb-partitionkeyrangeid
-//x-ms-documentdb-query-enablecrosspartition
+
+
+
 
 public function generateTokenNew(string verb, string resourceType, string resourceId, string keys, string keyType, string tokenVersion) returns string?{
     var token = generateTokenJ(java:fromString(verb),java:fromString(resourceType),java:fromString(resourceId),java:fromString(keys),java:fromString(keyType),java:fromString(tokenVersion));

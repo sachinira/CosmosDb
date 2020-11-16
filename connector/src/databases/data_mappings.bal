@@ -1,4 +1,4 @@
-//import ballerina/io;
+//import ballerina/java.arrays;
 
 function mapJsonToDatabaseType(json jsonPayload) returns Database {
 

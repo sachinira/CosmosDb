@@ -225,7 +225,6 @@ public  client class Databases{
     }
 
         //Replace Collection supports changing the indexing policy of a collection after creation.
-        //Create collection with autoscale
 
 
     public remote function createDocument(string dbname,string colname,json document,boolean? upsert,string? indexingdir,json partitionkey) returns @tainted Document|error{
@@ -256,7 +255,7 @@ public  client class Databases{
         return mapJsonToDocument(jsonresponse);
     }
 
-    public remote function listAllDocuments(string dbname,string colname) returns @tainted DocumentList|error{
+    public remote function listAllDocuments(string dbname,string colname,int? itemcount) returns @tainted DocumentList|error{
         
         http:Request req = new;
 
@@ -269,9 +268,44 @@ public  client class Databases{
         var response = self.basicClient->get(string `/dbs/${dbname}/colls/${colname}/docs`,req);
 
         json jsonresponse = check parseResponseToJson(response);
+        DocumentList l =  check mapJsonToDocumentList(jsonresponse); 
 
+
+        if response is http:Response && response.hasHeader("x-ms-continuation") {
+
+            //if there is continuation header
+
+             //createRequestAgain(response,req,dbname,colname,l);
+        }
+
+
+        return l;    
+    }
+
+    public remote function createRequestAgain(http:Response resp, http:Request req,string dbname,string colname, DocumentList list1) returns @tainted DocumentList|error{
+
+        DocumentList newd = {};
+
+        string verb = "GET"; 
+        string resourceId = string `dbs/${dbname}/colls/${colname}`;
         
-        return mapJsonToDocumentList(jsonresponse);
+        var reqn = check setHeaders(req,self.apiVersion,self.host,verb,self.resourceTypedoc,resourceId,self.masterKey,self.keyType,self.tokenVersion);
+
+        reqn.setHeader("x-ms-continuation",resp.getHeader("x-ms-continuation"));
+
+        var response2 = self.basicClient->get(string `/dbs/${dbname}/colls/${colname}/docs`,reqn);
+
+        json jsonresponse2 = check parseResponseToJson(response2);
+        DocumentList list2 =  check mapJsonToDocumentList(jsonresponse2);
+
+        Document[] l = <Document[]>mergeTwoArrays(list1.documents,list2.documents);
+        int count = list2._count + list1._count;
+
+        newd.documents = l;
+        newd._count =count;
+
+        return newd;
+
     }
 
     public remote function listOneDocument(string dbname,string colname,string id,any partitionkey) returns @tainted Document|error{
@@ -294,6 +328,9 @@ public  client class Databases{
     }
 
     public remote function replaceDocument(string dbname,string colname,json document,string docid,any partitionkeyvalue) returns @tainted Document|error{
+        
+
+        //x-ms-indexing-directive
         
         http:Request req = new;
 
