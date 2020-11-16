@@ -211,22 +211,7 @@ public function setHeadersforItemCount(http:Request req,int? maxitemcount) retur
     return req;
 }
 
-public function setHeadersforContinuation(http:Response resp) returns http:Request|error{
-//default amount of results is 100
-// we can set max count to 10
-//we can findout if there are more than the returned results using existance of continuation header;
-//
 
-    json jsonresponse = check parseResponseToJson(resp);
-    DocumentList l = check mapJsonToDocumentList(jsonresponse);
-
-    if resp.hasHeader("x-ms-continuation") {
-        
-        req.setHeader("x-ms-continuation",continuation);
-    }
-    
-    return req;
-}
 
 public function setHeadersForConsistancy(http:Request req,string? consistancylevel,string? sessiontoken) returns http:Request|error{
 

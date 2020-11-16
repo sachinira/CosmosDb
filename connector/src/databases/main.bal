@@ -264,6 +264,9 @@ public  client class Databases{
         
         req = check setHeaders(req,self.apiVersion,self.host,verb,self.resourceTypedoc,resourceId,self.masterKey,self.keyType,self.tokenVersion);
 
+        if itemcount is int{
+            req = check setHeadersforItemCount(req,itemcount);
+        }
 
         var response = self.basicClient->get(string `/dbs/${dbname}/colls/${colname}/docs`,req);
 
