@@ -11,7 +11,7 @@ AuthConfig config = {
 };
 
 @test:Config{
-
+    enable: false
 }
 function createDB(){
 
@@ -36,7 +36,7 @@ function createDB(){
 
 
 @test:Config{
-    //enable: false
+    enable: false
 
 }
 function listAllDB(){
@@ -100,7 +100,7 @@ function deleteDB(){
 }
 
 @test:Config{
-           // enable: false
+    enable: false
 
 }
 function createCollection(){
@@ -133,8 +133,7 @@ function createCollection(){
 
 
 @test:Config{
-   // enable: false
-
+   enable: false
 }
 function getAllCollections(){
 
@@ -156,7 +155,7 @@ function getAllCollections(){
 }
 
 @test:Config{
-       // enable: false
+    enable: false
 }
 function getOneCollection(){
 
@@ -178,9 +177,7 @@ function getOneCollection(){
 }
 
 @test:Config{
-
     enable: false
-
 }
 function deleteCollection(){
 
@@ -198,8 +195,7 @@ function deleteCollection(){
 }
 
 @test:Config{
-   // enable: false
-
+   enable: false
 }
 function GetPartitionKeyRanges(){
 
@@ -221,8 +217,7 @@ function GetPartitionKeyRanges(){
 
 
 @test:Config{
-  //  enable: false
-
+  enable: false
 }
 function createDocument(){
 
@@ -293,8 +288,7 @@ function createDocument(){
 
 
 @test:Config{
-   // enable: false
-
+   enable: false
 }
 function GetDocumentList(){
 
@@ -316,7 +310,6 @@ function GetDocumentList(){
 
 @test:Config{
     enable: false
-
 }
 function GetOneDocument(){
 
@@ -431,7 +424,7 @@ function deleteDocument(){
 }
 
 @test:Config{
-        enable: false
+    enable: false
 }
 function queryDocument(){
 
@@ -468,9 +461,7 @@ function queryDocument(){
 }
 
 @test:Config{
-            enable: false
-
-
+   // enable: false
 }
 function CreateAttachment(){
 
