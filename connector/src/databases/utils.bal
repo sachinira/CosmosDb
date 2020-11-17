@@ -7,12 +7,16 @@ import ballerina/http;
 
 
 function parseResponseToJson(http:Response|http:ClientError httpResponse) returns @tainted json|error {
+    
     if (httpResponse is http:Response) {
+
         var jsonResponse = httpResponse.getJsonPayload();
 
         if (jsonResponse is json) {
+
             if (httpResponse.statusCode != http:STATUS_OK && httpResponse.statusCode != http:STATUS_CREATED) {
                 string code = "";
+                
                 if (jsonResponse?.error_code != ()) {
                     code = jsonResponse.error_code.toString();
                 } else if (jsonResponse?.'error != ()) {
@@ -21,52 +25,67 @@ function parseResponseToJson(http:Response|http:ClientError httpResponse) return
 
                 string message = jsonResponse.message.toString();
                 string errorMessage = httpResponse.statusCode.toString() + " " + httpResponse.reasonPhrase;
+                
                 if (code != "") {
                     errorMessage += " - " + code;
                 }
                 errorMessage += " : " + message;
+
                 return prepareError(errorMessage);
             }
+
             return jsonResponse;
+        
         } else {
+
             return prepareError("Error occurred while accessing the JSON payload of the response");
         }
     } else {
+
         return prepareError("Error occurred while invoking the REST API");
     }
 }
 
 function getDeleteResponse(http:Response|http:ClientError httpResponse) returns @tainted string|error{
 
-    if (httpResponse is http:Response) {
-
-        if(httpResponse.statusCode == http:STATUS_NO_CONTENT){
-                return string `Deleted Sucessfully ${httpResponse.statusCode}`;
-        }else{
+    if (httpResponse is http:Response) 
+    {
+        if(httpResponse.statusCode == http:STATUS_NO_CONTENT)
+        {
+            return string `Deleted Sucessfully ${httpResponse.statusCode}`;
+        } 
+        else
+        {
             return prepareError(string `Error occurred while invoking the REST API"${httpResponse.statusCode}`);
-
         }
-
-    }else{
+    }
+    else
+    {
         return prepareError("Error occurred while invoking the REST API");
-
     }
 }
 
 function prepareError(string message, error? err = ()) returns error {
+    
     error azureError;
-    if (err is error) {
+    if (err is error) 
+    {
         azureError = AzureError(message, err);
-    } else {
+    } 
+    else 
+    {
         azureError = AzureError(message);
     }
     return azureError;
 }
 
 function convertToBoolean(json|error value) returns boolean {
-    if (value is json) {
+    
+    if (value is json) 
+    {
         boolean|error result = 'boolean:fromString(value.toString());
-        if (result is boolean) {
+        if (result is boolean) 
+        {
             return result;
         }
     }
@@ -74,9 +93,12 @@ function convertToBoolean(json|error value) returns boolean {
 }
 
 function convertToInt(json|error value) returns int {
-    if (value is json) {
+    
+    if (value is json) 
+    {
         int|error result = 'int:fromString(value.toString());
-        if (result is int) {
+        if (result is int) 
+        {
             return result;
         }
     }
@@ -84,7 +106,9 @@ function convertToInt(json|error value) returns int {
 }
 
 function mergeTwoArrays(any[] array1,any[] array2) returns any[]{
-    foreach any element in array2 {
+    
+    foreach any element in array2 
+    {
        array1.push(element);
     }
     return array1;
@@ -93,17 +117,16 @@ function mergeTwoArrays(any[] array1,any[] array2) returns any[]{
 public function generateToken(string verb, string resourceType, string resourceId, string keys, string keyType, string tokenVersion, string date) returns string?|error{
         
     string authorization;
-
     string payload = verb.toLowerAscii()+"\n" 
         +resourceType.toLowerAscii()+"\n"
         +resourceId+"\n"
         +date.toLowerAscii()+"\n"
         +""+"\n";
 
-
     var decoded = encoding:decodeBase64Url(keys);
         
-    if decoded is byte[]{
+    if decoded is byte[]
+    {
 
         byte[] k = crypto:hmacSha256(payload.toBytes(),decoded);
         string  t = k.toBase16();
@@ -114,7 +137,9 @@ public function generateToken(string verb, string resourceType, string resourceI
             
         return authorization;
 
-    }else{
+    }
+    else
+    {
             
         io:println("Decoding error");
     }
@@ -125,8 +150,8 @@ public function getTime() returns string?|error{
 
     time:Time time1 = time:currentTime();
     var time2 = check time:toTimeZone(time1, "Europe/London");
-
     string|error timeString = time:format(time2, "EEE, dd MMM yyyy HH:mm:ss z");
+
     return timeString;
 }
 
@@ -140,23 +165,22 @@ public function setHeaders(http:Request req,string apiversion,string host,string
 
     string? date = check getTime();
 
-
-    
-    if date is string{
-            //string? s = check generateToken(verb,resourceType,resourceId,keys,keyType,tokenVersion,date);
-
+    if date is string
+    {
         string? s = generateTokenNew(verb,resourceType,resourceId,keys,keyType,tokenVersion);
-
         req.setHeader("x-ms-date",date);
-        if s is string{
+
+        if s is string
+        {
             req.setHeader("Authorization",s);
-
-        }else{
-
-            io:println("token is null");
-
         }
-    }else{
+        else
+        {
+            io:println("token is null");
+        }
+    }
+    else
+    {
         io:println("date is null");
     }
 
@@ -179,20 +203,19 @@ public function setUpsertHeader(http:Request req,boolean? upsert) returns http:R
 
 public function setThroughputOrAutopilotHeader(http:Request req,int? throughput,json? option) returns http:Request|error{
 
-
-    if throughput is int &&  option is (){
-            //validate throughput The minimum is 400 up to 1,000,000 (or higher by requesting a limit increase).
+    if throughput is int &&  option is () 
+    {
+        //validate throughput The minimum is 400 up to 1,000,000 (or higher by requesting a limit increase).
         req.setHeader("x-ms-offer-throughput",option.toString());
-
-    }else if throughput is () &&  option != (){
-
+    } 
+    else if throughput is () &&  option != () 
+    {
         req.setHeader("x-ms-cosmos-offer-autopilot-settings",option.toString());
-
-    }else if throughput is int &&  option != (){
-        
+    }
+    else if throughput is int &&  option != ()
+    {
         return prepareError("Cannot set both x-ms-offer-throughput and x-ms-cosmos-offer-autopilot-settings headers at once");
     }
-
 
     return req;
 }
@@ -210,8 +233,6 @@ public function setHeadersforItemCount(http:Request req,int? maxitemcount) retur
     req.setHeader("x-ms-max-item-count",maxitemcount.toString()); 
     return req;
 }
-
-
 
 public function setHeadersForConsistancy(http:Request req,string? consistancylevel,string? sessiontoken) returns http:Request|error{
 
@@ -246,18 +267,15 @@ public function enableCrossPartitionKeyHeader(http:Request req,boolean isignore)
 //---------------
 
 public function setHeadersForQuery(http:Request req) returns http:Request|error{
-    
+
     req.setHeader("Content-Type","application/query+json");
     req.setHeader("x-ms-documentdb-isquery","True");
 
     return req;
-
 }
 
-
-
-
 public function generateTokenNew(string verb, string resourceType, string resourceId, string keys, string keyType, string tokenVersion) returns string?{
+
     var token = generateTokenJ(java:fromString(verb),java:fromString(resourceType),java:fromString(resourceId),java:fromString(keys),java:fromString(keyType),java:fromString(tokenVersion));
     return java:toString(token);
 

@@ -15,7 +15,7 @@ public type DBList record {
 };
 
 
-//conflict rresolution policy must be included
+//conflict resolution policy must be included
 public type Collection record {
     string id = "";
     string _rid = "";

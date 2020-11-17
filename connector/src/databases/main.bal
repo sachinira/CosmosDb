@@ -1,5 +1,5 @@
 import ballerina/http;
-import ballerina/io;
+//import ballerina/io;
 
 public  client class Databases{
     
@@ -44,17 +44,13 @@ public  client class Databases{
                 }
             }
         });
-
-
     }
 
     //--------------------------------------Databases --------------------------------------
 
-    public remote function createDatabase(string dbname,int? throughput,json? autoscale) returns @tainted Database|error{
-
+    public remote function createDatabase(string dbname, int? throughput, json? autoscale) returns @tainted Database|error{
 
         http:Request req = new;
-
         string verb = "POST"; 
         string resourceId = "";
         string requestPath = string `/dbs`;
@@ -79,7 +75,6 @@ public  client class Databases{
     public remote function listDatabases() returns @tainted DBList|error{
 
         http:Request req = new;
-
         string verb = "GET"; 
         string resourceId = "";
        
@@ -96,7 +91,6 @@ public  client class Databases{
     public remote function listOneDatabase(string dbname) returns @tainted Database|error{
 
         http:Request req = new;
-
         string verb = "GET"; 
         string resourceId = string `dbs/${dbname}`;
        
@@ -113,7 +107,6 @@ public  client class Databases{
     public remote function deleteDatabase(string dbname) returns @tainted string|error{
 
         http:Request req = new;
-
         string verb = "DELETE"; 
         string resourceId = string `dbs/${dbname}`;
         
@@ -128,10 +121,9 @@ public  client class Databases{
 
     //-----------------------------------------Collections--------------------------------------------
 
-    public remote function createCollection(string dbname,string colname,json partitionkey,json? indexingpolicy,int? throughput,json? autoscale) returns @tainted Collection|error{
+    public remote function createCollection(string dbname, string colname, json partitionkey, json? indexingpolicy, int? throughput,json? autoscale) returns @tainted Collection|error{
 
         http:Request req = new;
-
         string verb = "POST"; 
         string resourceId = string `dbs/${dbname}`;
 
@@ -152,21 +144,17 @@ public  client class Databases{
 
         json jsonresponse = check parseResponseToJson(response);
 
-
         return mapJsonToCollectionType(jsonresponse);
     }
 
 
     public remote function getAllCollections(string dbname) returns @tainted CollectionList|error{
 
-
         http:Request req = new;
-
         string verb = "GET"; 
         string resourceId = string `dbs/${dbname}`;
 
         req = check setHeaders(req,self.apiVersion,self.host,verb,self.resourceTypecoll,resourceId,self.masterKey,self.keyType,self.tokenVersion);
-
 
         var response = self.basicClient->get(string `/dbs/${dbname}/colls`,req);
 
@@ -177,14 +165,11 @@ public  client class Databases{
 
     public remote function getOneCollection(string dbname,string colname) returns @tainted Collection|error{
 
-
         http:Request req = new;
-
         string verb = "GET"; 
         string resourceId = string `dbs/${dbname}/colls/${colname}`;
 
         req = check setHeaders(req,self.apiVersion,self.host,verb,self.resourceTypecoll,resourceId,self.masterKey,self.keyType,self.tokenVersion);
-
 
         var response = self.basicClient->get(string `/dbs/${dbname}/colls/${colname}`,req);
 
@@ -193,26 +178,22 @@ public  client class Databases{
         return mapJsonToCollectionType(jsonresponse);
     }
 
-    public remote function deleteCollection(string dbname,string colname) returns @tainted string|error{
+    public remote function deleteCollection(string dbname, string colname) returns @tainted string|error{
 
         http:Request req = new;
-
         string verb = "DELETE"; 
         string resourceId = string `dbs/${dbname}/colls/${colname}`;
 
         req = check setHeaders(req,self.apiVersion,self.host,verb,self.resourceTypecoll,resourceId,self.masterKey,self.keyType,self.tokenVersion);
 
-
         var response = self.basicClient->delete(string `/dbs/${dbname}/colls/${colname}`,req);
 
-        
         return check getDeleteResponse(response);
     }
 
-    public remote function getPartitionKeyRanges(string dbname,string colname) returns @tainted PartitionKeyList|error{
+    public remote function getPartitionKeyRanges(string dbname, string colname) returns @tainted PartitionKeyList|error{
 
         http:Request req = new;
-
         string verb = "GET"; 
         string reType = "pkranges";
         string resourceId = string `dbs/${dbname}/colls/${colname}`;
@@ -221,21 +202,19 @@ public  client class Databases{
 
         var response = self.basicClient->get(string `/dbs/${dbname}/colls/${colname}/pkranges`,req);
 
-
         json jsonresponse = check parseResponseToJson(response);
 
         return mapJsonToPartitionKeyType(jsonresponse);
     }
 
-        //Replace Collection supports changing the indexing policy of a collection after creation.
+    //Replace Collection supports changing the indexing policy of a collection after creation.
 
 
     //------------------------------Documents------------------------------------------
 
-    public remote function createDocument(string dbname,string colname,json document,boolean? upsert,string? indexingdir,json partitionkey) returns @tainted Document|error{
+    public remote function createDocument(string dbname, string colname, json document, boolean? upsert, string? indexingdir, json partitionkey) returns @tainted Document|error{
         
         http:Request req = new;
-
         string verb = "POST"; 
         string resourceId = string `dbs/${dbname}/colls/${colname}`;
         
@@ -249,21 +228,18 @@ public  client class Databases{
         if upsert == true {
             req = check setUpsertHeader(req,upsert);
         }
-
-
+        
         req.setJsonPayload(document);
         var response = self.basicClient->post(string `/dbs/${dbname}/colls/${colname}/docs`,req);
 
         json jsonresponse = check parseResponseToJson(response);
 
-        
         return mapJsonToDocument(jsonresponse);
     }
 
-    public remote function listAllDocuments(string dbname,string colname,int? itemcount) returns @tainted DocumentList|error{
+    public remote function listAllDocuments(string dbname, string colname, int? itemcount) returns @tainted DocumentList|error{
         
         http:Request req = new;
-
         string verb = "GET"; 
         string resourceId = string `dbs/${dbname}/colls/${colname}`;
         
@@ -278,22 +254,20 @@ public  client class Databases{
         json jsonresponse = check parseResponseToJson(response);
         DocumentList l =  check mapJsonToDocumentList(jsonresponse); 
 
-
-        if response is http:Response && response.hasHeader("x-ms-continuation") {
+        //if response is http:Response && response.hasHeader("x-ms-continuation") {
 
             //if there is continuation header
 
              //createRequestAgain(response,req,dbname,colname,l);
-        }
+        //}
 
 
         return l;    
     }
 
-    public remote function createRequestAgain(http:Response resp, http:Request req,string dbname,string colname, DocumentList list1) returns @tainted DocumentList|error{
+    public remote function createRequestAgain(http:Response resp, http:Request req, string dbname, string colname, DocumentList list1) returns @tainted DocumentList|error{
 
         DocumentList newd = {};
-
         string verb = "GET"; 
         string resourceId = string `dbs/${dbname}/colls/${colname}`;
         
@@ -316,32 +290,25 @@ public  client class Databases{
 
     }
 
-    public remote function listOneDocument(string dbname,string colname,string id,any partitionkey) returns @tainted Document|error{
+    public remote function listOneDocument(string dbname, string colname, string id, any partitionkey) returns @tainted Document|error{
         
         http:Request req = new;
-
         string verb = "GET"; 
         string resourceId = string `dbs/${dbname}/colls/${colname}/docs/${id}`;
         
         req = check setHeaders(req,self.apiVersion,self.host,verb,self.resourceTypedoc,resourceId,self.masterKey,self.keyType,self.tokenVersion);
         req = check setPartitionKeyHeader(req,partitionkey);
 
-
         var response = self.basicClient->get(string `/dbs/${dbname}/colls/${colname}/docs/${id}`,req);
 
         json jsonresponse = check parseResponseToJson(response);
 
-        
         return mapJsonToDocument(jsonresponse);
     }
 
-    public remote function replaceDocument(string dbname,string colname,json document,string docid,any partitionkeyvalue) returns @tainted Document|error{
-        
-
-        //x-ms-indexing-directive
-        
+    public remote function replaceDocument(string dbname, string colname, json document, string docid, any partitionkeyvalue) returns @tainted Document|error{
+                
         http:Request req = new;
-
         string verb = "PUT"; 
         string resourceId = string `dbs/${dbname}/colls/${colname}/docs/${docid}`;
         
@@ -354,20 +321,20 @@ public  client class Databases{
 
         json jsonresponse = check parseResponseToJson(response);
 
-        
         return mapJsonToDocument(jsonresponse);
+        
+        //x-ms-indexing-directive
+
     }
 
-    public remote function deleteDocument(string dbname,string colname,string docid,any partitionkeyvalue) returns @tainted string|error{
+    public remote function deleteDocument(string dbname, string colname, string docid, any partitionkeyvalue) returns @tainted string|error{
         
         http:Request req = new;
-
         string verb = "DELETE"; 
         string resourceId = string `dbs/${dbname}/colls/${colname}/docs/${docid}`;
         
         req = check setHeaders(req,self.apiVersion,self.host,verb,self.resourceTypedoc,resourceId,self.masterKey,self.keyType,self.tokenVersion);
         req = check setPartitionKeyHeader(req,partitionkeyvalue);
-
 
         var response = self.basicClient->delete(string `/dbs/${dbname}/colls/${colname}/docs/${docid}`,req);
         
@@ -375,10 +342,9 @@ public  client class Databases{
     }
 
 
-    public remote function queryDocument(string dbname,string colname,json query,any partitionkeyvalue) returns @tainted json|error{
+    public remote function queryDocument(string dbname, string colname, json query, any partitionkeyvalue) returns @tainted json|error{
         
         http:Request req = new;
-
         string verb = "POST"; 
         string resourceId = string `dbs/${dbname}/colls/${colname}`;
 
@@ -392,17 +358,14 @@ public  client class Databases{
 
         json jsonresponse = check parseResponseToJson(response);
 
-                io:println(jsonresponse);
-
         return (jsonresponse);
     }
 
     //------------------------------Stored Procedures------------------------------------------
 
-    public remote function createStoredProcedure(string dbname,string colname,string sproc,string sprocid) returns @tainted StoredProcedure|error{
+    public remote function createStoredProcedure(string dbname, string colname, string sproc, string sprocid) returns @tainted StoredProcedure|error{
 
         http:Request req = new;
-
         string verb = "POST"; 
         string resourceId = string `dbs/${dbname}/colls/${colname}`;
 
@@ -423,10 +386,9 @@ public  client class Databases{
         
     }
 
-    public remote function replaceStoredProcedure(string dbname,string colname,string sproc,string previousid) returns @tainted StoredProcedure|error{
+    public remote function replaceStoredProcedure(string dbname, string colname, string sproc, string previousid) returns @tainted StoredProcedure|error{
 
         http:Request req = new;
-
         string verb = "PUT"; 
         string resourceId = string `dbs/${dbname}/colls/${colname}/sprocs/${previousid}`;
 
@@ -447,10 +409,9 @@ public  client class Databases{
         
     }
 
-    public remote function listStoredProcedures(string dbname,string colname) returns @tainted StoredProcedureList|error{
+    public remote function listStoredProcedures(string dbname, string colname) returns @tainted StoredProcedureList|error{
 
         http:Request req = new;
-
         string verb = "GET"; 
         string resourceId = string `dbs/${dbname}/colls/${colname}`;
 
@@ -464,10 +425,9 @@ public  client class Databases{
         
     }
 
-    public remote function deleteStoredProcedure(string dbname,string colname,string sprocid) returns @tainted json|error{
+    public remote function deleteStoredProcedure(string dbname, string colname, string sprocid) returns @tainted json|error{
 
         http:Request req = new;
-
         string verb = "DELETE"; 
         string resourceId = string `dbs/${dbname}/colls/${colname}/sprocs/${sprocid}`;
 
@@ -479,10 +439,9 @@ public  client class Databases{
         
     }
 
-    public remote function executeStoredProcedure(string dbname,string colname,string sprocid,any[]? parameters) returns @tainted json|error{
+    public remote function executeStoredProcedure(string dbname, string colname, string sprocid, any[]? parameters) returns @tainted json|error{
 
         http:Request req = new;
-
         string verb = "POST"; 
         string resourceId = string `dbs/${dbname}/colls/${colname}/sprocs/${sprocid}`;
 
@@ -490,8 +449,6 @@ public  client class Databases{
         req.setTextPayload(parameters.toString());
 
         var response = self.basicClient->post(string `/dbs/${dbname}/colls/${colname}/sprocs/${sprocid}`,req);
-
-       // string s =  check response.getContentType();
 
         json jsonreponse = check parseResponseToJson(response);
 

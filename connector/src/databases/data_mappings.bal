@@ -1,8 +1,8 @@
-//import ballerina/java.arrays;
 
 function mapCommonElements(json jsonPayload)returns @tainted Common|error{
 
     Common comm = {};
+
     comm._rid = jsonPayload._rid.toString();
     comm._ts = convertToInt(jsonPayload._ts);
     comm._self  =jsonPayload._self.toString();
@@ -14,6 +14,7 @@ function mapCommonElements(json jsonPayload)returns @tainted Common|error{
 function mapJsonToDatabaseType(json jsonPayload) returns Database {
 
     Database db = {};
+
     db.id = jsonPayload.id.toString();
     db._rid = jsonPayload._rid.toString();
     db._ts = convertToInt(jsonPayload._ts);
@@ -26,7 +27,9 @@ function mapJsonToDatabaseType(json jsonPayload) returns Database {
 }
 
 function mapJsonToDbList(json jsonPayload) returns @tainted DBList{
+
     DBList dbl = {};
+
     dbl._rid =jsonPayload._rid.toString();
     dbl.Databases =  convertToDatabaseArray(<json[]>jsonPayload.Databases);
     
@@ -50,6 +53,7 @@ function mapJsonToCollectionType(json jsonPayload)returns @tainted Collection{
     coll.allowMaterializedViews = convertToBoolean(jsonPayload.allowMaterializedViews);
     coll.indexingPolicy = mapJsonToIndexingPolicy(<json>jsonPayload.indexingPolicy);
     coll.partitionKey = convertJsonToPartitionKey(<json>jsonPayload.partitionKey);
+
     return coll;
 }
 
@@ -62,19 +66,21 @@ function mapJsonToIndexingPolicy(json jsonPayload) returns @tainted IndexingPoli
     indp.automatic = convertToBoolean(jsonPayload.automatic);
     indp.includedPaths =  convertToIncludedPathsArray(<json[]>jsonPayload.includedPaths);
     indp.excludedPaths =  convertToIncludedPathsArray(<json[]>jsonPayload.excludedPaths);
+
     return indp;
 }
 
 function mapJsonToIncludedPathsType(json jsonPayload) returns @tainted IncludedPath{
+    
     IncludedPath ip = {};
 
     ip.path = jsonPayload.path.toString();
-
-    if jsonPayload.indexes is error{
-            return ip;
-
-    }else{
-
+    if jsonPayload.indexes is error
+    {
+        return ip;
+    }
+    else
+    {
         ip.indexes = convertToIndexArray(<json[]>jsonPayload.indexes);
     }
 
@@ -82,6 +88,7 @@ function mapJsonToIncludedPathsType(json jsonPayload) returns @tainted IncludedP
 }
 
 function mapJsonToIndexType(json jsonPayload) returns Index{
+    
     Index ind = {};
 
     ind.kind = jsonPayload.kind.toString();
@@ -93,6 +100,7 @@ function mapJsonToIndexType(json jsonPayload) returns Index{
 }
 
 function convertJsonToPartitionKey(json jsonPayload) returns @tainted PartitionKey{
+    
     PartitionKey pk = {};
 
     pk.paths = convertToStringArray(<json[]>jsonPayload.paths);
@@ -105,6 +113,7 @@ function convertJsonToPartitionKey(json jsonPayload) returns @tainted PartitionK
 function mapJsonToCollectionListType(json jsonPayload) returns @tainted CollectionList{
 
     CollectionList cll = {};
+
     cll._rid = jsonPayload._rid.toString();
     cll._count = convertToInt(jsonPayload._count);
     cll.DocumentCollections = convertToCollectionArray(<json[]>jsonPayload.DocumentCollections);
@@ -150,7 +159,6 @@ function mapJsonToDocument(json jsonPayload) returns @tainted Document|error{
     doc._self  =jsonPayload._self.toString();
     doc._etag  = jsonPayload._etag.toString();
     doc._attachments  = jsonPayload._attachments.toString();
-
     doc.document = check jsonPayload.cloneWithType(anydata);
 
     return doc;
@@ -158,6 +166,7 @@ function mapJsonToDocument(json jsonPayload) returns @tainted Document|error{
 }
 
 function mapJsonToDocumentList(json jsonPayload) returns @tainted DocumentList|error{
+    
     DocumentList documentlist = {};
 
     documentlist._rid = jsonPayload._rid.toString();
@@ -189,13 +198,13 @@ function mapJsonToSprocList(json jsonPayload)returns @tainted StoredProcedureLis
     return sproclist;
 }
 
-
-//**********************convert to arrays
-
 function convertToDatabaseArray(json[] sourceDatabaseArrayJsonObject) returns @tainted Database[] {
+    
     Database[] databases = [];
     int i = 0;
-    foreach json jsonDatabase in sourceDatabaseArrayJsonObject {
+
+    foreach json jsonDatabase in sourceDatabaseArrayJsonObject 
+    {
         databases[i] = mapJsonToDatabaseType(jsonDatabase);
         i = i + 1;
     }
@@ -203,10 +212,12 @@ function convertToDatabaseArray(json[] sourceDatabaseArrayJsonObject) returns @t
 }
 
 function convertToIncludedPathsArray(json[] sourcePathArrayJsonObject) returns @tainted IncludedPath[]{
+    
     IncludedPath[] includedpaths = [];
     int i = 0;
-    foreach json jsonPath in sourcePathArrayJsonObject {
 
+    foreach json jsonPath in sourcePathArrayJsonObject 
+    {
         includedpaths[i] = <IncludedPath>mapJsonToIncludedPathsType(jsonPath);
         i = i + 1;
     }
@@ -214,9 +225,12 @@ function convertToIncludedPathsArray(json[] sourcePathArrayJsonObject) returns @
 }
 
 function convertToIndexArray(json[] sourcePathArrayJsonObject) returns @tainted Index[]{
+    
     Index[] indexes = [];
     int i = 0;
-    foreach json index in sourcePathArrayJsonObject {
+
+    foreach json index in sourcePathArrayJsonObject 
+    {
         indexes[i] = mapJsonToIndexType(index);
         i = i + 1;
     }
@@ -224,9 +238,12 @@ function convertToIndexArray(json[] sourcePathArrayJsonObject) returns @tainted 
 }
 
 function convertToStringArray(json[] sourcePathArrayJsonObject) returns @tainted string[]{
+    
     string[] strings = [];
     int i = 0;
-    foreach json str in sourcePathArrayJsonObject {
+
+    foreach json str in sourcePathArrayJsonObject 
+    {
         strings[i] = str.toString();
         i = i + 1;
     }
@@ -234,9 +251,12 @@ function convertToStringArray(json[] sourcePathArrayJsonObject) returns @tainted
 }
 
 function convertToCollectionArray(json[] sourceCollectionArrayJsonObject) returns @tainted Collection[] {
+    
     Collection[] collections = [];
     int i = 0;
-    foreach json jsonCollection in sourceCollectionArrayJsonObject {
+
+    foreach json jsonCollection in sourceCollectionArrayJsonObject 
+    {
         collections[i] = mapJsonToCollectionType(jsonCollection);
         i = i + 1;
     }
@@ -244,9 +264,12 @@ function convertToCollectionArray(json[] sourceCollectionArrayJsonObject) return
 }
 
 function convertToPartitionKeyRangeArray(json[] sourceCollectionArrayJsonObject) returns @tainted PartitionKeyRanges[]{
+    
     PartitionKeyRanges[] pkranges = [];
     int i = 0;
-    foreach json jsonCollection in sourceCollectionArrayJsonObject {
+
+    foreach json jsonCollection in sourceCollectionArrayJsonObject 
+    {
         pkranges[i] = mapJsonToPartitionKeyRange(jsonCollection);
         i = i + 1;
     }
@@ -254,9 +277,12 @@ function convertToPartitionKeyRangeArray(json[] sourceCollectionArrayJsonObject)
 }
 
 function convertToDocumentArray(json[] sourceDocumentArrayJsonObject) returns @tainted Document[] {
+    
     Document[] documents = [];
     int i = 0;
-    foreach json doc in sourceDocumentArrayJsonObject { 
+
+    foreach json doc in sourceDocumentArrayJsonObject 
+    { 
         documents[i] = <Document>mapJsonToDocument(doc);
         i = i + 1;
     }
@@ -264,9 +290,12 @@ function convertToDocumentArray(json[] sourceDocumentArrayJsonObject) returns @t
 }
 
 function convertToSprocArray(json[] sourceSprocArrayJsonObject) returns @tainted StoredProcedure[] {
+    
     StoredProcedure[] sprocs = [];
     int i = 0;
-    foreach json sproc in sourceSprocArrayJsonObject { 
+
+    foreach json sproc in sourceSprocArrayJsonObject 
+    { 
         sprocs[i] = <StoredProcedure>mapJsonToSproc(sproc);
         i = i + 1;
     }
