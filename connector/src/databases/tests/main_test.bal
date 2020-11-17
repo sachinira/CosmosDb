@@ -277,7 +277,7 @@ function createDocument(){
 
     if finalj is json{
 
-        var result = AzureCosmosClient->createDocument("heloo","mycollection1",finalj,true,(),<json>custombody.AccountNumber);
+        var result = AzureCosmosClient->createDocument("heloo","mycollection1",finalj,<json>custombody.AccountNumber,true);
        
         if result is Document 
         {

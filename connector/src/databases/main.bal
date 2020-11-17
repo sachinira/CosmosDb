@@ -262,36 +262,65 @@ public  client class Databases{
     //Replace Collection supports changing the indexing policy of a collection after creation. must be implemented here
 
 
-    public remote function createDocument(string dbname, string colname, json document, boolean? upsert, string? indexingdir, json partitionkey) returns @tainted Document|error{
+    # To create a Document inside a collection
+    #
+    # + dbName -  id/name for the database
+    # + colName - id/name for collection
+    # 
+    # + partitionKey -  value for the partition key field specified for the collection  to set x-ms-documentdb-partitionkey header.
+    # 
+    # + document - Any json content that will include as the document.
+    # 
+    # + isUpsert - Optional boolean value to specify if this request is updating an existing document 
+    #               (If set to true, Cosmos DB creates the document with the ID (and partition key value if applicable) 
+    #               if it doesn’t exist, or update the document if it exists.)
+    # 
+    # + indexingDir - Optional indexing directive parameter which will set 'x-ms-indexing-directive' header
+    #                   The acceptable value is Include or Exclude. 
+    #                   -Include adds the document to the index.
+    #                   -Exclude omits the document from indexing.
+    # 
+    # + return - If successful, returns Collection. Else returns error.  
+    #
+    public remote function createDocument(string dbName, string colName, json document,any partitionKey, boolean? isUpsert = (), string? indexingDir = ()) returns @tainted Document|error{
         
         http:Request req = new;
         string verb = "POST"; 
-        string resourceId = string `dbs/${dbname}/colls/${colname}`;
+        string resourceId = string `dbs/${dbName}/colls/${colName}`;
         
         req = check setHeaders(req,self.apiVersion,self.host,verb,self.resourceTypedoc,resourceId,self.masterKey,self.keyType,self.tokenVersion);
-        req = check setPartitionKeyHeader(req,partitionkey);
+        req = check setPartitionKeyHeader(req,partitionKey);
 
-        if indexingdir is string {
-            req = check setIndexingHeader(req,indexingdir);
+        if indexingDir is string {
+            req = check setIndexingHeader(req,indexingDir);
         }
        
-        if upsert == true {
-            req = check setUpsertHeader(req,upsert);
+        if isUpsert == true {
+            req = check setUpsertHeader(req,isUpsert);
         }
 
         req.setJsonPayload(document);
-        var response = self.basicClient->post(string `/dbs/${dbname}/colls/${colname}/docs`,req);
+        var response = self.basicClient->post(string `/dbs/${dbName}/colls/${colName}/docs`,req);
 
         json jsonresponse = check parseResponseToJson(response);
 
         return mapJsonToDocument(jsonresponse);
     }
 
-    public remote function listAllDocuments(string dbname, string colname, int? itemcount) returns @tainted DocumentList|error{
+    
+    #To list all the documents inside a collection
+    # ******x-ms-consistency-level, x-ms-session-token, A-IM, x-ms-continuation and If-None-Match headers are not handled******
+    # 
+    # + dbName -  id/name of the database which collection is in.
+    # + colName - id/name of collection which documents are in.
+    # + itemcount - Optional integer number of documents to be listed in document list (Default is 100)
+    # + return - If successful, returns DocumentList. Else returns error. 
+    #
+    public remote function listAllDocuments(string dbName, string colName, int? itemcount = ()) returns @tainted DocumentList|error{
         
         http:Request req = new;
         string verb = "GET"; 
-        string resourceId = string `dbs/${dbname}/colls/${colname}`;
+        string resourceId = string `dbs/${dbName}/colls/${colName}`;
         
         req = check setHeaders(req,self.apiVersion,self.host,verb,self.resourceTypedoc,resourceId,self.masterKey,self.keyType,self.tokenVersion);
 
@@ -299,17 +328,24 @@ public  client class Databases{
             req = check setHeadersforItemCount(req,itemcount);
         }
 
-        var response = self.basicClient->get(string `/dbs/${dbname}/colls/${colname}/docs`,req);
+        var response = self.basicClient->get(string `/dbs/${dbName}/colls/${colName}/docs`,req);
 
         json jsonresponse = check parseResponseToJson(response);
         DocumentList list =  check mapJsonToDocumentList(jsonresponse); 
 
         return list;    
-
     }
 
-    public remote function createRequestAgain(http:Response resp, http:Request req, string dbname, string colname, DocumentList list1) returns @tainted DocumentList|error{
-
+    #A partially implemented function to handle 'x-ms-continuation' header value which is used for pagination
+    # 
+    # + dbName -  id/name of the database which collection is in.
+    # + colName - id/name of collection to retrive.
+    # + resp -
+    # + req -
+    # + list1 - 
+    # + return - If successful, returns Collection. Else returns error. 
+    # 
+    public remote function createRequestAgain(http:Response resp, http:Request req, string dbName, string colName, DocumentList list1) returns @tainted DocumentList|error{
 
         //if response is http:Response && response.hasHeader("x-ms-continuation") {
 
@@ -320,13 +356,13 @@ public  client class Databases{
         
         DocumentList newd = {};
         string verb = "GET"; 
-        string resourceId = string `dbs/${dbname}/colls/${colname}`;
+        string resourceId = string `dbs/${dbName}/colls/${colName}`;
         
         var reqn = check setHeaders(req,self.apiVersion,self.host,verb,self.resourceTypedoc,resourceId,self.masterKey,self.keyType,self.tokenVersion);
 
         reqn.setHeader("x-ms-continuation",resp.getHeader("x-ms-continuation"));
 
-        var response2 = self.basicClient->get(string `/dbs/${dbname}/colls/${colname}/docs`,reqn);
+        var response2 = self.basicClient->get(string `/dbs/${dbName}/colls/${colName}/docs`,reqn);
 
         json jsonresponse2 = check parseResponseToJson(response2);
         DocumentList list2 =  check mapJsonToDocumentList(jsonresponse2);
@@ -340,71 +376,103 @@ public  client class Databases{
         return newd;
     }
 
-    public remote function listOneDocument(string dbname, string colname, string id, any partitionkey) returns @tainted Document|error{
+    #To list one document inside a collection
+    # ********x-ms-consistency-level, x-ms-session-token and If-None-Match headers are not handled******
+    # 
+    # + dbName -  id/name of the database which collection is in.
+    # + colName - id/name of collection which documents are in.
+    # + documentId - id of the document to be retrieved
+    # + partitionKey - the value in the partition key field specified for the collection to set x-ms-documentdb-partitionkey header
+    # + return - If successful, returns a Document. Else returns error. 
+    #
+    public remote function listOneDocument(string dbName, string colName, string documentId, any partitionKey) returns @tainted Document|error{
         
         http:Request req = new;
         string verb = "GET"; 
-        string resourceId = string `dbs/${dbname}/colls/${colname}/docs/${id}`;
+        string resourceId = string `dbs/${dbName}/colls/${colName}/docs/${documentId}`;
         
         req = check setHeaders(req,self.apiVersion,self.host,verb,self.resourceTypedoc,resourceId,self.masterKey,self.keyType,self.tokenVersion);
-        req = check setPartitionKeyHeader(req,partitionkey);
+        req = check setPartitionKeyHeader(req,partitionKey);
 
-        var response = self.basicClient->get(string `/dbs/${dbname}/colls/${colname}/docs/${id}`,req);
+        var response = self.basicClient->get(string `/dbs/${dbName}/colls/${colName}/docs/${documentId}`,req);
 
         json jsonresponse = check parseResponseToJson(response);
 
         return mapJsonToDocument(jsonresponse);
     }
 
-    public remote function replaceDocument(string dbname, string colname, json document, string docid, any partitionkeyvalue) returns @tainted Document|error{
+    #To replace a document inside a collection
+    # *******x-ms-indexing-directive and If-Match headers are not handled******
+    # 
+    # + dbName -  id/name of the database which collection is in.
+    # + colName - id/name of collection which document is in.
+    # + document - json object for replacing the existing document
+    # + documentId - id of the document to be replaced
+    # + partitionKey - the value in the partition key field specified for the collection to set x-ms-documentdb-partitionkey header
+    # + return - If successful, returns a Document. Else returns error. 
+    #
+    public remote function replaceDocument(string dbName, string colName, json document, string documentId, any partitionKey) returns @tainted Document|error{
                 
         http:Request req = new;
         string verb = "PUT"; 
-        string resourceId = string `dbs/${dbname}/colls/${colname}/docs/${docid}`;
+        string resourceId = string `dbs/${dbName}/colls/${colName}/docs/${documentId}`;
         
         req = check setHeaders(req,self.apiVersion,self.host,verb,self.resourceTypedoc,resourceId,self.masterKey,self.keyType,self.tokenVersion);
-        req = check setPartitionKeyHeader(req,partitionkeyvalue);
+        req = check setPartitionKeyHeader(req,partitionKey);
 
         req.setJsonPayload(document);
 
-        var response = self.basicClient->put(string `/dbs/${dbname}/colls/${colname}/docs/${docid}`,req);
+        var response = self.basicClient->put(string `/dbs/${dbName}/colls/${colName}/docs/${documentId}`,req);
 
         json jsonresponse = check parseResponseToJson(response);
 
         return mapJsonToDocument(jsonresponse);
-        
-        //x-ms-indexing-directive
-
     }
 
-    public remote function deleteDocument(string dbname, string colname, string docid, any partitionkeyvalue) returns @tainted string|error{
+    #To delete a document inside a collection
+    # 
+    # + dbName -  id/name of the database which collection is in.
+    # + colName - id/name of collection which document is in.
+    # + documentId - id of the document to be deleted
+    # + partitionKey - the value in the partition key field specified for the collection to set x-ms-documentdb-partitionkey header
+    # + return - If successful, returns a Document. Else returns error. 
+    #
+    public remote function deleteDocument(string dbName, string colName, string documentId, any partitionKey) returns @tainted string|error{
         
         http:Request req = new;
         string verb = "DELETE"; 
-        string resourceId = string `dbs/${dbname}/colls/${colname}/docs/${docid}`;
+        string resourceId = string `dbs/${dbName}/colls/${colName}/docs/${documentId}`;
         
         req = check setHeaders(req,self.apiVersion,self.host,verb,self.resourceTypedoc,resourceId,self.masterKey,self.keyType,self.tokenVersion);
-        req = check setPartitionKeyHeader(req,partitionkeyvalue);
+        req = check setPartitionKeyHeader(req,partitionKey);
 
-        var response = self.basicClient->delete(string `/dbs/${dbname}/colls/${colname}/docs/${docid}`,req);
+        var response = self.basicClient->delete(string `/dbs/${dbName}/colls/${colName}/docs/${documentId}`,req);
         
         return getDeleteResponse(response);
     }
 
-
-    public remote function queryDocument(string dbname, string colname, json query, any partitionkeyvalue) returns @tainted json|error{
+    #To query documents inside a collection
+    # *********Function does not work properly, x-ms-max-item-count header is not handled*********
+    # 
+    # + dbName -  id/name of the database which collection is in.
+    # + colName - id/name of collection which document is in.
+    # + sqlQuery - json object containing the sql query
+    # + partitionKey - the value in the partition key field specified for the collection to set x-ms-documentdb-partitionkey header
+    # + return - If successful, returns a Document. Else returns error. 
+    #
+    public remote function queryDocument(string dbName, string colName, json sqlQuery, any partitionKey) returns @tainted json|error{
         
         http:Request req = new;
         string verb = "POST"; 
-        string resourceId = string `dbs/${dbname}/colls/${colname}`;
+        string resourceId = string `dbs/${dbName}/colls/${colName}`;
 
         req = check setHeadersForQuery(req);
         req = check setHeaders(req,self.apiVersion,self.host,verb,self.resourceTypedoc,resourceId,self.masterKey,self.keyType,self.tokenVersion);
-        req = check setPartitionKeyHeader(req,partitionkeyvalue);
+        req = check setPartitionKeyHeader(req,partitionKey);
 
-        req.setJsonPayload(query);
+        req.setJsonPayload(sqlQuery);
 
-        var response = self.basicClient->post(string `/dbs/${dbname}/colls/${colname}/docs`,req);
+        var response = self.basicClient->post(string `/dbs/${dbName}/colls/${colName}/docs`,req);
 
         json jsonresponse = check parseResponseToJson(response);
 
