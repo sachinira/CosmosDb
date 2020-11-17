@@ -15,7 +15,7 @@ public type DBList record {
 };
 
 
-//conflict rresolution policy must be included
+//conflict resolution policy must be included
 public type Collection record {
     string id = "";
     string _rid = "";
@@ -105,6 +105,25 @@ public type DocumentList record {|
     string _rid= "";
     Document[] documents = [];
     int _count = 0;
+|};
+
+public type StoredProcedure record {
+    string body = "";
+    string id = "";
+    Common common = {};
+};
+
+public type StoredProcedureList record {
+    string _rid = "";
+    StoredProcedure[] storedprocedures = [];
+    int _count = 0;
+};
+
+public type Common record {|
+    string _rid = "";
+    int _ts = 0;
+    string _self = "";
+    string _etag = "";
 |};
 
 public type AzureError distinct error;
