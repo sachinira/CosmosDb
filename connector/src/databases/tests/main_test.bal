@@ -7,7 +7,9 @@ AuthConfig config = {
         baseUrl: BASE_URL,
         masterKey: MASTER_KEY,
         host: HOST,
-        apiVersion:API_VERSION
+        apiVersion:API_VERSION,
+        tokenType: TOKEN_TYPE,
+        tokenVersion: TOKEN_VERSION
 };
 
 @test:Config{

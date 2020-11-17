@@ -30,15 +30,14 @@ public  client class Databases{
         self.masterKey = opConf.masterKey;
         self.host = opConf.host;
         self.apiVersion = opConf.apiVersion;
+        self.keyType = opConf.tokenType;
+        self.tokenVersion = opConf.tokenVersion;
 
         self.resourceTypedb = "dbs";
         self.resourceTypecoll= "colls";
         self.resourceTypedoc = "docs";
         self.resourceTypeattchment = "attachments";
         self.resourceTypesproc = "sprocs";
-
-        self.keyType = "master";
-        self.tokenVersion = "1.0";
 
         self.basicClient = new (self.baseUrl, {
             secureSocket: {
@@ -55,6 +54,7 @@ public  client class Databases{
     # + dbName -  id/name for the database
     # + throughput - Optional throughput parameter which will set 'x-ms-offer-throughput' header 
     # + autoscale - Optional throughput parameter which will set 'x-ms-cosmos-offer-autopilot-settings' header
+    # 
     # + return - If successful, returns Database. Else returns error.  
     # 
     public remote function createDatabase(string dbName, int? throughput = (), json? autoscale = ()) returns @tainted Database|error{
@@ -104,6 +104,7 @@ public  client class Databases{
     # To retrive a given database inside a resource
     #
     # + dbName -  id/name of the database to retrieve
+    # 
     # + return - If successful, returns Database. Else returns error.  
     #
     public remote function listOneDatabase(string dbName) returns @tainted Database|error{
@@ -125,6 +126,7 @@ public  client class Databases{
     # To retrive a given database inside a resource
     #
     # + dbName -  id/name of the database to retrieve
+    # 
     # + return - If successful, returns string specifying delete is sucessfull. Else returns error.  
     #
     public remote function deleteDatabase(string dbName) returns @tainted string|error{
@@ -149,6 +151,7 @@ public  client class Databases{
     # + indexingPolicy - Optional json object to configure indexing policy. By default, the indexing is automatic for all document paths within the collection.
     # + throughput - Optional throughput parameter which will set 'x-ms-offer-throughput' header 
     # + autoscale - Optional throughput parameter which will set 'x-ms-cosmos-offer-autopilot-settings' header
+    # 
     # + return - If successful, returns Collection. Else returns error.  
     # 
     public remote function createCollection(string dbName, string colName, json partitionKey, json? indexingPolicy = (), int? throughput = (),json? autoscale = ()) returns @tainted Collection|error{
@@ -180,6 +183,7 @@ public  client class Databases{
     # To retrive  all collections inside a database
     #
     # + dbName -  id/name of the database collections are in.
+    # 
     # + return - If successful, returns CollectionList. Else returns error.  
     #
     public remote function getAllCollections(string dbName) returns @tainted CollectionList|error{
@@ -201,6 +205,7 @@ public  client class Databases{
     #
     # + dbName -  id/name of the database which collection is in.
     # + colName - id/name of collection to retrive.
+    # 
     # + return - If successful, returns Collection. Else returns error.  
     #
     public remote function getOneCollection(string dbName,string colName) returns @tainted Collection|error{
@@ -222,6 +227,7 @@ public  client class Databases{
     #
     # + dbName -  id/name of the database which collection is in.
     # + colName - id/name of collection to delete.
+    # 
     # + return - If successful, returns string specifying delete is sucessfull. Else returns error.   
     #
     public remote function deleteCollection(string dbName, string colName) returns @tainted string|error{
@@ -240,8 +246,9 @@ public  client class Databases{
     # To retrieve a list of partition key ranges for the collection
     #
     # + dbName -  id/name of the database which collection is in.
-    # + colName - id/name of collection to delete.
-    # + return - If successful, returns Collection. Else returns error.  
+    # + colName - id/name of collection to where partition key range is in.
+    # 
+    # + return - If successful, returns PartitionKeyList. Else returns error.  
     #
     public remote function getPartitionKeyRanges(string dbName, string colName) returns @tainted PartitionKeyList|error{
 
@@ -280,7 +287,7 @@ public  client class Databases{
     #                   -Include adds the document to the index.
     #                   -Exclude omits the document from indexing.
     # 
-    # + return - If successful, returns Collection. Else returns error.  
+    # + return - If successful, returns Document. Else returns error.  
     #
     public remote function createDocument(string dbName, string colName, json document,any partitionKey, boolean? isUpsert = (), string? indexingDir = ()) returns @tainted Document|error{
         
@@ -314,6 +321,7 @@ public  client class Databases{
     # + dbName -  id/name of the database which collection is in.
     # + colName - id/name of collection which documents are in.
     # + itemcount - Optional integer number of documents to be listed in document list (Default is 100)
+    # 
     # + return - If successful, returns DocumentList. Else returns error. 
     #
     public remote function listAllDocuments(string dbName, string colName, int? itemcount = ()) returns @tainted DocumentList|error{
@@ -343,7 +351,8 @@ public  client class Databases{
     # + resp -
     # + req -
     # + list1 - 
-    # + return - If successful, returns Collection. Else returns error. 
+    # 
+    # + return - 
     # 
     public remote function createRequestAgain(http:Response resp, http:Request req, string dbName, string colName, DocumentList list1) returns @tainted DocumentList|error{
 
@@ -383,6 +392,7 @@ public  client class Databases{
     # + colName - id/name of collection which documents are in.
     # + documentId - id of the document to be retrieved
     # + partitionKey - the value in the partition key field specified for the collection to set x-ms-documentdb-partitionkey header
+    # 
     # + return - If successful, returns a Document. Else returns error. 
     #
     public remote function listOneDocument(string dbName, string colName, string documentId, any partitionKey) returns @tainted Document|error{
@@ -409,6 +419,7 @@ public  client class Databases{
     # + document - json object for replacing the existing document
     # + documentId - id of the document to be replaced
     # + partitionKey - the value in the partition key field specified for the collection to set x-ms-documentdb-partitionkey header
+    # 
     # + return - If successful, returns a Document. Else returns error. 
     #
     public remote function replaceDocument(string dbName, string colName, json document, string documentId, any partitionKey) returns @tainted Document|error{
@@ -435,7 +446,8 @@ public  client class Databases{
     # + colName - id/name of collection which document is in.
     # + documentId - id of the document to be deleted
     # + partitionKey - the value in the partition key field specified for the collection to set x-ms-documentdb-partitionkey header
-    # + return - If successful, returns a Document. Else returns error. 
+    # 
+    # + return - If successful, returns a string giving sucessfully deleted. Else returns error. 
     #
     public remote function deleteDocument(string dbName, string colName, string documentId, any partitionKey) returns @tainted string|error{
         
@@ -458,7 +470,8 @@ public  client class Databases{
     # + colName - id/name of collection which document is in.
     # + sqlQuery - json object containing the sql query
     # + partitionKey - the value in the partition key field specified for the collection to set x-ms-documentdb-partitionkey header
-    # + return - If successful, returns a Document. Else returns error. 
+    # 
+    # + return - If successful, returns a json. Else returns error. 
     #
     public remote function queryDocument(string dbName, string colName, json sqlQuery, any partitionKey) returns @tainted json|error{
         
@@ -479,90 +492,134 @@ public  client class Databases{
         return (jsonresponse);
     }
 
-    //------------------------------Stored Procedures------------------------------------------
-
-    public remote function createStoredProcedure(string dbname, string colname, string sproc, string sprocid) returns @tainted StoredProcedure|error{
+    #To create a new stored procedure inside a collection
+    # A stored procedure is a piece of application logic written in JavaScript that 
+    # is registered and executed against a collection as a single transaction.
+    # 
+    # + dbName -  id/name of the database which collection is in.
+    # + colName - id/name of collection which stored procedure is in.
+    # + sproc - 
+    # + sprocId -
+    #  
+    # + return - If successful, returns a StoredProcedure. Else returns error. 
+    #
+    public remote function createStoredProcedure(string dbName, string colName, string sproc, string sprocId) returns @tainted StoredProcedure|error{
 
         http:Request req = new;
         string verb = "POST"; 
-        string resourceId = string `dbs/${dbname}/colls/${colname}`;
+        string resourceId = string `dbs/${dbName}/colls/${colName}`;
 
         req = check setHeaders(req,self.apiVersion,self.host,verb,self.resourceTypesproc,resourceId,self.masterKey,self.keyType,self.tokenVersion);
 
         json spbody = {
-            id: sprocid,
+            id: sprocId,
             body:sproc
         };
 
         req.setJsonPayload(spbody);
 
-        var response = self.basicClient->post(string `/dbs/${dbname}/colls/${colname}/sprocs`,req);
+        var response = self.basicClient->post(string `/dbs/${dbName}/colls/${colName}/sprocs`,req);
 
         json jsonreponse = check parseResponseToJson(response);
 
         return mapJsonToSproc(jsonreponse);    
     }
 
-    public remote function replaceStoredProcedure(string dbname, string colname, string sproc, string previousid) returns @tainted StoredProcedure|error{
+    #To replace a stored procedure with new one inside a collection
+    # 
+    # + dbName -  id/name of the database which collection is in.
+    # + colName - id/name of collection which stored procedure is in.
+    # + sproc - 
+    # + sprocId - 
+    # 
+    # + return - If successful, returns a StoredProcedure. Else returns error. 
+    #
+    public remote function replaceStoredProcedure(string dbName, string colName, string sproc, string sprocId) returns @tainted StoredProcedure|error{
 
         http:Request req = new;
         string verb = "PUT"; 
-        string resourceId = string `dbs/${dbname}/colls/${colname}/sprocs/${previousid}`;
+        string resourceId = string `dbs/${dbName}/colls/${colName}/sprocs/${sprocId}`;
 
         req = check setHeaders(req,self.apiVersion,self.host,verb,self.resourceTypesproc,resourceId,self.masterKey,self.keyType,self.tokenVersion);
 
         json spbody = {
-            id: previousid,
+            id: sprocId,
             body:sproc
         };
 
         req.setJsonPayload(spbody);
 
-        var response = self.basicClient->put(string `/dbs/${dbname}/colls/${colname}/sprocs/${previousid}`,req);
+        var response = self.basicClient->put(string `/dbs/${dbName}/colls/${colName}/sprocs/${sprocId}`,req);
 
         json jsonreponse = check parseResponseToJson(response);
 
         return mapJsonToSproc(jsonreponse);  
     }
 
-    public remote function listStoredProcedures(string dbname, string colname) returns @tainted StoredProcedureList|error{
+    #To list all stored procedures inside a collection
+    # 
+    # + dbName -  id/name of the database which collection is in.
+    # + colName - id/name of collection which stored procedures are in.
+    #  
+    # + return - If successful, returns a StoredProcedureList. Else returns error. 
+    #
+    public remote function listStoredProcedures(string dbName, string colName) returns @tainted StoredProcedureList|error{
 
         http:Request req = new;
         string verb = "GET"; 
-        string resourceId = string `dbs/${dbname}/colls/${colname}`;
+        string resourceId = string `dbs/${dbName}/colls/${colName}`;
 
         req = check setHeaders(req,self.apiVersion,self.host,verb,self.resourceTypesproc,resourceId,self.masterKey,self.keyType,self.tokenVersion);
 
-        var response = self.basicClient->get(string `/dbs/${dbname}/colls/${colname}/sprocs`,req);
+        var response = self.basicClient->get(string `/dbs/${dbName}/colls/${colName}/sprocs`,req);
 
         json jsonreponse = check parseResponseToJson(response);
 
         return mapJsonToSprocList(jsonreponse);  
     }
 
-    public remote function deleteStoredProcedure(string dbname, string colname, string sprocid) returns @tainted json|error{
+    #To delete a stored procedure inside a collection
+    # 
+    # + dbName -  id/name of the database which collection is in.
+    # + colName - id/name of collection which stored procedure is in.
+    # + sprocId - id of the stored procedure to be deleted
+    # 
+    # + return - If successful, returns string specifying delete is sucessfull. Else returns error. 
+    #
+    public remote function deleteStoredProcedure(string dbName, string colName, string sprocId) returns @tainted json|error{
 
         http:Request req = new;
         string verb = "DELETE"; 
-        string resourceId = string `dbs/${dbname}/colls/${colname}/sprocs/${sprocid}`;
+        string resourceId = string `dbs/${dbName}/colls/${colName}/sprocs/${sprocId}`;
 
         req = check setHeaders(req,self.apiVersion,self.host,verb,self.resourceTypesproc,resourceId,self.masterKey,self.keyType,self.tokenVersion);
 
-        var response = self.basicClient->delete(string `/dbs/${dbname}/colls/${colname}/sprocs/${sprocid}`,req);
+        var response = self.basicClient->delete(string `/dbs/${dbName}/colls/${colName}/sprocs/${sprocId}`,req);
 
         return getDeleteResponse(response);   
     }
 
-    public remote function executeStoredProcedure(string dbname, string colname, string sprocid, any[]? parameters) returns @tainted json|error{
+
+    #To execute a stored procedure inside a collection
+    # ***********function only works correctly for string parameters************
+    # 
+    # + dbName -  id/name of the database which collection is in.
+    # + colName - id/name of collection which stored procedure is in.
+    # + sprocId - id of the stored procedure to be executed
+    # + parameters - The list of paramaters to pass to javascript function as an array.
+    # 
+    # + return - If successful, returns json with the output from the executed funxtion. Else returns error. 
+    #
+    public remote function executeStoredProcedure(string dbName, string colName, string sprocId, any[]? parameters) returns @tainted json|error{
 
         http:Request req = new;
         string verb = "POST"; 
-        string resourceId = string `dbs/${dbname}/colls/${colname}/sprocs/${sprocid}`;
+        string resourceId = string `dbs/${dbName}/colls/${colName}/sprocs/${sprocId}`;
 
         req = check setHeaders(req,self.apiVersion,self.host,verb,self.resourceTypesproc,resourceId,self.masterKey,self.keyType,self.tokenVersion);
         req.setTextPayload(parameters.toString());
 
-        var response = self.basicClient->post(string `/dbs/${dbname}/colls/${colname}/sprocs/${sprocid}`,req);
+        var response = self.basicClient->post(string `/dbs/${dbName}/colls/${colName}/sprocs/${sprocId}`,req);
 
         json jsonreponse = check parseResponseToJson(response);
 
@@ -571,9 +628,3 @@ public  client class Databases{
 
 }
 
-public type AuthConfig record {
-    string baseUrl;    
-    string masterKey;
-    string host;
-    string apiVersion;
-};
