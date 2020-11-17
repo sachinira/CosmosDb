@@ -117,7 +117,7 @@ function createCollection(){
                         };
     string throughput = "400";
 
-    var result = AzureCosmosClient->createCollection("heloo","mycollection1",partitionkey,(),(),());
+    var result = AzureCosmosClient->createCollection("heloo","mycollection1",partitionkey);
 
     if (result is Collection) 
     {
