@@ -34,7 +34,7 @@ function createDB(){
 
 }
 
-//create db with throughput / autoscale
+//create db with throughput / autoscale testcase comes here
 
 
 @test:Config{
@@ -131,7 +131,7 @@ function createCollection(){
 
 }
 
-//create collection with autoscale indexing policy and throughput
+//create collection with autoscale indexing policy and throughput testcase comes here
 
 
 @test:Config{
@@ -235,7 +235,7 @@ function createDocument(){
     var uuid = createRandomUUID();
     string docid = uuid.toString();
  
-    json custom = {
+    json custombody = {
         "LastName": "keeeeeee",  
         "Parents": [  
             {  
@@ -273,11 +273,11 @@ function createDocument(){
             id: docid    
     };
         
-    json|error finalj =  body.mergeJson(custom);
+    json|error finalj =  body.mergeJson(custombody);
 
     if finalj is json{
 
-        var result = AzureCosmosClient->createDocument("heloo","mycollection1",finalj,true,(),<json>custom.AccountNumber);
+        var result = AzureCosmosClient->createDocument("heloo","mycollection1",finalj,true,(),<json>custombody.AccountNumber);
        
         if result is Document 
         {
@@ -293,7 +293,7 @@ function createDocument(){
 
 }
 
-//with indexing or upsert headers
+//with indexing or upsert headers test case comes here
 
 
 @test:Config{
@@ -592,9 +592,9 @@ function executeOneSproc(){
 
     Databases AzureCosmosClient = new(config);
     string sprocid = "sproc-50c4f0df-b25d-48ef-b936-d31a55798193";
-    string[] array = ["Sachi"];
+    string[] arrayofparameters = ["Sachi"];
 
-    var result = AzureCosmosClient->executeStoredProcedure("hikall","mycollection1",sprocid,array);
+    var result = AzureCosmosClient->executeStoredProcedure("hikall","mycollection1",sprocid,arrayofparameters);
        
     if result is json 
     {
