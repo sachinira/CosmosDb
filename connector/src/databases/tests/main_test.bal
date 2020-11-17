@@ -12,6 +12,12 @@ AuthConfig config = {
         tokenVersion: TOKEN_VERSION
 };
 
+
+function createRandomUUID() returns handle = @java:Method {
+    name: "randomUUID",
+    'class: "java.util.UUID"
+} external;
+
 @test:Config{
     enable: false
 }
@@ -36,11 +42,83 @@ function createDB(){
 
 }
 
-//create db with throughput / autoscale testcase comes here
+@test:Config{
+    enable: false
+}
+function createDBWithManualThroughput(){
+
+    io:println("--------------Create with manual throguput------------------------\n\n");
+
+    Databases AzureCosmosClient = new(config);
+    int throughput = 600;
+    
+    var result = AzureCosmosClient->createDatabase("helooth",600);
+
+    if (result is Database) 
+    {
+        io:println(result);
+    } 
+    else 
+    {
+        test:assertFail(msg = result.message());
+    }
+
+    io:println("\n\n");
+
+}
+
+@test:Config{
+    enable: false
+}
+function createDBWithAutoscaling(){
+
+    io:println("--------------Create with autoscaling throguput------------------------\n\n");
+
+    Databases AzureCosmosClient = new(config);
+    json scaling = {"maxThroughput": 4000};
+    
+    var result = AzureCosmosClient->createDatabase("helooauto",(),scaling);
+
+    if (result is Database) 
+    {
+        io:println(result);
+    } 
+    else 
+    {
+        test:assertFail(msg = result.message());
+    }
+
+    io:println("\n\n");
+}
 
 
 @test:Config{
     enable: false
+}
+function createDBWithBothHeaders(){
+
+    io:println("--------------Create with autoscaling and throguput headers------------------------\n\n");
+
+    Databases AzureCosmosClient = new(config);
+    json scaling = {"maxThroughput": 4000};
+    int throughput = 800;
+
+    var result = AzureCosmosClient->createDatabase("helooboth",throughput,scaling);
+
+    if (result is Database) 
+    {
+        io:println(result);
+    } 
+    else 
+    {
+        test:assertFail(msg = result.message());
+    }
+
+    io:println("\n\n");
+}
+
+@test:Config{
+   enable: false
 }
 function listAllDB(){
 
@@ -487,7 +565,6 @@ function queryDocument(){
 }
 function createSproc(){
 
-
     io:println("-----------------Create stored procedure-----------------------\n\n");
 
     Databases AzureCosmosClient = new(config);
@@ -586,7 +663,7 @@ function deleteOneSproc(){
 }
 
 @test:Config{
-   //enable: false
+   enable: false
 }
 function executeOneSproc(){
 
@@ -611,10 +688,7 @@ function executeOneSproc(){
     
 }
 
-function createRandomUUID() returns handle = @java:Method {
-    name: "randomUUID",
-    'class: "java.util.UUID"
-} external;
+
 
 
 
