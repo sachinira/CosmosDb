@@ -1,12 +1,17 @@
 import ballerina/http;
 //import ballerina/io;
 
+
+# Azure Cosmos DB Client object.
+#
+# + basicClient - The HTTP Client
+# 
 public  client class Databases{
     
-    public string baseUrl;
-    public string masterKey;
-    public string host;
-    public string apiVersion;
+    private string baseUrl;
+    private string masterKey;
+    private string host;
+    private string apiVersion;
     
     public http:Client basicClient;
 
@@ -45,9 +50,15 @@ public  client class Databases{
         });
     }
 
-    //--------------------------------------Databases --------------------------------------
 
-    public remote function createDatabase(string dbname, int? throughput, json? autoscale) returns @tainted Database|error{
+    # To create a database inside a resource
+    #
+    # + dbName -  id/name for the database
+    # + throughput - Optional throughput parameter which will set 'x-ms-offer-throughput' header 
+    # + autoscale - Optional throughput parameter which will set 'x-ms-cosmos-offer-autopilot-settings' header
+    # + return - If successful, returns Database. Else returns error.  
+    # 
+    public remote function createDatabase(string dbName, int? throughput = (), json? autoscale = ()) returns @tainted Database|error{
 
         http:Request req = new;
         string verb = "POST"; 
@@ -58,7 +69,7 @@ public  client class Databases{
         req = check setThroughputOrAutopilotHeader(req,throughput,autoscale);
 
         json body = {
-            id: dbname
+            id: dbName
         };
 
         req.setJsonPayload(body);
@@ -71,6 +82,10 @@ public  client class Databases{
         
     }
 
+    # To list all databases inside a resource
+    #
+    # + return - If successful, returns DBList. Else returns error.  
+    # 
     public remote function listDatabases() returns @tainted DBList|error{
 
         http:Request req = new;
@@ -87,15 +102,21 @@ public  client class Databases{
         
     }
 
-    public remote function listOneDatabase(string dbname) returns @tainted Database|error{
+
+    # To retrive a given database inside a resource
+    #
+    # + dbName -  id/name of the database to retrieve
+    # + return - If successful, returns Database. Else returns error.  
+    #
+    public remote function listOneDatabase(string dbName) returns @tainted Database|error{
 
         http:Request req = new;
         string verb = "GET"; 
-        string resourceId = string `dbs/${dbname}`;
+        string resourceId = string `dbs/${dbName}`;
        
         req = check setHeaders(req,self.apiVersion,self.host,verb,self.resourceTypedb,resourceId,self.masterKey,self.keyType,self.tokenVersion);
 
-        var response = self.basicClient->get(string `/dbs/${dbname}`,req);
+        var response = self.basicClient->get(string `/dbs/${dbName}`,req);
 
         json jsonresponse = check parseResponseToJson(response);
 
@@ -103,20 +124,25 @@ public  client class Databases{
         
     }
 
-    public remote function deleteDatabase(string dbname) returns @tainted string|error{
+
+    # To retrive a given database inside a resource
+    #
+    # + dbName -  id/name of the database to retrieve
+    # + return - If successful, returns string specifying delete is sucessfull. Else returns error.  
+    #
+    public remote function deleteDatabase(string dbName) returns @tainted string|error{
 
         http:Request req = new;
         string verb = "DELETE"; 
-        string resourceId = string `dbs/${dbname}`;
+        string resourceId = string `dbs/${dbName}`;
         
         req = check setHeaders(req,self.apiVersion,self.host,verb,self.resourceTypedb,resourceId,self.masterKey,self.keyType,self.tokenVersion);
 
-        var response = self.basicClient->delete(string `/dbs/${dbname}`,req);
+        var response = self.basicClient->delete(string `/dbs/${dbName}`,req);
 
         return check getDeleteResponse(response);
     }
 
-    //-----------------------------------------Collections--------------------------------------------
 
     public remote function createCollection(string dbname, string colname, json partitionkey, json? indexingpolicy, int? throughput,json? autoscale) returns @tainted Collection|error{
 

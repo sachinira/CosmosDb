@@ -19,7 +19,7 @@ function createDB(){
 
     Databases AzureCosmosClient = new(config);
     
-    var result = AzureCosmosClient->createDatabase("heloo",(),());
+    var result = AzureCosmosClient->createDatabase("heloo");
 
     if (result is Database) 
     {
