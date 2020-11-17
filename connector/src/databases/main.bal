@@ -19,9 +19,8 @@ public  client class Databases{
     private string keyType;
     private string tokenVersion;
 
-
-
     function init(AuthConfig opConf){
+
         self.baseUrl = opConf.baseUrl;
         self.masterKey = opConf.masterKey;
         self.host = opConf.host;
@@ -116,8 +115,6 @@ public  client class Databases{
 
         return check getDeleteResponse(response);
     }
-
-
 
     //-----------------------------------------Collections--------------------------------------------
 
@@ -228,7 +225,7 @@ public  client class Databases{
         if upsert == true {
             req = check setUpsertHeader(req,upsert);
         }
-        
+
         req.setJsonPayload(document);
         var response = self.basicClient->post(string `/dbs/${dbname}/colls/${colname}/docs`,req);
 
@@ -260,8 +257,7 @@ public  client class Databases{
 
              //createRequestAgain(response,req,dbname,colname,l);
         //}
-
-
+        
         return l;    
     }
 
@@ -455,8 +451,6 @@ public  client class Databases{
         return jsonreponse;
         
     }
-
-    
 
 }
 
