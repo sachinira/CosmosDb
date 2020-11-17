@@ -4,12 +4,13 @@ import ballerina/java;
 
 
 AuthConfig config = {
-        baseUrl: BASE_URL,
-        masterKey: MASTER_KEY,
-        host: HOST,
-        apiVersion:API_VERSION,
-        tokenType: TOKEN_TYPE,
-        tokenVersion: TOKEN_VERSION
+    
+    baseUrl: BASE_URL,
+    masterKey: MASTER_KEY,
+    host: HOST,
+    apiVersion:API_VERSION,
+    tokenType: TOKEN_TYPE,
+    tokenVersion: TOKEN_VERSION
 };
 
 
@@ -211,7 +212,54 @@ function createCollection(){
 
 }
 
-//create collection with autoscale indexing policy and throughput testcase comes here
+@test:Config{
+    enable: false
+}
+function createCollectionWithManualThroughputAndIndexingPolicy(){
+
+    io:println("--------------Create Collection with manual throughput-----------------------\n\n");
+
+    Databases AzureCosmosClient = new(config);
+    json partitionkey = {  
+                            "paths": ["/AccountNumber"], 
+                            "kind": "Hash",
+                            "Version": 2
+                        };
+    
+    json indexingPolicy =   {  
+                                "automatic": true,  
+                                "indexingMode": "Consistent",  
+                                "includedPaths": [  
+                                    {  
+                                        "path": "/*",  
+                                        "indexes": [  
+                                        {  
+                                            "dataType": "String",  
+                                            "precision": -1,  
+                                            "kind": "Range"  
+                                        }  
+                                        ]  
+                                    }  
+                                ]  
+                            };
+    int throughput = 400;
+    string collectionName = "mycoll";
+
+    var result = AzureCosmosClient->createCollection("heloo",collectionName,partitionkey,indexingPolicy,throughput);
+
+    if (result is Collection) 
+    {
+        io:println(result);
+    } else 
+    {
+        test:assertFail(msg = result.message());
+    } 
+
+    io:println("\n\n");
+
+}
+
+//create collection with autoscale testcase comes here
 
 
 @test:Config{
@@ -302,7 +350,6 @@ function GetPartitionKeyRanges(){
     io:println("\n\n");
 
 }
-
 
 @test:Config{
   enable: false
