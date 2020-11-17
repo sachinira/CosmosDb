@@ -1,3 +1,11 @@
+public type AuthConfig record {|
+    string baseUrl;    
+    string masterKey;
+    string host;
+    string apiVersion;
+    string tokenType;
+    string tokenVersion;
+|};
 
 public type Database record {
     string id = "";

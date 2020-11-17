@@ -7,7 +7,9 @@ AuthConfig config = {
         baseUrl: BASE_URL,
         masterKey: MASTER_KEY,
         host: HOST,
-        apiVersion:API_VERSION
+        apiVersion:API_VERSION,
+        tokenType: TOKEN_TYPE,
+        tokenVersion: TOKEN_VERSION
 };
 
 @test:Config{
@@ -19,7 +21,7 @@ function createDB(){
 
     Databases AzureCosmosClient = new(config);
     
-    var result = AzureCosmosClient->createDatabase("heloo",(),());
+    var result = AzureCosmosClient->createDatabase("heloo");
 
     if (result is Database) 
     {
@@ -117,7 +119,7 @@ function createCollection(){
                         };
     string throughput = "400";
 
-    var result = AzureCosmosClient->createCollection("heloo","mycollection1",partitionkey,(),(),());
+    var result = AzureCosmosClient->createCollection("heloo","mycollection1",partitionkey);
 
     if (result is Collection) 
     {
@@ -277,7 +279,7 @@ function createDocument(){
 
     if finalj is json{
 
-        var result = AzureCosmosClient->createDocument("heloo","mycollection1",finalj,true,(),<json>custombody.AccountNumber);
+        var result = AzureCosmosClient->createDocument("heloo","mycollection1",finalj,<json>custombody.AccountNumber,true);
        
         if result is Document 
         {
