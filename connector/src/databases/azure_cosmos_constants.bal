@@ -12,6 +12,5 @@ const string RESOURCE_PATH_DOCUMENTS = "/docs";
 const string RESOURCE_PATH_STORED_POCEDURES = "/sprocs";
 const string RESOURCE_PATH_PK_RANGES = "/pkranges";
 
-
 # Azure Cosmos DB Document API (REST) version
 final string API_VERSION = "2018-12-31";

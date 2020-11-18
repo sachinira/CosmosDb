@@ -220,7 +220,7 @@ public  client class Databases {
 
     
     #To list all the documents inside a collection
-    # ******x-ms-consistency-level, x-ms-session-token, A-IM, x-ms-continuation and If-None-Match headers are not handled******
+    # x-ms-consistency-level, x-ms-session-token, A-IM, x-ms-continuation and If-None-Match headers are not handled**
     # + dbName -  id/name of the database which collection is in.
     # + colName - id/name of collection which documents are in.
     # + itemcount - Optional integer number of documents to be listed in document list (Default is 100)

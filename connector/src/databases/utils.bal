@@ -103,14 +103,16 @@ public function setUpsertHeader(http:Request req, boolean? upsert= ()) returns h
     return req;
 }
 
-public function setThroughputOrAutopilotHeader(http:Request req,int? throughput = (),json? option =()) returns http:Request|error{
+public function setThroughputOrAutopilotHeader(http:Request req,int? throughput = (),json? option =()) returns 
+http:Request|error{
     if throughput is int &&  option is () {
         //validate throughput The minimum is 400 up to 1,000,000 (or higher by requesting a limit increase).
         req.setHeader("x-ms-offer-throughput",option.toString());
     } else if throughput is () &&  option != () {
         req.setHeader("x-ms-cosmos-offer-autopilot-settings",option.toString());
     } else if throughput is int &&  option != () {
-        return prepareError("Cannot set both x-ms-offer-throughput and x-ms-cosmos-offer-autopilot-settings headers at once");
+        return 
+        prepareError("Cannot set both x-ms-offer-throughput and x-ms-cosmos-offer-autopilot-settings headers at once");
     }
     return req;
 }
@@ -125,7 +127,8 @@ public function setHeadersforItemCount(http:Request req, int? maxitemcount = ())
     return req;
 }
 
-public function setHeadersForConsistancy(http:Request req, string? consistancylevel = (), string? sessiontoken = ()) returns http:Request|error{
+public function setHeadersForConsistancy(http:Request req, string? consistancylevel = (), string? sessiontoken = ()) 
+returns http:Request|error{
     //The override must be the same or weaker than the account’s configured consistency level.
     req.setHeader("x-ms-consistency-level",consistancylevel.toString());
     //Clients must echo the latest read value of this header during read requests for session consistency.
@@ -133,7 +136,8 @@ public function setHeadersForConsistancy(http:Request req, string? consistancyle
     return req;
 }
 
-public function setHeadersForChangeFeed(http:Request req, string? aim = (), string? nonmatch = ()) returns http:Request|error{
+public function setHeadersForChangeFeed(http:Request req, string? aim = (), string? nonmatch = ()) returns 
+http:Request|error{
     req.setHeader("A-IM",aim.toString());
     req.setHeader("If-None-Match",nonmatch.toString());
     return req;
@@ -167,7 +171,8 @@ public function setHeadersForQuery(http:Request req) returns http:Request|error{
 # + tokenVersion - denotes the version of the token, currently 1.0.
 # + params - an object of type HeaderParamaters
 # + return - If successful, returns same http:Request with newly appended headers. Else returns error.  
-public function setHeaders(http:Request req, string host, string keyToken, string tokenType, string tokenVersion,HeaderParamaters params) returns http:Request|error{
+public function setHeaders(http:Request req, string host, string keyToken, string tokenType, string tokenVersion,
+HeaderParamaters params) returns http:Request|error{
     req.setHeader("x-ms-version",params.apiVersion);
     req.setHeader("Host",host);
     req.setHeader("Accept","*/*");
@@ -197,8 +202,10 @@ public function setHeaders(http:Request req, string host, string keyToken, strin
 # + tokenType - denotes the type of token: master or resource.
 # + tokenVersion - denotes the version of the token, currently 1.0.
 # + return - If successful, returns string which is the  hashed token signature. Else returns ().  
-public function generateTokenNew(string verb, string resourceType, string resourceId, string keyToken, string tokenType, string tokenVersion) returns string?{
-    var token = generateTokenJ(java:fromString(verb),java:fromString(resourceType),java:fromString(resourceId),java:fromString(keyToken),java:fromString(tokenType),java:fromString(tokenVersion));
+public function generateTokenNew(string verb, string resourceType, string resourceId, string keyToken, string tokenType, 
+string tokenVersion) returns string?{
+    var token = generateTokenJ(java:fromString(verb),java:fromString(resourceType),java:fromString(resourceId),
+    java:fromString(keyToken),java:fromString(tokenType),java:fromString(tokenVersion));
     return java:toString(token);
 
 }
@@ -251,7 +258,8 @@ public function getResourceId(string url) returns string{
     return resourceId;
 }
 
-public function generateToken(string verb, string resourceType, string resourceId, string keys, string keyType, string tokenVersion, string date) returns string?|error{    
+public function generateToken(string verb, string resourceType, string resourceId, string keys, string keyType, 
+string tokenVersion, string date) returns string?|error{    
     string authorization;
     string payload = verb.toLowerAscii()+"\n" 
         +resourceType.toLowerAscii()+"\n"
@@ -265,14 +273,16 @@ public function generateToken(string verb, string resourceType, string resourceI
         byte[] k = crypto:hmacSha256(payload.toBytes(),decoded);
         string  t = k.toBase16();
         string signature = encoding:encodeBase64Url(k);
-        authorization = check encoding:encodeUriComponent(string `type=${keyType}&ver=${tokenVersion}&sig=${signature}=`, "UTF-8");   
+        authorization = 
+        check encoding:encodeUriComponent(string `type=${keyType}&ver=${tokenVersion}&sig=${signature}=`, "UTF-8");   
         return authorization;
     } else {     
         io:println("Decoding error");
     }
 }
 
-function generateTokenJ(handle verb, handle resourceType, handle resourceId, handle keyToken, handle tokenType, handle tokenVersion) returns handle = @java:Method {
+function generateTokenJ(handle verb, handle resourceType, handle resourceId, handle keyToken, handle tokenType, 
+handle tokenVersion) returns handle = @java:Method {
     name: "generate",
     'class: "com.sachini.TokenCreate"
 } external;
