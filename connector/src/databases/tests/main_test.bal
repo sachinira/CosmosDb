@@ -450,7 +450,6 @@ function queryDocument(){
     io:println("\n\n");  
 }
 
-
 @test:Config{
    enable: false
 }
@@ -469,7 +468,6 @@ function createSproc(){
     }   
     io:println("\n\n");  
 }
-
 
 @test:Config{
    enable: false
