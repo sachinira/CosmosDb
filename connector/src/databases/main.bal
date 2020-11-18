@@ -14,7 +14,6 @@ public  client class Databases{
     private string apiVersion;
     
     public http:Client basicClient;
-
     private string resourceTypedb;
     private string resourceTypecoll;
     private string resourceTypedoc;
@@ -55,7 +54,6 @@ public  client class Databases{
     # + autoscale - Optional throughput parameter which will set 'x-ms-cosmos-offer-autopilot-settings' header
     # + return - If successful, returns Database. Else returns error.  
     public remote function createDatabase(string dbName, int? throughput = (), json? autoscale = ()) returns @tainted Database|error{
-
         http:Request req = new;
         string verb = "POST"; 
         string resourceId = "";
@@ -76,7 +74,6 @@ public  client class Databases{
     # To list all databases inside a resource
     # + return - If successful, returns DBList. Else returns error.  
     public remote function listDatabases() returns @tainted DBList|error{
-
         http:Request req = new;
         string verb = "GET"; 
         string resourceId = "";
@@ -91,7 +88,6 @@ public  client class Databases{
     # + dbName -  id/name of the database to retrieve
     # + return - If successful, returns Database. Else returns error.  
     public remote function listOneDatabase(string dbName) returns @tainted Database|error{
-
         http:Request req = new;
         string verb = "GET"; 
         string resourceId = string `dbs/${dbName}`;
@@ -106,7 +102,6 @@ public  client class Databases{
     # + dbName -  id/name of the database to retrieve
     # + return - If successful, returns string specifying delete is sucessfull. Else returns error.  
     public remote function deleteDatabase(string dbName) returns @tainted string|error{
-
         http:Request req = new;
         string verb = "DELETE"; 
         string resourceId = string `dbs/${dbName}`;
@@ -126,7 +121,6 @@ public  client class Databases{
     # + autoscale - Optional throughput parameter which will set 'x-ms-cosmos-offer-autopilot-settings' header
     # + return - If successful, returns Collection. Else returns error.  
     public remote function createCollection(string dbName, string colName, json partitionKey, json? indexingPolicy = (), int? throughput = (),json? autoscale = ()) returns @tainted Collection|error{
-
         http:Request req = new;
         string verb = "POST"; 
         string resourceId = string `dbs/${dbName}`;
@@ -147,88 +141,61 @@ public  client class Databases{
     }
 
     # To retrive  all collections inside a database
-    #
     # + dbName -  id/name of the database collections are in.
-    # 
     # + return - If successful, returns CollectionList. Else returns error.  
-    #
     public remote function getAllCollections(string dbName) returns @tainted CollectionList|error{
-
         http:Request req = new;
         string verb = "GET"; 
         string resourceId = string `dbs/${dbName}`;
 
         req = check setHeaders(req,self.apiVersion,self.host,verb,self.resourceTypecoll,resourceId,self.masterKey,self.keyType,self.tokenVersion);
-
         var response = self.basicClient->get(string `/dbs/${dbName}/colls`,req);
-
         json jsonresponse = check parseResponseToJson(response);
-
         return mapJsonToCollectionListType(jsonresponse);
     }
 
     # To retrive  one collection inside a database
-    #
     # + dbName -  id/name of the database which collection is in.
     # + colName - id/name of collection to retrive.
-    # 
     # + return - If successful, returns Collection. Else returns error.  
-    #
     public remote function getOneCollection(string dbName,string colName) returns @tainted Collection|error{
-
         http:Request req = new;
         string verb = "GET"; 
         string resourceId = string `dbs/${dbName}/colls/${colName}`;
 
         req = check setHeaders(req,self.apiVersion,self.host,verb,self.resourceTypecoll,resourceId,self.masterKey,self.keyType,self.tokenVersion);
-
         var response = self.basicClient->get(string `/dbs/${dbName}/colls/${colName}`,req);
-
         json jsonresponse = check parseResponseToJson(response);
-
         return mapJsonToCollectionType(jsonresponse);
     }
 
     # To delete one collection inside a database
-    #
     # + dbName -  id/name of the database which collection is in.
     # + colName - id/name of collection to delete.
-    # 
     # + return - If successful, returns string specifying delete is sucessfull. Else returns error.   
-    #
     public remote function deleteCollection(string dbName, string colName) returns @tainted string|error{
-
         http:Request req = new;
         string verb = "DELETE"; 
         string resourceId = string `dbs/${dbName}/colls/${colName}`;
 
         req = check setHeaders(req,self.apiVersion,self.host,verb,self.resourceTypecoll,resourceId,self.masterKey,self.keyType,self.tokenVersion);
-
         var response = self.basicClient->delete(string `/dbs/${dbName}/colls/${colName}`,req);
-
         return check getDeleteResponse(response);
     }
 
     # To retrieve a list of partition key ranges for the collection
-    #
     # + dbName -  id/name of the database which collection is in.
     # + colName - id/name of collection to where partition key range is in.
-    # 
     # + return - If successful, returns PartitionKeyList. Else returns error.  
-    #
     public remote function getPartitionKeyRanges(string dbName, string colName) returns @tainted PartitionKeyList|error{
-
         http:Request req = new;
         string verb = "GET"; 
         string reType = "pkranges";
         string resourceId = string `dbs/${dbName}/colls/${colName}`;
         
         req = check setHeaders(req,self.apiVersion,self.host,verb,reType,resourceId,self.masterKey,self.keyType,self.tokenVersion);
-
         var response = self.basicClient->get(string `/dbs/${dbName}/colls/${colName}/pkranges`,req);
-
         json jsonresponse = check parseResponseToJson(response);
-
         return mapJsonToPartitionKeyType(jsonresponse);
     }
 
@@ -236,47 +203,34 @@ public  client class Databases{
 
 
     # To create a Document inside a collection
-    #
     # + dbName -  id/name for the database
     # + colName - id/name for collection
-    # 
     # + partitionKey -  value for the partition key field specified for the collection  to set x-ms-documentdb-partitionkey header.
-    # 
     # + document - Any json content that will include as the document.
-    # 
     # + isUpsert - Optional boolean value to specify if this request is updating an existing document 
     #               (If set to true, Cosmos DB creates the document with the ID (and partition key value if applicable) 
     #               if it doesn’t exist, or update the document if it exists.)
-    # 
     # + indexingDir - Optional indexing directive parameter which will set 'x-ms-indexing-directive' header
     #                   The acceptable value is Include or Exclude. 
     #                   -Include adds the document to the index.
     #                   -Exclude omits the document from indexing.
-    # 
     # + return - If successful, returns Document. Else returns error.  
-    #
     public remote function createDocument(string dbName, string colName, json document,any partitionKey, boolean? isUpsert = (), string? indexingDir = ()) returns @tainted Document|error{
-        
         http:Request req = new;
         string verb = "POST"; 
         string resourceId = string `dbs/${dbName}/colls/${colName}`;
         
         req = check setHeaders(req,self.apiVersion,self.host,verb,self.resourceTypedoc,resourceId,self.masterKey,self.keyType,self.tokenVersion);
         req = check setPartitionKeyHeader(req,partitionKey);
-
         if indexingDir is string {
             req = check setIndexingHeader(req,indexingDir);
         }
-       
         if isUpsert == true {
             req = check setUpsertHeader(req,isUpsert);
         }
-
         req.setJsonPayload(document);
         var response = self.basicClient->post(string `/dbs/${dbName}/colls/${colName}/docs`,req);
-
         json jsonresponse = check parseResponseToJson(response);
-
         return mapJsonToDocument(jsonresponse);
     }
 
