@@ -1,12 +1,9 @@
 import ballerina/http;
 //import ballerina/io;
 
-
 # Azure Cosmos DB Client object.
-#
 # + basicClient - The HTTP Client
-# 
-public  client class Databases{
+public  client class Databases {
     
     private string baseUrl;
     private string masterKey;
