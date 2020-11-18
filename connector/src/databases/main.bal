@@ -380,7 +380,6 @@ public  client class Databases{
     # + sprocId -
     # + return - If successful, returns a StoredProcedure. Else returns error. 
     public remote function createStoredProcedure(string dbName, string colName, string sproc, string sprocId) returns @tainted StoredProcedure|error{
-
         http:Request req = new;
         string verb = "POST"; 
         string resourceId = string `dbs/${dbName}/colls/${colName}`;
@@ -397,103 +396,74 @@ public  client class Databases{
     }
 
     #To replace a stored procedure with new one inside a collection
-    # 
     # + dbName -  id/name of the database which collection is in.
     # + colName - id/name of collection which stored procedure is in.
     # + sproc - 
     # + sprocId - 
-    # 
     # + return - If successful, returns a StoredProcedure. Else returns error. 
-    #
     public remote function replaceStoredProcedure(string dbName, string colName, string sproc, string sprocId) returns @tainted StoredProcedure|error{
-
         http:Request req = new;
         string verb = "PUT"; 
         string resourceId = string `dbs/${dbName}/colls/${colName}/sprocs/${sprocId}`;
 
         req = check setHeaders(req,self.apiVersion,self.host,verb,self.resourceTypesproc,resourceId,self.masterKey,self.keyType,self.tokenVersion);
-
         json spbody = {
             id: sprocId,
             body:sproc
         };
-
         req.setJsonPayload(spbody);
-
         var response = self.basicClient->put(string `/dbs/${dbName}/colls/${colName}/sprocs/${sprocId}`,req);
-
         json jsonreponse = check parseResponseToJson(response);
-
         return mapJsonToSproc(jsonreponse);  
     }
 
     #To list all stored procedures inside a collection
-    # 
     # + dbName -  id/name of the database which collection is in.
     # + colName - id/name of collection which stored procedures are in.
-    #  
     # + return - If successful, returns a StoredProcedureList. Else returns error. 
-    #
     public remote function listStoredProcedures(string dbName, string colName) returns @tainted StoredProcedureList|error{
-
         http:Request req = new;
         string verb = "GET"; 
         string resourceId = string `dbs/${dbName}/colls/${colName}`;
 
         req = check setHeaders(req,self.apiVersion,self.host,verb,self.resourceTypesproc,resourceId,self.masterKey,self.keyType,self.tokenVersion);
-
         var response = self.basicClient->get(string `/dbs/${dbName}/colls/${colName}/sprocs`,req);
-
         json jsonreponse = check parseResponseToJson(response);
-
         return mapJsonToSprocList(jsonreponse);  
     }
 
     #To delete a stored procedure inside a collection
-    # 
     # + dbName -  id/name of the database which collection is in.
     # + colName - id/name of collection which stored procedure is in.
     # + sprocId - id of the stored procedure to be deleted
-    # 
     # + return - If successful, returns string specifying delete is sucessfull. Else returns error. 
-    #
     public remote function deleteStoredProcedure(string dbName, string colName, string sprocId) returns @tainted json|error{
-
         http:Request req = new;
         string verb = "DELETE"; 
         string resourceId = string `dbs/${dbName}/colls/${colName}/sprocs/${sprocId}`;
 
         req = check setHeaders(req,self.apiVersion,self.host,verb,self.resourceTypesproc,resourceId,self.masterKey,self.keyType,self.tokenVersion);
-
         var response = self.basicClient->delete(string `/dbs/${dbName}/colls/${colName}/sprocs/${sprocId}`,req);
-
         return getDeleteResponse(response);   
     }
 
 
     #To execute a stored procedure inside a collection
     # ***********function only works correctly for string parameters************
-    # 
     # + dbName -  id/name of the database which collection is in.
     # + colName - id/name of collection which stored procedure is in.
     # + sprocId - id of the stored procedure to be executed
     # + parameters - The list of paramaters to pass to javascript function as an array.
-    # 
     # + return - If successful, returns json with the output from the executed funxtion. Else returns error. 
-    #
     public remote function executeStoredProcedure(string dbName, string colName, string sprocId, any[]? parameters) returns @tainted json|error{
-
         http:Request req = new;
         string verb = "POST"; 
         string resourceId = string `dbs/${dbName}/colls/${colName}/sprocs/${sprocId}`;
 
         req = check setHeaders(req,self.apiVersion,self.host,verb,self.resourceTypesproc,resourceId,self.masterKey,self.keyType,self.tokenVersion);
         req.setTextPayload(parameters.toString());
-
         var response = self.basicClient->post(string `/dbs/${dbName}/colls/${colName}/sprocs/${sprocId}`,req);
-
         json jsonreponse = check parseResponseToJson(response);
-
         return jsonreponse;   
     }
 

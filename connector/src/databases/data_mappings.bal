@@ -45,7 +45,6 @@ function mapJsonToCollectionType(json jsonPayload)returns @tainted Collection {
     return coll;
 }
 
-
 function mapJsonToIndexingPolicy(json jsonPayload) returns @tainted IndexingPolicy{
     IndexingPolicy indp = {};
     indp.indexingMode = jsonPayload.indexingMode.toString();
