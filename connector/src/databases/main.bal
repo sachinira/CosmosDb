@@ -50,13 +50,10 @@ public  client class Databases{
     }
 
     # To create a database inside a resource
-    #
     # + dbName -  id/name for the database
     # + throughput - Optional throughput parameter which will set 'x-ms-offer-throughput' header 
     # + autoscale - Optional throughput parameter which will set 'x-ms-cosmos-offer-autopilot-settings' header
-    # 
     # + return - If successful, returns Database. Else returns error.  
-    # 
     public remote function createDatabase(string dbName, int? throughput = (), json? autoscale = ()) returns @tainted Database|error{
 
         http:Request req = new;
