@@ -22,7 +22,6 @@ public type DBList record {
     Database[] Databases = [];
 };
 
-
 //conflict resolution policy must be included
 public type Collection record {
     string id = "";
@@ -38,7 +37,6 @@ public type Collection record {
     boolean allowMaterializedViews?;
     IndexingPolicy indexingPolicy?;
     PartitionKey partitionKey?;
-
 };
 
 public type IndexingPolicy record {|
