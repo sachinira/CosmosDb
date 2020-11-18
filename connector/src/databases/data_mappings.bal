@@ -8,6 +8,14 @@ function mapCommonElements(json jsonPayload)returns @tainted Common|error{
     return comm;
 }
 
+function mapParametersToHeaderType(string httpVerb,string url) returns HeaderParamaters {
+    HeaderParamaters params = {};
+    params.verb = httpVerb;
+    params.resourceType = getResourceType(url);
+    params.resourceId = getResourceId(url);
+    return params;
+}
+
 function mapJsonToDatabaseType(json jsonPayload) returns Database {
     Database db = {};
     db.id = jsonPayload.id.toString();

@@ -1,5 +1,4 @@
 import ballerina/http;
-//import ballerina/io;
 
 # Azure Cosmos DB Client object.
 # + basicClient - The HTTP Client
@@ -8,32 +7,17 @@ public  client class Databases {
     private string baseUrl;
     private string masterKey;
     private string host;
-    private string apiVersion;
-    
-    public http:Client basicClient;
-    private string resourceTypedb;
-    private string resourceTypecoll;
-    private string resourceTypedoc;
-    private string resourceTypeattchment;
-    private string resourceTypesproc;
-
     private string keyType;
     private string tokenVersion;
 
-    function init(AuthConfig opConf){
+    public http:Client basicClient;
 
+    function init(AuthConfig opConf){
         self.baseUrl = opConf.baseUrl;
         self.masterKey = opConf.masterKey;
         self.host = opConf.host;
-        self.apiVersion = opConf.apiVersion;
         self.keyType = opConf.tokenType;
         self.tokenVersion = opConf.tokenVersion;
-
-        self.resourceTypedb = "dbs";
-        self.resourceTypecoll= "colls";
-        self.resourceTypedoc = "docs";
-        self.resourceTypeattchment = "attachments";
-        self.resourceTypesproc = "sprocs";
 
         self.basicClient = new (self.baseUrl, {
             secureSocket: {
@@ -52,16 +36,14 @@ public  client class Databases {
     # + return - If successful, returns Database. Else returns error.  
     public remote function createDatabase(string dbName, int? throughput = (), json? autoscale = ()) returns @tainted Database|error{
         http:Request req = new;
-        string verb = "POST"; 
-        string resourceId = "";
-        string requestPath = string `/dbs`;
-
-        req = check setHeaders(req,self.apiVersion,self.host,verb,self.resourceTypedb,resourceId,self.masterKey,self.keyType,self.tokenVersion);
-        req = check setThroughputOrAutopilotHeader(req,throughput,autoscale);
+        string requestPath = RESOURCE_PATH_DATABASES;
+        HeaderParamaters header = mapParametersToHeaderType(POST,requestPath);
         json body = {
             id: dbName
         };
 
+        req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
+        req = check setThroughputOrAutopilotHeader(req,throughput,autoscale);
         req.setJsonPayload(body);
         var response = self.basicClient->post(requestPath,req);
         json jsonreponse = check parseResponseToJson(response);
@@ -72,11 +54,11 @@ public  client class Databases {
     # + return - If successful, returns DBList. Else returns error.  
     public remote function listDatabases() returns @tainted DBList|error{
         http:Request req = new;
-        string verb = "GET"; 
-        string resourceId = "";
-       
-        req = check setHeaders(req,self.apiVersion,self.host,verb,self.resourceTypedb,resourceId,self.masterKey,self.keyType,self.tokenVersion);
-        var response = self.basicClient->get("/dbs",req);
+        string requestPath = RESOURCE_PATH_DATABASES;
+        HeaderParamaters header = mapParametersToHeaderType(GET,requestPath);
+
+        req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
+        var response = self.basicClient->get(requestPath,req);
         json jsonresponse = check parseResponseToJson(response);
         return mapJsonToDbList(jsonresponse); 
     }
@@ -86,11 +68,11 @@ public  client class Databases {
     # + return - If successful, returns Database. Else returns error.  
     public remote function listOneDatabase(string dbName) returns @tainted Database|error{
         http:Request req = new;
-        string verb = "GET"; 
-        string resourceId = string `dbs/${dbName}`;
-       
-        req = check setHeaders(req,self.apiVersion,self.host,verb,self.resourceTypedb,resourceId,self.masterKey,self.keyType,self.tokenVersion);
-        var response = self.basicClient->get(string `/dbs/${dbName}`,req);
+        string requestPath = string `${RESOURCE_PATH_DATABASES}/${dbName}`;
+        HeaderParamaters header = mapParametersToHeaderType(GET,requestPath);
+
+        req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
+        var response = self.basicClient->get(requestPath,req);
         json jsonresponse = check parseResponseToJson(response);
         return mapJsonToDatabaseType(jsonresponse);  
     }
@@ -100,11 +82,11 @@ public  client class Databases {
     # + return - If successful, returns string specifying delete is sucessfull. Else returns error.  
     public remote function deleteDatabase(string dbName) returns @tainted string|error{
         http:Request req = new;
-        string verb = "DELETE"; 
-        string resourceId = string `dbs/${dbName}`;
-        
-        req = check setHeaders(req,self.apiVersion,self.host,verb,self.resourceTypedb,resourceId,self.masterKey,self.keyType,self.tokenVersion);
-        var response = self.basicClient->delete(string `/dbs/${dbName}`,req);
+        string requestPath = string `${RESOURCE_PATH_DATABASES}/${dbName}`;
+        HeaderParamaters header = mapParametersToHeaderType(DELETE,requestPath);
+
+        req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
+        var response = self.basicClient->delete(requestPath,req);
         return check getDeleteResponse(response);
     }
 
@@ -119,20 +101,18 @@ public  client class Databases {
     # + return - If successful, returns Collection. Else returns error.  
     public remote function createCollection(string dbName, string colName, json partitionKey, json? indexingPolicy = (), int? throughput = (),json? autoscale = ()) returns @tainted Collection|error{
         http:Request req = new;
-        string verb = "POST"; 
-        string resourceId = string `dbs/${dbName}`;
-
-        req = check setHeaders(req,self.apiVersion,self.host,verb,self.resourceTypecoll,resourceId,self.masterKey,self.keyType,self.tokenVersion);
-        req = check setThroughputOrAutopilotHeader(req,throughput,autoscale);
-
+        string requestPath = string `${RESOURCE_PATH_DATABASES}/${dbName}${RESOURCE_PATH_COLLECTIONS}`;
+        HeaderParamaters header = mapParametersToHeaderType(POST,requestPath);
         json body = {
             "id": colName,
             "partitionKey": partitionKey
         };
-
         json finalc = check body.mergeJson(indexingPolicy);
+
+        req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
+        req = check setThroughputOrAutopilotHeader(req,throughput,autoscale);
         req.setJsonPayload(finalc);
-        var response = self.basicClient->post(string `/dbs/${dbName}/colls`,req);
+        var response = self.basicClient->post(requestPath,req);
         json jsonresponse = check parseResponseToJson(response);
         return mapJsonToCollectionType(jsonresponse);
     }
@@ -142,11 +122,12 @@ public  client class Databases {
     # + return - If successful, returns CollectionList. Else returns error.  
     public remote function getAllCollections(string dbName) returns @tainted CollectionList|error{
         http:Request req = new;
-        string verb = "GET"; 
-        string resourceId = string `dbs/${dbName}`;
+        string requestPath = string `${RESOURCE_PATH_DATABASES}/${dbName}${RESOURCE_PATH_COLLECTIONS}`;
+        HeaderParamaters header = mapParametersToHeaderType(GET,requestPath);
 
-        req = check setHeaders(req,self.apiVersion,self.host,verb,self.resourceTypecoll,resourceId,self.masterKey,self.keyType,self.tokenVersion);
-        var response = self.basicClient->get(string `/dbs/${dbName}/colls`,req);
+        req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
+        //req = check setHeaders(req,self.apiVersion,self.host,verb,self.resourceTypecoll,resourceId,self.masterKey,self.keyType,self.tokenVersion);
+        var response = self.basicClient->get(requestPath,req);
         json jsonresponse = check parseResponseToJson(response);
         return mapJsonToCollectionListType(jsonresponse);
     }
@@ -157,11 +138,11 @@ public  client class Databases {
     # + return - If successful, returns Collection. Else returns error.  
     public remote function getOneCollection(string dbName,string colName) returns @tainted Collection|error{
         http:Request req = new;
-        string verb = "GET"; 
-        string resourceId = string `dbs/${dbName}/colls/${colName}`;
+        string requestPath = string `${RESOURCE_PATH_DATABASES}/${dbName}${RESOURCE_PATH_COLLECTIONS}/${colName}`;
+        HeaderParamaters header = mapParametersToHeaderType(GET,requestPath);
 
-        req = check setHeaders(req,self.apiVersion,self.host,verb,self.resourceTypecoll,resourceId,self.masterKey,self.keyType,self.tokenVersion);
-        var response = self.basicClient->get(string `/dbs/${dbName}/colls/${colName}`,req);
+        req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
+        var response = self.basicClient->get(requestPath,req);
         json jsonresponse = check parseResponseToJson(response);
         return mapJsonToCollectionType(jsonresponse);
     }
@@ -172,11 +153,11 @@ public  client class Databases {
     # + return - If successful, returns string specifying delete is sucessfull. Else returns error.   
     public remote function deleteCollection(string dbName, string colName) returns @tainted string|error{
         http:Request req = new;
-        string verb = "DELETE"; 
-        string resourceId = string `dbs/${dbName}/colls/${colName}`;
+        string requestPath = string `${RESOURCE_PATH_DATABASES}/${dbName}${RESOURCE_PATH_COLLECTIONS}/${colName}`;
+        HeaderParamaters header = mapParametersToHeaderType(DELETE,requestPath);
 
-        req = check setHeaders(req,self.apiVersion,self.host,verb,self.resourceTypecoll,resourceId,self.masterKey,self.keyType,self.tokenVersion);
-        var response = self.basicClient->delete(string `/dbs/${dbName}/colls/${colName}`,req);
+        req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
+        var response = self.basicClient->delete(requestPath,req);
         return check getDeleteResponse(response);
     }
 
@@ -186,12 +167,11 @@ public  client class Databases {
     # + return - If successful, returns PartitionKeyList. Else returns error.  
     public remote function getPartitionKeyRanges(string dbName, string colName) returns @tainted PartitionKeyList|error{
         http:Request req = new;
-        string verb = "GET"; 
-        string reType = "pkranges";
-        string resourceId = string `dbs/${dbName}/colls/${colName}`;
-        
-        req = check setHeaders(req,self.apiVersion,self.host,verb,reType,resourceId,self.masterKey,self.keyType,self.tokenVersion);
-        var response = self.basicClient->get(string `/dbs/${dbName}/colls/${colName}/pkranges`,req);
+        string requestPath = string `${RESOURCE_PATH_DATABASES}/${dbName}${RESOURCE_PATH_COLLECTIONS}/${colName}${RESOURCE_PATH_PK_RANGES}`;
+        HeaderParamaters header = mapParametersToHeaderType(GET,requestPath);
+
+        req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
+        var response = self.basicClient->get(requestPath,req);
         json jsonresponse = check parseResponseToJson(response);
         return mapJsonToPartitionKeyType(jsonresponse);
     }
@@ -214,10 +194,10 @@ public  client class Databases {
     # + return - If successful, returns Document. Else returns error.  
     public remote function createDocument(string dbName, string colName, json document,any partitionKey, boolean? isUpsert = (), string? indexingDir = ()) returns @tainted Document|error{
         http:Request req = new;
-        string verb = "POST"; 
-        string resourceId = string `dbs/${dbName}/colls/${colName}`;
-        
-        req = check setHeaders(req,self.apiVersion,self.host,verb,self.resourceTypedoc,resourceId,self.masterKey,self.keyType,self.tokenVersion);
+        string requestPath = string `${RESOURCE_PATH_DATABASES}/${dbName}${RESOURCE_PATH_COLLECTIONS}/${colName}${RESOURCE_PATH_DOCUMENTS}`;
+        HeaderParamaters header = mapParametersToHeaderType(POST,requestPath);
+
+        req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
         req = check setPartitionKeyHeader(req,partitionKey);
         if indexingDir is string {
             req = check setIndexingHeader(req,indexingDir);
@@ -226,7 +206,7 @@ public  client class Databases {
             req = check setUpsertHeader(req,isUpsert);
         }
         req.setJsonPayload(document);
-        var response = self.basicClient->post(string `/dbs/${dbName}/colls/${colName}/docs`,req);
+        var response = self.basicClient->post(requestPath,req);
         json jsonresponse = check parseResponseToJson(response);
         return mapJsonToDocument(jsonresponse);
     }
@@ -240,14 +220,14 @@ public  client class Databases {
     # + return - If successful, returns DocumentList. Else returns error. 
     public remote function listAllDocuments(string dbName, string colName, int? itemcount = ()) returns @tainted DocumentList|error{ 
         http:Request req = new;
-        string verb = "GET"; 
-        string resourceId = string `dbs/${dbName}/colls/${colName}`;
-        
-        req = check setHeaders(req,self.apiVersion,self.host,verb,self.resourceTypedoc,resourceId,self.masterKey,self.keyType,self.tokenVersion);
+        string requestPath = string `${RESOURCE_PATH_DATABASES}/${dbName}${RESOURCE_PATH_COLLECTIONS}/${colName}${RESOURCE_PATH_DOCUMENTS}`;
+        HeaderParamaters header = mapParametersToHeaderType(GET,requestPath);
+
+        req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
         if itemcount is int{
             req = check setHeadersforItemCount(req,itemcount);
         }
-        var response = self.basicClient->get(string `/dbs/${dbName}/colls/${colName}/docs`,req);
+        var response = self.basicClient->get(requestPath,req);
         json jsonresponse = check parseResponseToJson(response);
         DocumentList list =  check mapJsonToDocumentList(jsonresponse); 
         return list;    
@@ -272,18 +252,18 @@ public  client class Databases {
         string verb = "GET"; 
         string resourceId = string `dbs/${dbName}/colls/${colName}`;
         
-        var reqn = check setHeaders(req,self.apiVersion,self.host,verb,self.resourceTypedoc,resourceId,self.masterKey,self.keyType,self.tokenVersion);
-        reqn.setHeader("x-ms-continuation",resp.getHeader("x-ms-continuation"));
-        var response2 = self.basicClient->get(string `/dbs/${dbName}/colls/${colName}/docs`,reqn);
+        //var reqn = check setHeaders(req,self.apiVersion,self.host,verb,self.resourceTypedoc,resourceId,self.masterKey,self.keyType,self.tokenVersion);
+        //reqn.setHeader("x-ms-continuation",resp.getHeader("x-ms-continuation"));
+        //var response2 = self.basicClient->get(string `/dbs/${dbName}/colls/${colName}/docs`,reqn);
 
-        json jsonresponse2 = check parseResponseToJson(response2);
-        DocumentList list2 =  check mapJsonToDocumentList(jsonresponse2);
+        //json jsonresponse2 = check parseResponseToJson(response2);
+        //DocumentList list2 =  check mapJsonToDocumentList(jsonresponse2);
 
-        Document[] l = <Document[]>mergeTwoArrays(list1.documents,list2.documents);
-        int count = list2._count + list1._count;
+        //Document[] l = <Document[]>mergeTwoArrays(list1.documents,list2.documents);
+        //int count = list2._count + list1._count;
 
-        newd.documents = l;
-        newd._count =count;
+        //newd.documents = l;
+        //newd._count =count;
 
         return newd;
     }
@@ -297,12 +277,12 @@ public  client class Databases {
     # + return - If successful, returns a Document. Else returns error. 
     public remote function listOneDocument(string dbName, string colName, string documentId, any partitionKey) returns @tainted Document|error{
         http:Request req = new;
-        string verb = "GET"; 
-        string resourceId = string `dbs/${dbName}/colls/${colName}/docs/${documentId}`;
-        
-        req = check setHeaders(req,self.apiVersion,self.host,verb,self.resourceTypedoc,resourceId,self.masterKey,self.keyType,self.tokenVersion);
+        string requestPath = string `${RESOURCE_PATH_DATABASES}/${dbName}${RESOURCE_PATH_COLLECTIONS}/${colName}${RESOURCE_PATH_DOCUMENTS}/${documentId}`;
+        HeaderParamaters header = mapParametersToHeaderType(GET,requestPath);
+
+        req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
         req = check setPartitionKeyHeader(req,partitionKey);
-        var response = self.basicClient->get(string `/dbs/${dbName}/colls/${colName}/docs/${documentId}`,req);
+        var response = self.basicClient->get(requestPath,req);
         json jsonresponse = check parseResponseToJson(response);
         return mapJsonToDocument(jsonresponse);
     }
@@ -317,13 +297,13 @@ public  client class Databases {
     # + return - If successful, returns a Document. Else returns error. 
     public remote function replaceDocument(string dbName, string colName, json document, string documentId, any partitionKey) returns @tainted Document|error{         
         http:Request req = new;
-        string verb = "PUT"; 
-        string resourceId = string `dbs/${dbName}/colls/${colName}/docs/${documentId}`;
-        
-        req = check setHeaders(req,self.apiVersion,self.host,verb,self.resourceTypedoc,resourceId,self.masterKey,self.keyType,self.tokenVersion);
+        string requestPath = string `${RESOURCE_PATH_DATABASES}/${dbName}${RESOURCE_PATH_COLLECTIONS}/${colName}${RESOURCE_PATH_DOCUMENTS}/${documentId}`;
+        HeaderParamaters header = mapParametersToHeaderType(PUT,requestPath);
+
+        req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
         req = check setPartitionKeyHeader(req,partitionKey);
         req.setJsonPayload(document);
-        var response = self.basicClient->put(string `/dbs/${dbName}/colls/${colName}/docs/${documentId}`,req);
+        var response = self.basicClient->put(requestPath,req);
         json jsonresponse = check parseResponseToJson(response);
         return mapJsonToDocument(jsonresponse);
     }
@@ -336,14 +316,12 @@ public  client class Databases {
     # + return - If successful, returns a string giving sucessfully deleted. Else returns error. 
     public remote function deleteDocument(string dbName, string colName, string documentId, any partitionKey) returns @tainted string|error{  
         http:Request req = new;
-        string verb = "DELETE"; 
-        string resourceId = string `dbs/${dbName}/colls/${colName}/docs/${documentId}`;
-        
-        req = check setHeaders(req,self.apiVersion,self.host,verb,self.resourceTypedoc,resourceId,self.masterKey,self.keyType,self.tokenVersion);
-        req = check setPartitionKeyHeader(req,partitionKey);
+        string requestPath = string `${RESOURCE_PATH_DATABASES}/${dbName}${RESOURCE_PATH_COLLECTIONS}/${colName}${RESOURCE_PATH_DOCUMENTS}/${documentId}`;
+        HeaderParamaters header = mapParametersToHeaderType(DELETE,requestPath);
 
-        var response = self.basicClient->delete(string `/dbs/${dbName}/colls/${colName}/docs/${documentId}`,req);
-        
+        req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
+        req = check setPartitionKeyHeader(req,partitionKey);
+        var response = self.basicClient->delete(requestPath,req);
         return getDeleteResponse(response);
     }
 
@@ -356,11 +334,11 @@ public  client class Databases {
     # + return - If successful, returns a json. Else returns error. 
     public remote function queryDocument(string dbName, string colName, json sqlQuery, any partitionKey) returns @tainted json|error{
         http:Request req = new;
-        string verb = "POST"; 
-        string resourceId = string `dbs/${dbName}/colls/${colName}`;
+        string requestPath = string `${RESOURCE_PATH_DATABASES}/${dbName}${RESOURCE_PATH_COLLECTIONS}/${colName}${RESOURCE_PATH_DOCUMENTS}`;
+        HeaderParamaters header = mapParametersToHeaderType(POST,requestPath);
 
+        req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
         req = check setHeadersForQuery(req);
-        req = check setHeaders(req,self.apiVersion,self.host,verb,self.resourceTypedoc,resourceId,self.masterKey,self.keyType,self.tokenVersion);
         req = check setPartitionKeyHeader(req,partitionKey);
         req.setJsonPayload(sqlQuery);
         var response = self.basicClient->post(string `/dbs/${dbName}/colls/${colName}/docs`,req);
@@ -378,16 +356,16 @@ public  client class Databases {
     # + return - If successful, returns a StoredProcedure. Else returns error. 
     public remote function createStoredProcedure(string dbName, string colName, string sproc, string sprocId) returns @tainted StoredProcedure|error{
         http:Request req = new;
-        string verb = "POST"; 
-        string resourceId = string `dbs/${dbName}/colls/${colName}`;
-
-        req = check setHeaders(req,self.apiVersion,self.host,verb,self.resourceTypesproc,resourceId,self.masterKey,self.keyType,self.tokenVersion);
+        string requestPath = string `${RESOURCE_PATH_DATABASES}/${dbName}${RESOURCE_PATH_COLLECTIONS}/${colName}${RESOURCE_PATH_STORED_POCEDURES}`;
+        HeaderParamaters header = mapParametersToHeaderType(POST,requestPath);
         json spbody = {
             id: sprocId,
             body:sproc
         };
+
+        req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
         req.setJsonPayload(spbody);
-        var response = self.basicClient->post(string `/dbs/${dbName}/colls/${colName}/sprocs`,req);
+        var response = self.basicClient->post(requestPath,req);
         json jsonreponse = check parseResponseToJson(response);
         return mapJsonToSproc(jsonreponse);    
     }
@@ -400,16 +378,16 @@ public  client class Databases {
     # + return - If successful, returns a StoredProcedure. Else returns error. 
     public remote function replaceStoredProcedure(string dbName, string colName, string sproc, string sprocId) returns @tainted StoredProcedure|error{
         http:Request req = new;
-        string verb = "PUT"; 
-        string resourceId = string `dbs/${dbName}/colls/${colName}/sprocs/${sprocId}`;
-
-        req = check setHeaders(req,self.apiVersion,self.host,verb,self.resourceTypesproc,resourceId,self.masterKey,self.keyType,self.tokenVersion);
+        string requestPath = string `${RESOURCE_PATH_DATABASES}/${dbName}${RESOURCE_PATH_COLLECTIONS}/${colName}${RESOURCE_PATH_STORED_POCEDURES}/${sprocId}`;
+        HeaderParamaters header = mapParametersToHeaderType(PUT,requestPath);
         json spbody = {
             id: sprocId,
             body:sproc
         };
+
+        req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
         req.setJsonPayload(spbody);
-        var response = self.basicClient->put(string `/dbs/${dbName}/colls/${colName}/sprocs/${sprocId}`,req);
+        var response = self.basicClient->put(requestPath,req);
         json jsonreponse = check parseResponseToJson(response);
         return mapJsonToSproc(jsonreponse);  
     }
@@ -420,11 +398,11 @@ public  client class Databases {
     # + return - If successful, returns a StoredProcedureList. Else returns error. 
     public remote function listStoredProcedures(string dbName, string colName) returns @tainted StoredProcedureList|error{
         http:Request req = new;
-        string verb = "GET"; 
-        string resourceId = string `dbs/${dbName}/colls/${colName}`;
+        string requestPath = string `${RESOURCE_PATH_DATABASES}/${dbName}${RESOURCE_PATH_COLLECTIONS}/${colName}${RESOURCE_PATH_STORED_POCEDURES}`;
+        HeaderParamaters header = mapParametersToHeaderType(GET,requestPath);
 
-        req = check setHeaders(req,self.apiVersion,self.host,verb,self.resourceTypesproc,resourceId,self.masterKey,self.keyType,self.tokenVersion);
-        var response = self.basicClient->get(string `/dbs/${dbName}/colls/${colName}/sprocs`,req);
+        req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
+        var response = self.basicClient->get(requestPath,req);
         json jsonreponse = check parseResponseToJson(response);
         return mapJsonToSprocList(jsonreponse);  
     }
@@ -436,11 +414,11 @@ public  client class Databases {
     # + return - If successful, returns string specifying delete is sucessfull. Else returns error. 
     public remote function deleteStoredProcedure(string dbName, string colName, string sprocId) returns @tainted json|error{
         http:Request req = new;
-        string verb = "DELETE"; 
-        string resourceId = string `dbs/${dbName}/colls/${colName}/sprocs/${sprocId}`;
+        string requestPath = string `${RESOURCE_PATH_DATABASES}/${dbName}${RESOURCE_PATH_COLLECTIONS}/${colName}${RESOURCE_PATH_STORED_POCEDURES}/${sprocId}`;
+        HeaderParamaters header = mapParametersToHeaderType(DELETE,requestPath);
 
-        req = check setHeaders(req,self.apiVersion,self.host,verb,self.resourceTypesproc,resourceId,self.masterKey,self.keyType,self.tokenVersion);
-        var response = self.basicClient->delete(string `/dbs/${dbName}/colls/${colName}/sprocs/${sprocId}`,req);
+        req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
+        var response = self.basicClient->delete(requestPath,req);
         return getDeleteResponse(response);   
     }
 
@@ -454,12 +432,12 @@ public  client class Databases {
     # + return - If successful, returns json with the output from the executed funxtion. Else returns error. 
     public remote function executeStoredProcedure(string dbName, string colName, string sprocId, any[]? parameters) returns @tainted json|error{
         http:Request req = new;
-        string verb = "POST"; 
-        string resourceId = string `dbs/${dbName}/colls/${colName}/sprocs/${sprocId}`;
+        string requestPath = string `${RESOURCE_PATH_DATABASES}/${dbName}${RESOURCE_PATH_COLLECTIONS}/${colName}${RESOURCE_PATH_STORED_POCEDURES}/${sprocId}`;
+        HeaderParamaters header = mapParametersToHeaderType(POST,requestPath);
 
-        req = check setHeaders(req,self.apiVersion,self.host,verb,self.resourceTypesproc,resourceId,self.masterKey,self.keyType,self.tokenVersion);
+        req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
         req.setTextPayload(parameters.toString());
-        var response = self.basicClient->post(string `/dbs/${dbName}/colls/${colName}/sprocs/${sprocId}`,req);
+        var response = self.basicClient->post(requestPath,req);
         json jsonreponse = check parseResponseToJson(response);
         return jsonreponse;   
     }

@@ -6,7 +6,6 @@ AuthConfig config = {
     baseUrl: BASE_URL,
     masterKey: MASTER_KEY,
     host: HOST,
-    apiVersion:API_VERSION,
     tokenType: TOKEN_TYPE,
     tokenVersion: TOKEN_VERSION
 };
@@ -108,7 +107,7 @@ function listOneDB(){
     io:println("--------------List one database------------------------\n\n");
 
     Databases AzureCosmosClient = new(config); 
-    var result = AzureCosmosClient->listOneDatabase("heloo");
+    var result = AzureCosmosClient->listOneDatabase("hikall");
     if (result is Database) {
         io:println(result);
     } else {
@@ -142,7 +141,7 @@ function createCollection(){
                             "Version": 2
                         };
     string throughput = "400";
-    var result = AzureCosmosClient->createCollection("heloo","mycollection1",partitionkey);
+    var result = AzureCosmosClient->createCollection("hikall","mycollec",partitionkey);
     if (result is Collection) {
         io:println(result);
     } else {
@@ -194,13 +193,12 @@ function createCollectionWithManualThroughputAndIndexingPolicy(){
 
 @test:Config{
    enable: false
-
 }
 function getAllCollections(){
     io:println("--------------Get All collections-----------------------\n\n");
 
     Databases AzureCosmosClient = new(config);
-    var result = AzureCosmosClient->getAllCollections("heloo");
+    var result = AzureCosmosClient->getAllCollections("hikall");
     if (result is CollectionList) {
         io:println(result);
     } else {
@@ -210,13 +208,13 @@ function getAllCollections(){
 }
 
 @test:Config{
-    enable: false
+   enable: false
 }
 function getOneCollection(){
     io:println("--------------Get One collections-----------------------\n\n");
 
     Databases AzureCosmosClient = new(config);
-    var result = AzureCosmosClient->getOneCollection("heloo","mycollection1");
+    var result = AzureCosmosClient->getOneCollection("hikall","mycollection1");
     if (result is Collection) {
         io:println(result);
     } else {
@@ -241,10 +239,10 @@ function deleteCollection(){
    enable: false
 }
 function GetPartitionKeyRanges(){
-    io:println("--------------Get partition key------------------------\n\n");
+    io:println("--------------Get partition key ranges------------------------\n\n");
 
     Databases AzureCosmosClient = new(config);
-    var result = AzureCosmosClient->getPartitionKeyRanges("heloo","mycollection1");
+    var result = AzureCosmosClient->getPartitionKeyRanges("hikall","mycollection1");
     if (result is PartitionKeyList) {
         io:println(result);
     } else {
@@ -300,7 +298,7 @@ function createDocument(){
     };   
     json|error finalj =  body.mergeJson(custombody);
     if finalj is json{
-        var result = AzureCosmosClient->createDocument("heloo","mycollection1",finalj,<json>custombody.AccountNumber,true);
+        var result = AzureCosmosClient->createDocument("hikall","mycollection1",finalj,<json>custombody.AccountNumber,true);
         if result is Document {
             io:println(result);
         } else {
@@ -318,7 +316,7 @@ function GetDocumentList(){
     io:println("--------------Get all documents in a collection------------------------\n\n");
 
     Databases AzureCosmosClient = new(config);
-    var result = AzureCosmosClient->listAllDocuments("heloo","mycollection1",());
+    var result = AzureCosmosClient->listAllDocuments("hikall","mycollection1",());
     if (result is DocumentList) {
         io:println(result);
     } else {
@@ -333,10 +331,10 @@ function GetDocumentList(){
 function GetOneDocument(){
     io:println("--------------Get one document------------------------\n\n");
 
-    string documentid = "d0513dd9-dcf7-46c4-becc-0a533c93258a";
+    string documentid = "308f807c-f7b8-40a1-8457-767bb498a62e";
     int partitionkey = 1234;
     Databases AzureCosmosClient = new(config);
-    var result = AzureCosmosClient->listOneDocument("heloo","mycollection1",documentid,partitionkey);
+    var result = AzureCosmosClient->listOneDocument("hikall","mycollection1",documentid,partitionkey);
     if (result is Document) {
         io:println(result);
     } else {
@@ -353,14 +351,14 @@ function replaceDocument(){
     io:println("--------------Replace document------------------------\n\n");
 
     Databases AzureCosmosClient = new(config);
-    string documentid = "5404636f-f2bc-4ee4-b18a-5eacfd0c978d";
+    string documentid = "308f807c-f7b8-40a1-8457-767bb498a62e";
     int partitionkey = 1234;
     json id = {
         "id": documentid,
         "AccountNumber": partitionkey
     };
     json custom = {
-        "LastName": "keeeeeee",  
+        "LastName": "seemee",  
         "Parents": [  
             {  
             "FamilyName": null,  
@@ -409,7 +407,7 @@ function deleteDocument(){
     io:println("--------------Delete one document------------------------\n\n");
     
     Databases AzureCosmosClient = new(config);
-    string documentid = "f8c9c347-d50e-4ba4-860e-6b11aea51012";
+    string documentid = "308f807c-f7b8-40a1-8457-767bb498a62e";
     int partitionkey = 1234;
     var result = AzureCosmosClient->deleteDocument("hikall","mycollection1",documentid,partitionkey);  
     if result is string {
@@ -476,7 +474,7 @@ function replaceSproc(){
     io:println("-----------------Replace stored procedure-----------------------\n\n");
 
     Databases AzureCosmosClient = new(config);
-    string sprocid = "sproc-50c4f0df-b25d-48ef-b936-d31a55798193";
+    string sprocid = "sproc-561d47d6-36d2-4fd5-b20e-143550737f55";
     string sproc = "function (personToGreet) {\r\n    var context = getContext();\r\n    var response = context.getResponse();\r\n\r\n    response.setBody(\"Hello, \" + personToGreet);\r\n}"; 
     var result = AzureCosmosClient->replaceStoredProcedure("hikall","mycollection1",sproc,sprocid);  
     if result is StoredProcedure {
@@ -510,7 +508,7 @@ function deleteOneSproc(){
     io:println("-----------------Delete Stored Procedure-----------------------\n\n");
 
     Databases AzureCosmosClient = new(config);
-    string sprocid = "sproc-fe221415-47ce-4cf5-a633-59875c3c4b5d";
+    string sprocid = "sproc-561d47d6-36d2-4fd5-b20e-143550737f55";
     var result = AzureCosmosClient->deleteStoredProcedure("hikall","mycollection1",sprocid);   
     if result is json {
         io:println(result);

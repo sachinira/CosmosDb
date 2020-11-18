@@ -2,9 +2,15 @@ public type AuthConfig record {|
     string baseUrl;    
     string masterKey;
     string host;
-    string apiVersion;
     string tokenType;
     string tokenVersion;
+|};
+
+public type HeaderParamaters record {|
+    string verb = "";
+    string apiVersion = API_VERSION;
+    string resourceType = "";
+    string resourceId = "";
 |};
 
 public type Database record {

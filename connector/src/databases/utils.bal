@@ -4,6 +4,8 @@ import ballerina/io;
 import ballerina/crypto;
 import ballerina/encoding;
 import ballerina/http;
+import ballerina/stringutils;
+import ballerina/lang.'string as str;
 
 # To handle sucess or error reponses to requests
 # + httpResponse - http:Response or http:ClientError returned from an http:Request
@@ -44,7 +46,7 @@ function getDeleteResponse(http:Response|http:ClientError httpResponse) returns 
     if (httpResponse is http:Response) {
         if(httpResponse.statusCode == http:STATUS_NO_CONTENT){
             return string `Deleted Sucessfully ${httpResponse.statusCode}`;
-        } else {
+        } else {// if 404 error 401 error
             return prepareError(string `Error occurred while invoking the REST API"${httpResponse.statusCode}`);
         }
     } else {
@@ -100,7 +102,6 @@ public function setUpsertHeader(http:Request req, boolean? upsert= ()) returns h
     req.setHeader("x-ms-documentdb-is-upsert",upsert.toString());
     return req;
 }
-
 
 public function setThroughputOrAutopilotHeader(http:Request req,int? throughput = (),json? option =()) returns http:Request|error{
     if throughput is int &&  option is () {
@@ -160,17 +161,14 @@ public function setHeadersForQuery(http:Request req) returns http:Request|error{
 
 # To attach required basic headers to call REST endpoint
 # + req - http:Request to add headers to
-# + apiversion - version of REST API
 # + host - 
-# + verb - HTTP verb, such as GET, POST, or PUT
-# + resourceType - identifies the type of resource that the request is for, Eg. "dbs", "colls", "docs"
-# + resourceId -dentity property of the resource that the request is directed at
 # + keyToken - master or resource token
 # + tokenType - denotes the type of token: master or resource.
 # + tokenVersion - denotes the version of the token, currently 1.0.
+# + params - an object of type HeaderParamaters
 # + return - If successful, returns same http:Request with newly appended headers. Else returns error.  
-public function setHeaders(http:Request req, string apiversion, string host, string verb, string resourceType, string resourceId, string keyToken, string tokenType, string tokenVersion) returns http:Request|error{
-    req.setHeader("x-ms-version",apiversion);
+public function setHeaders(http:Request req, string host, string keyToken, string tokenType, string tokenVersion,HeaderParamaters params) returns http:Request|error{
+    req.setHeader("x-ms-version",params.apiVersion);
     req.setHeader("Host",host);
     req.setHeader("Accept","*/*");
     req.setHeader("Connection","keep-alive");
@@ -178,7 +176,7 @@ public function setHeaders(http:Request req, string apiversion, string host, str
     string? date = check getTime();
     if date is string
     {
-        string? s = generateTokenNew(verb,resourceType,resourceId,keyToken,tokenType,tokenVersion);
+        string? s = generateTokenNew(params.verb,params.resourceType,params.resourceId,keyToken,tokenType,tokenVersion);
         req.setHeader("x-ms-date",date);
         if s is string {
             req.setHeader("Authorization",s);
@@ -192,7 +190,6 @@ public function setHeaders(http:Request req, string apiversion, string host, str
 }
 
 # To construct the hashed token signature for a token to set  'Authorization' header
-#  
 # + verb - HTTP verb, such as GET, POST, or PUT
 # + resourceType - identifies the type of resource that the request is for, Eg. "dbs", "colls", "docs"
 # + resourceId -dentity property of the resource that the request is directed at
@@ -200,7 +197,6 @@ public function setHeaders(http:Request req, string apiversion, string host, str
 # + tokenType - denotes the type of token: master or resource.
 # + tokenVersion - denotes the version of the token, currently 1.0.
 # + return - If successful, returns string which is the  hashed token signature. Else returns ().  
-#
 public function generateTokenNew(string verb, string resourceType, string resourceId, string keyToken, string tokenType, string tokenVersion) returns string?{
     var token = generateTokenJ(java:fromString(verb),java:fromString(resourceType),java:fromString(resourceId),java:fromString(keyToken),java:fromString(tokenType),java:fromString(tokenVersion));
     return java:toString(token);
@@ -217,6 +213,44 @@ public function getTime() returns string?|error{
     return timeString;
 }
 
+# To construct resource type  which is used to create the hashed token signature 
+# + url - string parameter part of url to extract the resource type
+# + return - Returns the resource type extracted from url as a string  
+public function getResourceType(string url) returns string{
+    string resourceType = "";
+    string[] urlParts = stringutils:split(url,"/");
+    int count = urlParts.length()-1;
+    if count % 2 != 0{
+        resourceType = urlParts[count];
+        if count > 1{
+            int? i = str:lastIndexOf(url,"/");
+        }
+    } else {
+        resourceType = urlParts[count-1];
+    }
+    return resourceType;
+}
+
+# To construct resource id  which is used to create the hashed token signature 
+# + url - string parameter part of url to extract the resource id
+# + return - Returns the resource id extracted from url as a string 
+public function getResourceId(string url) returns string{
+    string resourceId = "";
+    string[] urlParts = stringutils:split(url,"/");
+    int count = urlParts.length()-1;
+    if count % 2 != 0{
+        if count > 1{
+            int? i = str:lastIndexOf(url,"/");
+            if i is int {
+                resourceId = str:substring(url,1,i);
+            }
+        }
+    } else {
+        resourceId = str:substring(url,1);
+    }
+    return resourceId;
+}
+
 public function generateToken(string verb, string resourceType, string resourceId, string keys, string keyType, string tokenVersion, string date) returns string?|error{    
     string authorization;
     string payload = verb.toLowerAscii()+"\n" 
@@ -224,17 +258,14 @@ public function generateToken(string verb, string resourceType, string resourceI
         +resourceId+"\n"
         +date.toLowerAscii()+"\n"
         +""+"\n";
+    var decoded = encoding:decodeBase64Url(keys);
 
-    var decoded = encoding:decodeBase64Url(keys);    
     if decoded is byte[]
     {
         byte[] k = crypto:hmacSha256(payload.toBytes(),decoded);
         string  t = k.toBase16();
-
         string signature = encoding:encodeBase64Url(k);
-
-        authorization = check encoding:encodeUriComponent(string `type=${keyType}&ver=${tokenVersion}&sig=${signature}=`, "UTF-8");
-            
+        authorization = check encoding:encodeUriComponent(string `type=${keyType}&ver=${tokenVersion}&sig=${signature}=`, "UTF-8");   
         return authorization;
     } else {     
         io:println("Decoding error");
