@@ -63,25 +63,18 @@ public  client class Databases{
 
         req = check setHeaders(req,self.apiVersion,self.host,verb,self.resourceTypedb,resourceId,self.masterKey,self.keyType,self.tokenVersion);
         req = check setThroughputOrAutopilotHeader(req,throughput,autoscale);
-
         json body = {
             id: dbName
         };
 
         req.setJsonPayload(body);
-
         var response = self.basicClient->post(requestPath,req);
-
         json jsonreponse = check parseResponseToJson(response);
-
-        return mapJsonToDatabaseType(jsonreponse);
-        
+        return mapJsonToDatabaseType(jsonreponse);   
     }
 
     # To list all databases inside a resource
-    #
     # + return - If successful, returns DBList. Else returns error.  
-    # 
     public remote function listDatabases() returns @tainted DBList|error{
 
         http:Request req = new;
@@ -89,21 +82,14 @@ public  client class Databases{
         string resourceId = "";
        
         req = check setHeaders(req,self.apiVersion,self.host,verb,self.resourceTypedb,resourceId,self.masterKey,self.keyType,self.tokenVersion);
-
         var response = self.basicClient->get("/dbs",req);
-
         json jsonresponse = check parseResponseToJson(response);
-
-        return mapJsonToDbList(jsonresponse);
-        
+        return mapJsonToDbList(jsonresponse); 
     }
 
     # To retrive a given database inside a resource
-    #
     # + dbName -  id/name of the database to retrieve
-    # 
     # + return - If successful, returns Database. Else returns error.  
-    #
     public remote function listOneDatabase(string dbName) returns @tainted Database|error{
 
         http:Request req = new;
@@ -111,21 +97,14 @@ public  client class Databases{
         string resourceId = string `dbs/${dbName}`;
        
         req = check setHeaders(req,self.apiVersion,self.host,verb,self.resourceTypedb,resourceId,self.masterKey,self.keyType,self.tokenVersion);
-
         var response = self.basicClient->get(string `/dbs/${dbName}`,req);
-
         json jsonresponse = check parseResponseToJson(response);
-
-        return mapJsonToDatabaseType(jsonresponse);
-        
+        return mapJsonToDatabaseType(jsonresponse);  
     }
 
     # To retrive a given database inside a resource
-    #
     # + dbName -  id/name of the database to retrieve
-    # 
     # + return - If successful, returns string specifying delete is sucessfull. Else returns error.  
-    #
     public remote function deleteDatabase(string dbName) returns @tainted string|error{
 
         http:Request req = new;
@@ -133,14 +112,11 @@ public  client class Databases{
         string resourceId = string `dbs/${dbName}`;
         
         req = check setHeaders(req,self.apiVersion,self.host,verb,self.resourceTypedb,resourceId,self.masterKey,self.keyType,self.tokenVersion);
-
         var response = self.basicClient->delete(string `/dbs/${dbName}`,req);
-
         return check getDeleteResponse(response);
     }
 
     # To create a collection inside a database
-    #
     # + dbName -  id/name for the database
     # + colName - id/name for collection
     # + partitionKey - json object for specifying properties of partition key. If the REST API version is 2018-12-31 or higher, 
@@ -148,9 +124,7 @@ public  client class Databases{
     # + indexingPolicy - Optional json object to configure indexing policy. By default, the indexing is automatic for all document paths within the collection.
     # + throughput - Optional throughput parameter which will set 'x-ms-offer-throughput' header 
     # + autoscale - Optional throughput parameter which will set 'x-ms-cosmos-offer-autopilot-settings' header
-    # 
     # + return - If successful, returns Collection. Else returns error.  
-    # 
     public remote function createCollection(string dbName, string colName, json partitionKey, json? indexingPolicy = (), int? throughput = (),json? autoscale = ()) returns @tainted Collection|error{
 
         http:Request req = new;
@@ -160,20 +134,15 @@ public  client class Databases{
         req = check setHeaders(req,self.apiVersion,self.host,verb,self.resourceTypecoll,resourceId,self.masterKey,self.keyType,self.tokenVersion);
         req = check setThroughputOrAutopilotHeader(req,throughput,autoscale);
 
-
         json body = {
             "id": colName,
             "partitionKey": partitionKey
         };
 
         json finalc = check body.mergeJson(indexingPolicy);
-
         req.setJsonPayload(finalc);
-
         var response = self.basicClient->post(string `/dbs/${dbName}/colls`,req);
-
         json jsonresponse = check parseResponseToJson(response);
-
         return mapJsonToCollectionType(jsonresponse);
     }
 
