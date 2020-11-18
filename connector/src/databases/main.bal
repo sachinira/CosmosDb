@@ -34,7 +34,8 @@ public  client class Databases {
     # + throughput - Optional throughput parameter which will set 'x-ms-offer-throughput' header 
     # + autoscale - Optional throughput parameter which will set 'x-ms-cosmos-offer-autopilot-settings' header
     # + return - If successful, returns Database. Else returns error.  
-    public remote function createDatabase(string dbName, int? throughput = (), json? autoscale = ()) returns @tainted Database|error{
+    public remote function createDatabase(string dbName, int? throughput = (), json? autoscale = ()) returns 
+    @tainted Database|error{
         http:Request req = new;
         string requestPath = RESOURCE_PATH_DATABASES;
         HeaderParamaters header = mapParametersToHeaderType(POST,requestPath);
@@ -93,13 +94,16 @@ public  client class Databases {
     # To create a collection inside a database
     # + dbName -  id/name for the database
     # + colName - id/name for collection
-    # + partitionKey - json object for specifying properties of partition key. If the REST API version is 2018-12-31 or higher, 
+    # + partitionKey - json object for specifying properties of partition key. If the REST API version is 
+    # 2018-12-31 or higher, 
     #                   the collection must include a partitionKey definition.
-    # + indexingPolicy - Optional json object to configure indexing policy. By default, the indexing is automatic for all document paths within the collection.
+    # + indexingPolicy - Optional json object to configure indexing policy. By default, the indexing is automatic 
+    # for all document paths within the collection.
     # + throughput - Optional throughput parameter which will set 'x-ms-offer-throughput' header 
     # + autoscale - Optional throughput parameter which will set 'x-ms-cosmos-offer-autopilot-settings' header
     # + return - If successful, returns Collection. Else returns error.  
-    public remote function createCollection(string dbName, string colName, json partitionKey, json? indexingPolicy = (), int? throughput = (),json? autoscale = ()) returns @tainted Collection|error{
+    public remote function createCollection(string dbName, string colName, json partitionKey, json? indexingPolicy = (), 
+    int? throughput = (),json? autoscale = ()) returns @tainted Collection|error{
         http:Request req = new;
         string requestPath = string `${RESOURCE_PATH_DATABASES}/${dbName}${RESOURCE_PATH_COLLECTIONS}`;
         HeaderParamaters header = mapParametersToHeaderType(POST,requestPath);
@@ -126,7 +130,6 @@ public  client class Databases {
         HeaderParamaters header = mapParametersToHeaderType(GET,requestPath);
 
         req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
-        //req = check setHeaders(req,self.apiVersion,self.host,verb,self.resourceTypecoll,resourceId,self.masterKey,self.keyType,self.tokenVersion);
         var response = self.basicClient->get(requestPath,req);
         json jsonresponse = check parseResponseToJson(response);
         return mapJsonToCollectionListType(jsonresponse);
@@ -167,7 +170,8 @@ public  client class Databases {
     # + return - If successful, returns PartitionKeyList. Else returns error.  
     public remote function getPartitionKeyRanges(string dbName, string colName) returns @tainted PartitionKeyList|error{
         http:Request req = new;
-        string requestPath = string `${RESOURCE_PATH_DATABASES}/${dbName}${RESOURCE_PATH_COLLECTIONS}/${colName}${RESOURCE_PATH_PK_RANGES}`;
+        string requestPath = string `${RESOURCE_PATH_DATABASES}/${dbName}${RESOURCE_PATH_COLLECTIONS}/${colName}
+        ${RESOURCE_PATH_PK_RANGES}`;
         HeaderParamaters header = mapParametersToHeaderType(GET,requestPath);
 
         req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
@@ -182,7 +186,8 @@ public  client class Databases {
     # To create a Document inside a collection
     # + dbName -  id/name for the database
     # + colName - id/name for collection
-    # + partitionKey -  value for the partition key field specified for the collection  to set x-ms-documentdb-partitionkey header.
+    # + partitionKey -  value for the partition key field specified for the collection  to set 
+    # x-ms-documentdb-partitionkey header.
     # + document - Any json content that will include as the document.
     # + isUpsert - Optional boolean value to specify if this request is updating an existing document 
     #               (If set to true, Cosmos DB creates the document with the ID (and partition key value if applicable) 
@@ -192,9 +197,11 @@ public  client class Databases {
     #                   -Include adds the document to the index.
     #                   -Exclude omits the document from indexing.
     # + return - If successful, returns Document. Else returns error.  
-    public remote function createDocument(string dbName, string colName, json document,any partitionKey, boolean? isUpsert = (), string? indexingDir = ()) returns @tainted Document|error{
+    public remote function createDocument(string dbName, string colName, json document,any partitionKey, 
+    boolean? isUpsert = (), string? indexingDir = ()) returns @tainted Document|error{
         http:Request req = new;
-        string requestPath = string `${RESOURCE_PATH_DATABASES}/${dbName}${RESOURCE_PATH_COLLECTIONS}/${colName}${RESOURCE_PATH_DOCUMENTS}`;
+        string requestPath = string `${RESOURCE_PATH_DATABASES}/${dbName}${RESOURCE_PATH_COLLECTIONS}/${colName}
+        ${RESOURCE_PATH_DOCUMENTS}`;
         HeaderParamaters header = mapParametersToHeaderType(POST,requestPath);
 
         req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
@@ -218,9 +225,11 @@ public  client class Databases {
     # + colName - id/name of collection which documents are in.
     # + itemcount - Optional integer number of documents to be listed in document list (Default is 100)
     # + return - If successful, returns DocumentList. Else returns error. 
-    public remote function listAllDocuments(string dbName, string colName, int? itemcount = ()) returns @tainted DocumentList|error{ 
+    public remote function listAllDocuments(string dbName, string colName, int? itemcount = ()) returns 
+    @tainted DocumentList|error{ 
         http:Request req = new;
-        string requestPath = string `${RESOURCE_PATH_DATABASES}/${dbName}${RESOURCE_PATH_COLLECTIONS}/${colName}${RESOURCE_PATH_DOCUMENTS}`;
+        string requestPath = string `${RESOURCE_PATH_DATABASES}/${dbName}${RESOURCE_PATH_COLLECTIONS}/${colName}
+        ${RESOURCE_PATH_DOCUMENTS}`;
         HeaderParamaters header = mapParametersToHeaderType(GET,requestPath);
 
         req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
@@ -240,7 +249,8 @@ public  client class Databases {
     # + req -
     # + list1 - 
     # + return - 
-    public remote function createRequestAgain(http:Response resp, http:Request req, string dbName, string colName, DocumentList list1) returns @tainted DocumentList|error{
+    public remote function createRequestAgain(http:Response resp, http:Request req, string dbName, string colName, 
+    DocumentList list1) returns @tainted DocumentList|error{
         //if response is http:Response && response.hasHeader("x-ms-continuation") {
 
             //if there is continuation header
@@ -252,7 +262,8 @@ public  client class Databases {
         string verb = "GET"; 
         string resourceId = string `dbs/${dbName}/colls/${colName}`;
         
-        //var reqn = check setHeaders(req,self.apiVersion,self.host,verb,self.resourceTypedoc,resourceId,self.masterKey,self.keyType,self.tokenVersion);
+        //var reqn = check setHeaders(req,self.apiVersion,self.host,verb,self.resourceTypedoc,resourceId,self.masterKey,
+        //self.keyType,self.tokenVersion);
         //reqn.setHeader("x-ms-continuation",resp.getHeader("x-ms-continuation"));
         //var response2 = self.basicClient->get(string `/dbs/${dbName}/colls/${colName}/docs`,reqn);
 
@@ -273,11 +284,14 @@ public  client class Databases {
     # + dbName -  id/name of the database which collection is in.
     # + colName - id/name of collection which documents are in.
     # + documentId - id of the document to be retrieved
-    # + partitionKey - the value in the partition key field specified for the collection to set x-ms-documentdb-partitionkey header
+    # + partitionKey - the value in the partition key field specified for the collection to 
+    # set x-ms-documentdb-partitionkey header
     # + return - If successful, returns a Document. Else returns error. 
-    public remote function listOneDocument(string dbName, string colName, string documentId, any partitionKey) returns @tainted Document|error{
+    public remote function listOneDocument(string dbName, string colName, string documentId, any partitionKey) returns 
+    @tainted Document|error{
         http:Request req = new;
-        string requestPath = string `${RESOURCE_PATH_DATABASES}/${dbName}${RESOURCE_PATH_COLLECTIONS}/${colName}${RESOURCE_PATH_DOCUMENTS}/${documentId}`;
+        string requestPath = string `${RESOURCE_PATH_DATABASES}/${dbName}${RESOURCE_PATH_COLLECTIONS}/${colName}
+        ${RESOURCE_PATH_DOCUMENTS}/${documentId}`;
         HeaderParamaters header = mapParametersToHeaderType(GET,requestPath);
 
         req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
@@ -293,11 +307,14 @@ public  client class Databases {
     # + colName - id/name of collection which document is in.
     # + document - json object for replacing the existing document
     # + documentId - id of the document to be replaced
-    # + partitionKey - the value in the partition key field specified for the collection to set x-ms-documentdb-partitionkey header
+    # + partitionKey - the value in the partition key field specified for the collection to 
+    # set x-ms-documentdb-partitionkey header
     # + return - If successful, returns a Document. Else returns error. 
-    public remote function replaceDocument(string dbName, string colName, json document, string documentId, any partitionKey) returns @tainted Document|error{         
+    public remote function replaceDocument(string dbName, string colName, json document, string documentId, 
+    any partitionKey) returns @tainted Document|error{         
         http:Request req = new;
-        string requestPath = string `${RESOURCE_PATH_DATABASES}/${dbName}${RESOURCE_PATH_COLLECTIONS}/${colName}${RESOURCE_PATH_DOCUMENTS}/${documentId}`;
+        string requestPath = string `${RESOURCE_PATH_DATABASES}/${dbName}${RESOURCE_PATH_COLLECTIONS}/${colName}
+        ${RESOURCE_PATH_DOCUMENTS}/${documentId}`;
         HeaderParamaters header = mapParametersToHeaderType(PUT,requestPath);
 
         req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
@@ -312,11 +329,14 @@ public  client class Databases {
     # + dbName -  id/name of the database which collection is in.
     # + colName - id/name of collection which document is in.
     # + documentId - id of the document to be deleted
-    # + partitionKey - the value in the partition key field specified for the collection to set x-ms-documentdb-partitionkey header
+    # + partitionKey - the value in the partition key field specified for the collection to 
+    # set x-ms-documentdb-partitionkey header
     # + return - If successful, returns a string giving sucessfully deleted. Else returns error. 
-    public remote function deleteDocument(string dbName, string colName, string documentId, any partitionKey) returns @tainted string|error{  
+    public remote function deleteDocument(string dbName, string colName, string documentId, any partitionKey) returns 
+    @tainted string|error{  
         http:Request req = new;
-        string requestPath = string `${RESOURCE_PATH_DATABASES}/${dbName}${RESOURCE_PATH_COLLECTIONS}/${colName}${RESOURCE_PATH_DOCUMENTS}/${documentId}`;
+        string requestPath = string `${RESOURCE_PATH_DATABASES}/${dbName}${RESOURCE_PATH_COLLECTIONS}/${colName}
+        ${RESOURCE_PATH_DOCUMENTS}/${documentId}`;
         HeaderParamaters header = mapParametersToHeaderType(DELETE,requestPath);
 
         req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
@@ -330,11 +350,14 @@ public  client class Databases {
     # + dbName -  id/name of the database which collection is in.
     # + colName - id/name of collection which document is in.
     # + sqlQuery - json object containing the sql query
-    # + partitionKey - the value in the partition key field specified for the collection to set x-ms-documentdb-partitionkey header
+    # + partitionKey - the value in the partition key field specified for the collection to 
+    # set x-ms-documentdb-partitionkey header
     # + return - If successful, returns a json. Else returns error. 
-    public remote function queryDocument(string dbName, string colName, json sqlQuery, any partitionKey) returns @tainted json|error{
+    public remote function queryDocument(string dbName, string colName, json sqlQuery, any partitionKey) returns 
+    @tainted json|error{
         http:Request req = new;
-        string requestPath = string `${RESOURCE_PATH_DATABASES}/${dbName}${RESOURCE_PATH_COLLECTIONS}/${colName}${RESOURCE_PATH_DOCUMENTS}`;
+        string requestPath = string `${RESOURCE_PATH_DATABASES}/${dbName}${RESOURCE_PATH_COLLECTIONS}/${colName}
+        ${RESOURCE_PATH_DOCUMENTS}`;
         HeaderParamaters header = mapParametersToHeaderType(POST,requestPath);
 
         req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
@@ -354,9 +377,11 @@ public  client class Databases {
     # + sproc - 
     # + sprocId -
     # + return - If successful, returns a StoredProcedure. Else returns error. 
-    public remote function createStoredProcedure(string dbName, string colName, string sproc, string sprocId) returns @tainted StoredProcedure|error{
+    public remote function createStoredProcedure(string dbName, string colName, string sproc, string sprocId) returns 
+    @tainted StoredProcedure|error{
         http:Request req = new;
-        string requestPath = string `${RESOURCE_PATH_DATABASES}/${dbName}${RESOURCE_PATH_COLLECTIONS}/${colName}${RESOURCE_PATH_STORED_POCEDURES}`;
+        string requestPath = string `${RESOURCE_PATH_DATABASES}/${dbName}${RESOURCE_PATH_COLLECTIONS}/${colName}
+        ${RESOURCE_PATH_STORED_POCEDURES}`;
         HeaderParamaters header = mapParametersToHeaderType(POST,requestPath);
         json spbody = {
             id: sprocId,
@@ -376,9 +401,11 @@ public  client class Databases {
     # + sproc - 
     # + sprocId - 
     # + return - If successful, returns a StoredProcedure. Else returns error. 
-    public remote function replaceStoredProcedure(string dbName, string colName, string sproc, string sprocId) returns @tainted StoredProcedure|error{
+    public remote function replaceStoredProcedure(string dbName, string colName, string sproc, string sprocId) returns 
+    @tainted StoredProcedure|error{
         http:Request req = new;
-        string requestPath = string `${RESOURCE_PATH_DATABASES}/${dbName}${RESOURCE_PATH_COLLECTIONS}/${colName}${RESOURCE_PATH_STORED_POCEDURES}/${sprocId}`;
+        string requestPath = string `${RESOURCE_PATH_DATABASES}/${dbName}${RESOURCE_PATH_COLLECTIONS}/${colName}
+        ${RESOURCE_PATH_STORED_POCEDURES}/${sprocId}`;
         HeaderParamaters header = mapParametersToHeaderType(PUT,requestPath);
         json spbody = {
             id: sprocId,
@@ -396,9 +423,11 @@ public  client class Databases {
     # + dbName -  id/name of the database which collection is in.
     # + colName - id/name of collection which stored procedures are in.
     # + return - If successful, returns a StoredProcedureList. Else returns error. 
-    public remote function listStoredProcedures(string dbName, string colName) returns @tainted StoredProcedureList|error{
+    public remote function listStoredProcedures(string dbName, string colName) returns 
+    @tainted StoredProcedureList|error{
         http:Request req = new;
-        string requestPath = string `${RESOURCE_PATH_DATABASES}/${dbName}${RESOURCE_PATH_COLLECTIONS}/${colName}${RESOURCE_PATH_STORED_POCEDURES}`;
+        string requestPath = string `${RESOURCE_PATH_DATABASES}/${dbName}${RESOURCE_PATH_COLLECTIONS}/${colName}
+        ${RESOURCE_PATH_STORED_POCEDURES}`;
         HeaderParamaters header = mapParametersToHeaderType(GET,requestPath);
 
         req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
@@ -412,16 +441,17 @@ public  client class Databases {
     # + colName - id/name of collection which stored procedure is in.
     # + sprocId - id of the stored procedure to be deleted
     # + return - If successful, returns string specifying delete is sucessfull. Else returns error. 
-    public remote function deleteStoredProcedure(string dbName, string colName, string sprocId) returns @tainted json|error{
+    public remote function deleteStoredProcedure(string dbName, string colName, string sprocId) returns 
+    @tainted json|error{
         http:Request req = new;
-        string requestPath = string `${RESOURCE_PATH_DATABASES}/${dbName}${RESOURCE_PATH_COLLECTIONS}/${colName}${RESOURCE_PATH_STORED_POCEDURES}/${sprocId}`;
+        string requestPath = string `${RESOURCE_PATH_DATABASES}/${dbName}${RESOURCE_PATH_COLLECTIONS}/${colName}
+        ${RESOURCE_PATH_STORED_POCEDURES}/${sprocId}`;
         HeaderParamaters header = mapParametersToHeaderType(DELETE,requestPath);
 
         req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
         var response = self.basicClient->delete(requestPath,req);
         return getDeleteResponse(response);   
     }
-
 
     #To execute a stored procedure inside a collection
     # ***********function only works correctly for string parameters************
@@ -430,7 +460,8 @@ public  client class Databases {
     # + sprocId - id of the stored procedure to be executed
     # + parameters - The list of paramaters to pass to javascript function as an array.
     # + return - If successful, returns json with the output from the executed funxtion. Else returns error. 
-    public remote function executeStoredProcedure(string dbName, string colName, string sprocId, any[]? parameters) returns @tainted json|error{
+    public remote function executeStoredProcedure(string dbName, string colName, string sprocId, any[]? parameters) 
+    returns @tainted json|error{
         http:Request req = new;
         string requestPath = string `${RESOURCE_PATH_DATABASES}/${dbName}${RESOURCE_PATH_COLLECTIONS}/${colName}${RESOURCE_PATH_STORED_POCEDURES}/${sprocId}`;
         HeaderParamaters header = mapParametersToHeaderType(POST,requestPath);
