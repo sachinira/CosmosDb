@@ -29,6 +29,41 @@ public  client class Client {
         });
     }
 
+
+////////Async
+    public remote function listDatabasesAsync() returns @tainted future<http:Response|error>|error {
+        http:Request req = new;
+        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES]);
+        HeaderParamaters header = mapParametersToHeaderType(GET,requestPath);
+
+        req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
+        future<http:Response|error> response = start self.azureCosmosClient->get(requestPath,req);
+        //json jsonresponse = check parseResponseToJsonAsync(response);
+        //return mapJsonToDbList(jsonresponse); 
+
+        return response;
+    }
+
+    public remote function listDatabasesSync() returns @tainted DBList|error {
+        json jsonresponse = {};
+        future<http:Response|error>|error response = self->listDatabasesAsync();
+
+        if response is future<http:Response|error> {
+            jsonresponse =  check parseResponseToJsonAsync(response);
+
+        }else{
+            //
+        }
+
+        return mapJsonToDbList(jsonresponse); 
+
+
+        
+        //return response;
+    }
+
+
+
     # To create a database inside a resource
     # + dbName -  id/name for the database
     # + throughput - Optional throughput parameter which will set 'x-ms-offer-throughput' header 

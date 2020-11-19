@@ -1,6 +1,7 @@
 import ballerina/io;
 import ballerina/test;
 import ballerina/java;
+import ballerina/http;
 
 AzureCosmosConfiguration config = {
     baseUrl: BASE_URL,
@@ -90,7 +91,7 @@ function listAllDB(){
     io:println("--------------List All databases------------------------\n\n");
 
     Client AzureCosmosClient = new(config);
-    var result = AzureCosmosClient->listDatabases();
+    var result = AzureCosmosClient->listDatabasesSync();
     if (result is DBList) {
         io:println(result);
     } else {
@@ -100,7 +101,23 @@ function listAllDB(){
 }
 
 @test:Config{
-    //enable: false
+   //enable: false
+}
+function listAllDBAsync(){
+    io:println("--------------List All databases------------------------\n\n");
+
+    Client AzureCosmosClient = new(config);
+    var result = AzureCosmosClient->listDatabasesAsync();
+    if (result is future<http:Response|error>) {
+        io:println(result);
+    } else {
+        test:assertFail(msg = result.message());
+    }
+    io:println("\n\n");
+}
+
+@test:Config{
+    enable: false
 }
 function listOneDB(){
     io:println("--------------List one database------------------------\n\n");

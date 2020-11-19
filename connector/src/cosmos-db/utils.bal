@@ -7,6 +7,38 @@ import ballerina/http;
 import ballerina/stringutils;
 import ballerina/lang.'string as str;
 
+
+function parseResponseToJsonAsync(future<http:Response|error> f) returns @tainted json|error { 
+    var httpResponse = wait f;
+
+    if (httpResponse is http:Response) {
+        var jsonResponse = httpResponse.getJsonPayload();
+
+        if (jsonResponse is json) {
+            if (httpResponse.statusCode != http:STATUS_OK && httpResponse.statusCode != http:STATUS_CREATED) {
+                string code = "";    
+                if (jsonResponse?.error_code != ()) {
+                    code = jsonResponse.error_code.toString();
+                } else if (jsonResponse?.'error != ()) {
+                    code = jsonResponse.'error.toString();
+                }
+                string message = jsonResponse.message.toString();
+                string errorMessage = httpResponse.statusCode.toString() + " " + httpResponse.reasonPhrase; 
+                if (code != "") {
+                    errorMessage += " - " + code;
+                }
+                errorMessage += " : " + message;
+                return prepareError(errorMessage);
+            }
+            return jsonResponse;
+        } else {
+            return prepareError("Error occurred while accessing the JSON payload of the response");
+        }
+    } else {
+        return prepareError("Error occurred while invoking the REST API");
+    }
+}
+
 # To handle sucess or error reponses to requests
 # + httpResponse - http:Response or http:ClientError returned from an http:Request
 # + return - If successful, returns json. Else returns error.  
