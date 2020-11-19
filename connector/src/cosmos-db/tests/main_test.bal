@@ -2,7 +2,7 @@ import ballerina/io;
 import ballerina/test;
 import ballerina/java;
 
-AuthConfig config = {
+AzureCosmosConfiguration config = {
     baseUrl: BASE_URL,
     masterKey: MASTER_KEY,
     host: HOST,
@@ -32,7 +32,7 @@ function createDB(){
 }
 
 @test:Config{
-    //enable: false
+    enable: false
 }
 function createDBWithManualThroughput(){
     io:println("--------------Create with manual throguput------------------------\n\n");
@@ -84,7 +84,7 @@ function createDBWithBothHeaders(){
 }
 
 @test:Config{
-   enable: false
+   //enable: false
 }
 function listAllDB(){
     io:println("--------------List All databases------------------------\n\n");
@@ -100,7 +100,7 @@ function listAllDB(){
 }
 
 @test:Config{
-    enable: false
+    //enable: false
 }
 function listOneDB(){
     io:println("--------------List one database------------------------\n\n");
@@ -191,7 +191,7 @@ function createCollectionWithManualThroughputAndIndexingPolicy(){
 //create collection with autoscale testcase comes here
 
 @test:Config{
-   enable: false
+   //enable: false
 }
 function getAllCollections(){
     io:println("--------------Get All collections-----------------------\n\n");
@@ -207,7 +207,7 @@ function getAllCollections(){
 }
 
 @test:Config{
-   enable: false
+   //enable: false
 }
 function getOneCollection(){
     io:println("--------------Get One collections-----------------------\n\n");
@@ -235,7 +235,7 @@ function deleteCollection(){
 }
 
 @test:Config{
-   enable: false
+   //enable: false
 }
 function GetPartitionKeyRanges(){
     io:println("--------------Get partition key ranges------------------------\n\n");
@@ -251,7 +251,7 @@ function GetPartitionKeyRanges(){
 }
 
 @test:Config{
-  enable: false
+  //enable: false
 }
 function createDocument(){
     io:println("--------------Create One document------------------------\n\n");
@@ -309,7 +309,7 @@ function createDocument(){
 
 //with indexing or upsert headers test case comes here
 @test:Config{
-   enable: false
+   //enable: false
 }
 function GetDocumentList(){
     io:println("--------------Get all documents in a collection------------------------\n\n");
@@ -448,7 +448,7 @@ function queryDocument(){
 }
 
 @test:Config{
-   enable: false
+   //enable: false
 }
 function createSproc(){
     io:println("-----------------Create stored procedure-----------------------\n\n");
@@ -485,7 +485,7 @@ function replaceSproc(){
 }
 
 @test:Config{
-   enable: false
+   //enable: false
 }
 function getAllSprocs(){
     io:println("-----------------Get All Stored Procedures-----------------------\n\n");
@@ -518,7 +518,7 @@ function deleteOneSproc(){
 }
 
 @test:Config{
-   enable: false
+   //enable: false
 }
 function executeOneSproc(){
     io:println("-----------------Execute Stored Procedure-----------------------\n\n");
