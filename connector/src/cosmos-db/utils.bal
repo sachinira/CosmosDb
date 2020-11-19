@@ -66,6 +66,24 @@ function prepareError(string message, error? err = ()) returns error {
     return azureError;
 }
 
+
+# Returns the prepared URL.
+# + paths - An array of paths prefixes
+# + return - The prepared URL
+function prepareUrl(string[] paths) returns string {
+    string url = EMPTY_STRING;
+
+    if (paths.length() > 0) {
+        foreach var path in paths {
+            if (!path.startsWith(FORWARD_SLASH)) {
+                url = url + FORWARD_SLASH;
+            }
+            url = url + path;
+        }
+    }
+    return <@untainted> url;
+}
+
 function convertToBoolean(json|error value) returns boolean { 
     if (value is json) {
         boolean|error result = 'boolean:fromString(value.toString());
@@ -224,13 +242,13 @@ public function getTime() returns string?|error{
 # + url - string parameter part of url to extract the resource type
 # + return - Returns the resource type extracted from url as a string  
 public function getResourceType(string url) returns string{
-    string resourceType = "";
-    string[] urlParts = stringutils:split(url,"/");
+    string resourceType = EMPTY_STRING;
+    string[] urlParts = stringutils:split(url,FORWARD_SLASH);
     int count = urlParts.length()-1;
     if count % 2 != 0{
         resourceType = urlParts[count];
         if count > 1{
-            int? i = str:lastIndexOf(url,"/");
+            int? i = str:lastIndexOf(url,FORWARD_SLASH);
         }
     } else {
         resourceType = urlParts[count-1];
@@ -242,12 +260,12 @@ public function getResourceType(string url) returns string{
 # + url - string parameter part of url to extract the resource id
 # + return - Returns the resource id extracted from url as a string 
 public function getResourceId(string url) returns string{
-    string resourceId = "";
-    string[] urlParts = stringutils:split(url,"/");
+    string resourceId = EMPTY_STRING;
+    string[] urlParts = stringutils:split(url,FORWARD_SLASH);
     int count = urlParts.length()-1;
     if count % 2 != 0{
         if count > 1{
-            int? i = str:lastIndexOf(url,"/");
+            int? i = str:lastIndexOf(url,FORWARD_SLASH);
             if i is int {
                 resourceId = str:substring(url,1,i);
             }

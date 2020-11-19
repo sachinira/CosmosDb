@@ -1,4 +1,6 @@
 target
-src/databases/tests/constants.bal
-src/collections/tests/constants.bal
-src/documents/tests/constants.bal
+src/cosmos-db/tests/constants.bal
+Ballerina.lock
+../ballerina-internal.log
+ballerina-internal.log
+.gitignore

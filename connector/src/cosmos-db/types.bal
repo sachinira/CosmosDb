@@ -1,10 +1,3 @@
-public type AuthConfig record {|
-    string baseUrl;    
-    string masterKey;
-    string host;
-    string tokenType;
-    string tokenVersion;
-|};
 
 public type HeaderParamaters record {|
     string verb = "";
