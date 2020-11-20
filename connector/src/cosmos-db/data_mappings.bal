@@ -131,9 +131,20 @@ function mapJsonToDocument(json jsonPayload) returns @tainted Document|error {
 
 function mapJsonToDocumentList(json jsonPayload) returns @tainted DocumentList|error {
     DocumentList documentlist = {};
+
     documentlist._rid = jsonPayload._rid.toString();
     documentlist._count = convertToInt(jsonPayload._count);
     documentlist.documents = convertToDocumentArray(<json[]>jsonPayload.Documents);
+    return documentlist;
+} 
+
+function mapJsonToDocumentListIterable(json jsonPayload) returns @tainted DocumentListIterable|error {
+    DocumentListIterable documentlist = {};
+
+    documentlist._rid = jsonPayload._rid.toString();
+    documentlist._count = convertToInt(jsonPayload._count);
+    documentlist.documents = convertToDocumentArray(<json[]>jsonPayload.Documents);
+    documentlist.continuation = jsonPayload.continuation.toString();
     return documentlist;
 } 
 

@@ -96,20 +96,28 @@ public type PartitionKeyRanges record {|
     int _ts = 0;
 |};
 
-public type Document record {|
+public type Document record{|
     string id = "";
-    any document?;
+    any document ="";
     string _rid = "";
     int _ts = 0;
     string _self = "";
     string _etag = "";
     string _attachments = "";
+  
 |};
 
 public type DocumentList record {|
     string _rid= "";
     Document[] documents = [];
     int _count = 0;
+|};
+
+public type DocumentListIterable record {|
+    string _rid= "";
+    Document[] documents = [];
+    int _count = 0;
+    string continuation = "";
 |};
 
 public type StoredProcedure record {
@@ -130,6 +138,11 @@ public type Common record {|
     string _self = "";
     string _etag = "";
 |};
+
+public type ThroughputProperties record {
+    int? throughput = ();
+    json? maxThroughput = ();
+};
 
 public type AzureError distinct error;
 

@@ -13,7 +13,6 @@ import ballerina/lang.'string as str;
 function parseResponseToJson(http:Response|http:ClientError httpResponse) returns @tainted json|error { 
     if (httpResponse is http:Response) {
         var jsonResponse = httpResponse.getJsonPayload();
-
         if (jsonResponse is json) {
             if (httpResponse.statusCode != http:STATUS_OK && httpResponse.statusCode != http:STATUS_CREATED) {
                 string code = "";    
@@ -30,6 +29,8 @@ function parseResponseToJson(http:Response|http:ClientError httpResponse) return
                 errorMessage += " : " + message;
                 return prepareError(errorMessage);
             }
+            var header = getHeaderIfExist(httpResponse,"x-ms-continuation");
+            jsonResponse = check jsonResponse.mergeJson(header);
             return jsonResponse;
         } else {
             return prepareError("Error occurred while accessing the JSON payload of the response");
@@ -38,6 +39,15 @@ function parseResponseToJson(http:Response|http:ClientError httpResponse) return
         return prepareError("Error occurred while invoking the REST API");
     }
 }
+
+function getHeaderIfExist(http:Response httpResponse,string headername) returns @tainted json?{
+        if httpResponse.hasHeader(headername) {
+            return {continuation: httpResponse.getHeader(headername)};
+        }else{
+            return ();
+        }
+}
+
 
 # To handle the delete responses which return without a json payload
 # + httpResponse - http:Response or http:ClientError returned from an http:Request
@@ -121,16 +131,19 @@ public function setUpsertHeader(http:Request req, boolean? upsert= ()) returns h
     return req;
 }
 
-public function setThroughputOrAutopilotHeader(http:Request req,int? throughput = (),json? option =()) returns 
+public function setThroughputOrAutopilotHeader(http:Request req,ThroughputProperties? throughputProperties) returns 
 http:Request|error{
-    if throughput is int &&  option is () {
-        //validate throughput The minimum is 400 up to 1,000,000 (or higher by requesting a limit increase).
-        req.setHeader("x-ms-offer-throughput",option.toString());
-    } else if throughput is () &&  option != () {
-        req.setHeader("x-ms-cosmos-offer-autopilot-settings",option.toString());
-    } else if throughput is int &&  option != () {
-        return 
-        prepareError("Cannot set both x-ms-offer-throughput and x-ms-cosmos-offer-autopilot-settings headers at once");
+
+    if throughputProperties is ThroughputProperties{
+        if throughputProperties.throughput is int &&  throughputProperties.maxThroughput is () {
+            //validate throughput The minimum is 400 up to 1,000,000 (or higher by requesting a limit increase).
+            req.setHeader("x-ms-offer-throughput",throughputProperties.maxThroughput.toString());
+        } else if throughputProperties.throughput is () &&  throughputProperties.maxThroughput != () {
+            req.setHeader("x-ms-cosmos-offer-autopilot-settings",throughputProperties.maxThroughput.toString());
+        } else if throughputProperties.throughput is int &&  throughputProperties.maxThroughput != () {
+            return 
+            prepareError("Cannot set both x-ms-offer-throughput and x-ms-cosmos-offer-autopilot-settings headers at once");
+        }
     }
     return req;
 }

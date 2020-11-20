@@ -38,8 +38,10 @@ function createDBWithManualThroughput(){
     io:println("--------------Create with manual throguput------------------------\n\n");
 
     Client AzureCosmosClient = new(config);
-    int throughput = 600; 
-    var result = AzureCosmosClient->createDatabase("helooth",600);
+
+    ThroughputProperties tp = {};
+    tp.throughput = 600; 
+    var result = AzureCosmosClient->createDatabase("heloodb",tp);
     if (result is Database) {
         io:println(result);
     } else {
@@ -55,8 +57,10 @@ function createDBWithAutoscaling(){
     io:println("--------------Create with autoscaling throguput------------------------\n\n");
 
     Client AzureCosmosClient = new(config);
-    json scaling = {"maxThroughput": 4000};
-    var result = AzureCosmosClient->createDatabase("helooauto",(),scaling);
+    ThroughputProperties tp = {};
+    tp.maxThroughput = {"maxThroughput": 4000};
+
+    var result = AzureCosmosClient->createDatabase("helooauto",tp);
     if (result is Database) {
         io:println(result);
     } else {
@@ -72,9 +76,10 @@ function createDBWithBothHeaders(){
     io:println("--------------Create with autoscaling and throguput headers------------------------\n\n");
 
     Client AzureCosmosClient = new(config);
-    json scaling = {"maxThroughput": 4000};
-    int throughput = 800;
-    var result = AzureCosmosClient->createDatabase("helooboth",throughput,scaling);
+    ThroughputProperties tp = {};
+    tp.maxThroughput = {"maxThroughput": 4000};
+    tp.throughput = 600; 
+    var result = AzureCosmosClient->createDatabase("helooboth",tp);
     if (result is Database) {
         io:println(result);
     } else {
@@ -84,13 +89,13 @@ function createDBWithBothHeaders(){
 }
 
 @test:Config{
-   //enable: false
+   enable: false
 }
 function listAllDB(){
     io:println("--------------List All databases------------------------\n\n");
 
     Client AzureCosmosClient = new(config);
-    var result = AzureCosmosClient->listDatabases();
+    var result = AzureCosmosClient->getAllDatabases();
     if (result is DBList) {
         io:println(result);
     } else {
@@ -100,13 +105,13 @@ function listAllDB(){
 }
 
 @test:Config{
-    //enable: false
+    enable: false
 }
 function listOneDB(){
     io:println("--------------List one database------------------------\n\n");
 
     Client AzureCosmosClient = new(config); 
-    var result = AzureCosmosClient->listOneDatabase("hikall");
+    var result = AzureCosmosClient->getDatabase("hikall");
     if (result is Database) {
         io:println(result);
     } else {
@@ -177,9 +182,10 @@ function createCollectionWithManualThroughputAndIndexingPolicy(){
                                     }  
                                 ]  
                             };
-    int throughput = 400;
+    ThroughputProperties tp = {};
+    tp.throughput = 600; 
     string collectionName = "mycoll";
-    var result = AzureCosmosClient->createCollection("heloo",collectionName,partitionkey,indexingPolicy,throughput);
+    var result = AzureCosmosClient->createCollection("heloo",collectionName,partitionkey,indexingPolicy,tp);
     if (result is Collection) {
         io:println(result);
     } else {
@@ -191,7 +197,7 @@ function createCollectionWithManualThroughputAndIndexingPolicy(){
 //create collection with autoscale testcase comes here
 
 @test:Config{
-   //enable: false
+   enable: false
 }
 function getAllCollections(){
     io:println("--------------Get All collections-----------------------\n\n");
@@ -207,13 +213,13 @@ function getAllCollections(){
 }
 
 @test:Config{
-   //enable: false
+   enable: false
 }
 function getOneCollection(){
     io:println("--------------Get One collections-----------------------\n\n");
 
     Client AzureCosmosClient = new(config);
-    var result = AzureCosmosClient->getOneCollection("hikall","mycollection1");
+    var result = AzureCosmosClient->getCollection("hikall","mycollection1");
     if (result is Collection) {
         io:println(result);
     } else {
@@ -235,7 +241,7 @@ function deleteCollection(){
 }
 
 @test:Config{
-   //enable: false
+   enable: false
 }
 function GetPartitionKeyRanges(){
     io:println("--------------Get partition key ranges------------------------\n\n");
@@ -251,7 +257,7 @@ function GetPartitionKeyRanges(){
 }
 
 @test:Config{
-  //enable: false
+  enable: false
 }
 function createDocument(){
     io:println("--------------Create One document------------------------\n\n");
@@ -309,14 +315,30 @@ function createDocument(){
 
 //with indexing or upsert headers test case comes here
 @test:Config{
-   //enable: false
+   enable: false
 }
 function GetDocumentList(){
     io:println("--------------Get all documents in a collection------------------------\n\n");
 
     Client AzureCosmosClient = new(config);
-    var result = AzureCosmosClient->listAllDocuments("hikall","mycollection1",());
-    if (result is DocumentList) {
+    var result = AzureCosmosClient->getDocumentList("hikall","mycollection1",4);
+    if (result is DocumentList|DocumentListIterable) {
+        io:println(result);
+    } else {
+        test:assertFail(msg = result.message());
+    }
+    io:println("\n\n");
+}
+
+@test:Config{
+   //enable: false
+}
+function getNextPageOfDocumentList(){
+    io:println("--------------Get next page documents in a collection------------------------\n\n");
+
+    Client AzureCosmosClient = new(config);
+    var result = AzureCosmosClient->documentListGetNextPage(string `{"token":"nXh6ANTE4QoHAAAAAAAAAA==","range":{"min":"","max":"FF"}}`,"hikall","mycollection1",7);
+    if (result is DocumentList|DocumentListIterable) {
         io:println(result);
     } else {
         test:assertFail(msg = result.message());
@@ -333,7 +355,7 @@ function GetOneDocument(){
     string documentid = "308f807c-f7b8-40a1-8457-767bb498a62e";
     int partitionkey = 1234;
     Client AzureCosmosClient = new(config);
-    var result = AzureCosmosClient->listOneDocument("hikall","mycollection1",documentid,partitionkey);
+    var result = AzureCosmosClient->getDocument("hikall","mycollection1",documentid,partitionkey);
     if (result is Document) {
         io:println(result);
     } else {
@@ -448,7 +470,7 @@ function queryDocument(){
 }
 
 @test:Config{
-   //enable: false
+   enable: false
 }
 function createSproc(){
     io:println("-----------------Create stored procedure-----------------------\n\n");
@@ -485,7 +507,7 @@ function replaceSproc(){
 }
 
 @test:Config{
-   //enable: false
+   enable: false
 }
 function getAllSprocs(){
     io:println("-----------------Get All Stored Procedures-----------------------\n\n");
@@ -518,7 +540,7 @@ function deleteOneSproc(){
 }
 
 @test:Config{
-   //enable: false
+   enable: false
 }
 function executeOneSproc(){
     io:println("-----------------Execute Stored Procedure-----------------------\n\n");
