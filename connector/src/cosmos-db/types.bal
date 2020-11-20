@@ -144,5 +144,12 @@ public type ThroughputProperties record {
     json? maxThroughput = ();
 };
 
+public type DocumentProperties record {|
+    string dbName = "";
+    string colName = "";
+    string? documentId = ();
+    any? partitionKey = ();
+|};
+
 public type AzureError distinct error;
 

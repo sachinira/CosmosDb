@@ -181,7 +181,7 @@ public function enableCrossPartitionKeyHeader(http:Request req, boolean isignore
 
 public function setHeadersForQuery(http:Request req) returns http:Request|error{
     req.setHeader("Content-Type","application/query+json");
-    req.setHeader("x-ms-documentdb-isquery","True");
+    req.setHeader("x-ms-documentdb-isquery","true");
     return req;
 }
 

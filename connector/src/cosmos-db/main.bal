@@ -180,11 +180,10 @@ public  client class Client {
 
     //Replace Collection supports changing the indexing policy of a collection after creation. must be implemented here
 
-
     # To create a Document inside a collection
     # + dbName -  id/name for the database
     # + colName - id/name for collection
-    # + partitionKey -  value for the partition key field specified for the collection  to set 
+    # + properties -  value for the partition key field specified for the collection  to set 
     # x-ms-documentdb-partitionkey header.
     # + document - Any json content that will include as the document.
     # + isUpsert - Optional boolean value to specify if this request is updating an existing document 
@@ -195,15 +194,15 @@ public  client class Client {
     #                   -Include adds the document to the index.
     #                   -Exclude omits the document from indexing.
     # + return - If successful, returns Document. Else returns error.  
-    public remote function createDocument(string dbName, string colName, json document,any partitionKey, 
-    boolean? isUpsert = (), string? indexingDir = ()) returns @tainted Document|error{
+    public remote function createDocument(@tainted DocumentProperties properties,json document,boolean? isUpsert = (), 
+    string? indexingDir = ()) returns @tainted Document|error{
         http:Request req = new;
-        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,dbName,RESOURCE_PATH_COLLECTIONS,colName,
+        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.dbName,RESOURCE_PATH_COLLECTIONS,properties.colName,
         RESOURCE_PATH_DOCUMENTS]);
         HeaderParamaters header = mapParametersToHeaderType(POST,requestPath);
 
         req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
-        req = check setPartitionKeyHeader(req,partitionKey);
+        req = check setPartitionKeyHeader(req,properties.partitionKey);
         if indexingDir is string {
             req = check setIndexingHeader(req,indexingDir);
         }
@@ -219,14 +218,14 @@ public  client class Client {
     #To list all the documents inside a collection
     # x-ms-consistency-level, x-ms-session-token, A-IM, x-ms-continuation and If-None-Match headers are not handled**
     # + dbName -  id/name of the database which collection is in.
-    # + colName - id/name of collection which documents are in.
+    # + properties - id/name of collection which documents are in.
     # + itemcount - Optional integer number of documents to be listed in document list (Default is 100)
     # + return - If successful, returns DocumentList. Else returns error. 
-    public remote function getDocumentList(string dbName, string colName, int? itemcount = ()) returns 
+    public remote function getDocumentList(@tainted DocumentProperties properties, int? itemcount = ()) returns 
     @tainted DocumentList|DocumentListIterable|error{ 
         http:Request req = new;
-        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,dbName,RESOURCE_PATH_COLLECTIONS,colName,
-        RESOURCE_PATH_DOCUMENTS]);
+        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.dbName,RESOURCE_PATH_COLLECTIONS,
+        properties.colName,RESOURCE_PATH_DOCUMENTS]);
         HeaderParamaters header = mapParametersToHeaderType(GET,requestPath);
 
         req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
@@ -247,16 +246,17 @@ public  client class Client {
     }
 
     #A function to handle 'x-ms-continuation' header value which is used for pagination
+    # + properties -
     # + continuationToken - The continuation token returned from previous document request
     # + dbName -  id/name of the database which collection is in.
     # + colName - id/name of collection which documents are in.
     # + itemcount - Optional integer number of documents to be listed in document list (Default is 100)
     # + return - 
-    public remote function documentListGetNextPage(string continuationToken,string dbName, string colName, 
+    public remote function documentListGetNextPage(@tainted DocumentProperties properties,string continuationToken, 
     int? itemcount = ()) returns @tainted DocumentList|DocumentListIterable|error{
 
         http:Request req = new;
-        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,dbName,RESOURCE_PATH_COLLECTIONS,colName,
+        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.dbName,RESOURCE_PATH_COLLECTIONS,properties.colName,
         RESOURCE_PATH_DOCUMENTS]);
         HeaderParamaters header = mapParametersToHeaderType(GET,requestPath);
 
@@ -281,21 +281,18 @@ public  client class Client {
 
     #To list one document inside a collection
     # ********x-ms-consistency-level, x-ms-session-token and If-None-Match headers are not handled******
-    # + dbName -  id/name of the database which collection is in.
-    # + colName - id/name of collection which documents are in.
-    # + documentId - id of the document to be retrieved
-    # + partitionKey - the value in the partition key field specified for the collection to 
+    # + properties - the value in the partition key field specified for the collection to 
     # set x-ms-documentdb-partitionkey header
     # + return - If successful, returns a Document. Else returns error. 
-    public remote function getDocument(string dbName, string colName, string documentId, any partitionKey) returns 
+    public remote function getDocument(@tainted DocumentProperties properties) returns 
     @tainted Document|error{
         http:Request req = new;
-        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,dbName,RESOURCE_PATH_COLLECTIONS,colName,
-        RESOURCE_PATH_DOCUMENTS,documentId]);
+        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.dbName,RESOURCE_PATH_COLLECTIONS,properties.colName,
+        RESOURCE_PATH_DOCUMENTS,<string>properties.documentId]);
         HeaderParamaters header = mapParametersToHeaderType(GET,requestPath);
 
         req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
-        req = check setPartitionKeyHeader(req,partitionKey);
+        req = check setPartitionKeyHeader(req,properties.partitionKey);
         var response = self.azureCosmosClient->get(requestPath,req);
         json jsonresponse = check parseResponseToJson(response);
         return mapJsonToDocument(jsonresponse);
@@ -307,18 +304,18 @@ public  client class Client {
     # + colName - id/name of collection which document is in.
     # + document - json object for replacing the existing document
     # + documentId - id of the document to be replaced
-    # + partitionKey - the value in the partition key field specified for the collection to 
+    # + properties - the value in the partition key field specified for the collection to 
     # set x-ms-documentdb-partitionkey header
     # + return - If successful, returns a Document. Else returns error. 
-    public remote function replaceDocument(string dbName, string colName, json document, string documentId, 
-    any partitionKey) returns @tainted Document|error{         
+    public remote function replaceDocument(@tainted DocumentProperties properties, json document) 
+    returns @tainted Document|error{         
         http:Request req = new;
-        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,dbName,RESOURCE_PATH_COLLECTIONS,colName,
-        RESOURCE_PATH_DOCUMENTS,documentId]);
+        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.dbName,RESOURCE_PATH_COLLECTIONS,properties.colName,
+        RESOURCE_PATH_DOCUMENTS,<string>properties.documentId]);
         HeaderParamaters header = mapParametersToHeaderType(PUT,requestPath);
 
         req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
-        req = check setPartitionKeyHeader(req,partitionKey);
+        req = check setPartitionKeyHeader(req,properties.partitionKey);
         req.setJsonPayload(document);
         var response = self.azureCosmosClient->put(requestPath,req);
         json jsonresponse = check parseResponseToJson(response);
@@ -332,15 +329,15 @@ public  client class Client {
     # + partitionKey - the value in the partition key field specified for the collection to 
     # set x-ms-documentdb-partitionkey header
     # + return - If successful, returns a string giving sucessfully deleted. Else returns error. 
-    public remote function deleteDocument(string dbName, string colName, string documentId, any partitionKey) returns 
+    public remote function deleteDocument(@tainted DocumentProperties properties) returns 
     @tainted string|error{  
         http:Request req = new;
-        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,dbName,RESOURCE_PATH_COLLECTIONS,colName,
-        RESOURCE_PATH_DOCUMENTS,documentId]);
+        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.dbName,RESOURCE_PATH_COLLECTIONS,properties.colName,
+        RESOURCE_PATH_DOCUMENTS,<string>properties.documentId]);
         HeaderParamaters header = mapParametersToHeaderType(DELETE,requestPath);
 
         req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
-        req = check setPartitionKeyHeader(req,partitionKey);
+        req = check setPartitionKeyHeader(req,properties.partitionKey);
         var response = self.azureCosmosClient->delete(requestPath,req);
         return getDeleteResponse(response);
     }
@@ -353,16 +350,16 @@ public  client class Client {
     # + partitionKey - the value in the partition key field specified for the collection to 
     # set x-ms-documentdb-partitionkey header
     # + return - If successful, returns a json. Else returns error. 
-    public remote function queryDocument(string dbName, string colName, json sqlQuery, any partitionKey) returns 
+    public remote function queryDocument(@tainted DocumentProperties properties, json sqlQuery) returns 
     @tainted json|error{
         http:Request req = new;
-        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,dbName,RESOURCE_PATH_COLLECTIONS,colName,
+        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.dbName,RESOURCE_PATH_COLLECTIONS,properties.colName,
         RESOURCE_PATH_DOCUMENTS]);
         HeaderParamaters header = mapParametersToHeaderType(POST,requestPath);
 
         req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
         req = check setHeadersForQuery(req);
-        req = check setPartitionKeyHeader(req,partitionKey);
+        req = check setPartitionKeyHeader(req,properties.partitionKey);
         req.setJsonPayload(sqlQuery);
         var response = self.azureCosmosClient->post(requestPath,req);
         json jsonresponse = check parseResponseToJson(response);
