@@ -91,29 +91,25 @@ public  client class Client {
     }
 
     # To create a collection inside a database
-    # + dbName -  id/name for the database
-    # + colName - id/name for collection
-    # + partitionKey - json object for specifying properties of partition key. If the REST API version is 
-    # 2018-12-31 or higher, 
-    #                   the collection must include a partitionKey definition.
+    # + properties - object of type ContainerProperties
     # + indexingPolicy - Optional json object to configure indexing policy. By default, the indexing is automatic 
     # for all document paths within the collection.
     # + throughputProperties - Optional throughput parameter which will set 'x-ms-offer-throughput' header 
     # + return - If successful, returns Collection. Else returns error.  
-    public remote function createCollection(string dbName, string colName, json partitionKey, json? indexingPolicy = (), 
+    public remote function createContainer(@tainted ContainerProperties properties, json? indexingPolicy = (), 
     ThroughputProperties? throughputProperties = ()) returns @tainted Collection|error{
         http:Request req = new;
-        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,dbName,RESOURCE_PATH_COLLECTIONS]);
+        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,<string>properties.dbName,RESOURCE_PATH_COLLECTIONS]);
         HeaderParamaters header = mapParametersToHeaderType(POST,requestPath);
         json body = {
-            "id": colName,
-            "partitionKey": partitionKey
+            "id": properties.colName,
+            "partitionKey": properties.partitionKey
         };
         json finalc = check body.mergeJson(indexingPolicy);
 
         req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
         req = check setThroughputOrAutopilotHeader(req,throughputProperties);
-        req.setJsonPayload(finalc);
+        req.setJsonPayload(<@untainted>finalc);
         var response = self.azureCosmosClient->post(requestPath,req);
         json jsonresponse = check parseResponseToJson(response);
         return mapJsonToCollectionType(jsonresponse);
@@ -122,7 +118,7 @@ public  client class Client {
     # To retrive  all collections inside a database
     # + dbName -  id/name of the database collections are in.
     # + return - If successful, returns CollectionList. Else returns error.  
-    public remote function getAllCollections(string dbName) returns @tainted CollectionList|error{
+    public remote function getAllContainers(string dbName) returns @tainted CollectionList|error{
         http:Request req = new;
         string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,dbName,RESOURCE_PATH_COLLECTIONS]);
         HeaderParamaters header = mapParametersToHeaderType(GET,requestPath);
@@ -134,12 +130,11 @@ public  client class Client {
     }
 
     # To retrive  one collection inside a database
-    # + dbName -  id/name of the database which collection is in.
-    # + colName - id/name of collection to retrive.
+    # + properties - object of type ContainerProperties
     # + return - If successful, returns Collection. Else returns error.  
-    public remote function getCollection(string dbName,string colName) returns @tainted Collection|error{
+    public remote function getContainer(@tainted ContainerProperties properties) returns @tainted Collection|error{
         http:Request req = new;
-        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,dbName,RESOURCE_PATH_COLLECTIONS,colName]);
+        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.dbName,RESOURCE_PATH_COLLECTIONS,properties.colName]);
         HeaderParamaters header = mapParametersToHeaderType(GET,requestPath);
 
         req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
@@ -149,12 +144,11 @@ public  client class Client {
     }
 
     # To delete one collection inside a database
-    # + dbName -  id/name of the database which collection is in.
-    # + colName - id/name of collection to delete.
+    # + properties - object of type ContainerProperties
     # + return - If successful, returns string specifying delete is sucessfull. Else returns error.   
-    public remote function deleteCollection(string dbName, string colName) returns @tainted string|error{
+    public remote function deleteContainer(@tainted ContainerProperties properties) returns @tainted string|error{
         http:Request req = new;
-        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,dbName,RESOURCE_PATH_COLLECTIONS,colName]);
+        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.dbName,RESOURCE_PATH_COLLECTIONS,properties.colName]);
         HeaderParamaters header = mapParametersToHeaderType(DELETE,requestPath);
 
         req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
@@ -181,10 +175,7 @@ public  client class Client {
     //Replace Collection supports changing the indexing policy of a collection after creation. must be implemented here
 
     # To create a Document inside a collection
-    # + dbName -  id/name for the database
-    # + colName - id/name for collection
-    # + properties -  value for the partition key field specified for the collection  to set 
-    # x-ms-documentdb-partitionkey header.
+    # + properties - object of type ContainerProperties
     # + document - Any json content that will include as the document.
     # + isUpsert - Optional boolean value to specify if this request is updating an existing document 
     #               (If set to true, Cosmos DB creates the document with the ID (and partition key value if applicable) 
@@ -217,8 +208,7 @@ public  client class Client {
     
     #To list all the documents inside a collection
     # x-ms-consistency-level, x-ms-session-token, A-IM, x-ms-continuation and If-None-Match headers are not handled**
-    # + dbName -  id/name of the database which collection is in.
-    # + properties - id/name of collection which documents are in.
+    # + properties - object of type ContainerProperties
     # + itemcount - Optional integer number of documents to be listed in document list (Default is 100)
     # + return - If successful, returns DocumentList. Else returns error. 
     public remote function getDocumentList(@tainted DocumentProperties properties, int? itemcount = ()) returns 
@@ -246,10 +236,8 @@ public  client class Client {
     }
 
     #A function to handle 'x-ms-continuation' header value which is used for pagination
-    # + properties -
+    # + properties - object of type ContainerProperties
     # + continuationToken - The continuation token returned from previous document request
-    # + dbName -  id/name of the database which collection is in.
-    # + colName - id/name of collection which documents are in.
     # + itemcount - Optional integer number of documents to be listed in document list (Default is 100)
     # + return - 
     public remote function documentListGetNextPage(@tainted DocumentProperties properties,string continuationToken, 
@@ -300,11 +288,8 @@ public  client class Client {
 
     #To replace a document inside a collection
     # *******x-ms-indexing-directive and If-Match headers are not handled******
-    # + dbName -  id/name of the database which collection is in.
-    # + colName - id/name of collection which document is in.
+    # + properties - object of type ContainerProperties
     # + document - json object for replacing the existing document
-    # + documentId - id of the document to be replaced
-    # + properties - the value in the partition key field specified for the collection to 
     # set x-ms-documentdb-partitionkey header
     # + return - If successful, returns a Document. Else returns error. 
     public remote function replaceDocument(@tainted DocumentProperties properties, json document) 
@@ -323,10 +308,7 @@ public  client class Client {
     }
 
     #To delete a document inside a collection
-    # + dbName -  id/name of the database which collection is in.
-    # + colName - id/name of collection which document is in.
-    # + documentId - id of the document to be deleted
-    # + partitionKey - the value in the partition key field specified for the collection to 
+    # + properties - object of type ContainerProperties
     # set x-ms-documentdb-partitionkey header
     # + return - If successful, returns a string giving sucessfully deleted. Else returns error. 
     public remote function deleteDocument(@tainted DocumentProperties properties) returns 
@@ -344,10 +326,8 @@ public  client class Client {
 
     #To query documents inside a collection
     # *********Function does not work properly, x-ms-max-item-count header is not handled*********
-    # + dbName -  id/name of the database which collection is in.
-    # + colName - id/name of collection which document is in.
+    # + properties - object of type ContainerProperties
     # + sqlQuery - json object containing the sql query
-    # + partitionKey - the value in the partition key field specified for the collection to 
     # set x-ms-documentdb-partitionkey header
     # + return - If successful, returns a json. Else returns error. 
     public remote function queryDocument(@tainted DocumentProperties properties, json sqlQuery) returns 

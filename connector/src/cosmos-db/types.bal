@@ -151,5 +151,11 @@ public type DocumentProperties record {|
     any? partitionKey = ();
 |};
 
+public type ContainerProperties record {|
+    string dbName = "";
+    string colName = "";
+    json? partitionKey = ();
+|};
+
 public type AzureError distinct error;
 
