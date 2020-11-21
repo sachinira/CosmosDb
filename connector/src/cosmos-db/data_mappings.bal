@@ -16,23 +16,38 @@ function mapParametersToHeaderType(string httpVerb,string url) returns HeaderPar
     return params;
 }
 
-function mapJsonToDatabaseType(json jsonPayload) returns Database {
+function mapJsonToDatabaseType([json,Headers] jsonPayload) returns Database {
+    json payload;
+    Headers headers;
+    [payload,headers] = jsonPayload;
+    
     Database db = {};
-    db.id = jsonPayload.id.toString();
-    db._rid = jsonPayload._rid.toString();
-    db._ts = convertToInt(jsonPayload._ts);
-    db._self  =jsonPayload._self.toString();
-    db._etag  = jsonPayload._etag.toString();
-    db._colls  = jsonPayload._colls.toString();
-    db._users  = jsonPayload._users.toString();
+    db.id = payload.id.toString();
+    db.reponseHeaders = headers;
     return db;
 }
 
-function mapJsonToDbList(json jsonPayload) returns @tainted DBList {
-    DBList dbl = {};
-    dbl._rid =jsonPayload._rid.toString();
-    dbl.Databases =  convertToDatabaseArray(<json[]>jsonPayload.Databases);
+function mapJsonToDbList([json,Headers] jsonPayload) returns @tainted DatabaseList {
+    json payload;
+    Headers headers;
+    [payload,headers] = jsonPayload;
+    
+    DatabaseList dbl = {};
+    dbl._rid =payload._rid.toString();
+    dbl.Databases =  convertToDatabaseArray(<json[]>payload.Databases);
+    dbl.reponseHeaders = headers;
     return dbl;
+}
+
+function mapTupleToDeleteresponse([string,Headers] jsonPayload)returns @tainted DeleteResponse {
+    string message;
+    Headers headers;
+    [message,headers] = jsonPayload;
+    
+    DeleteResponse deleteResponse = {};
+    deleteResponse.message =message;
+    deleteResponse.reponseHeaders = headers;
+    return deleteResponse;
 }
 
 function mapJsonToCollectionType(json jsonPayload)returns @tainted Collection {
@@ -168,7 +183,7 @@ function convertToDatabaseArray(json[] sourceDatabaseArrayJsonObject) returns @t
     Database[] databases = [];
     int i = 0;
     foreach json jsonDatabase in sourceDatabaseArrayJsonObject {
-        databases[i] = mapJsonToDatabaseType(jsonDatabase);
+        databases[i].id = <string>jsonDatabase.id;
         i = i + 1;
     }
     return databases;

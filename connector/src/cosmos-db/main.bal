@@ -46,21 +46,8 @@ public  client class Client {
         req = check setThroughputOrAutopilotHeader(req,throughputProperties);
         req.setJsonPayload(body);
         var response = self.azureCosmosClient->post(requestPath,req);
-        json jsonreponse = check parseResponseToJson(response);
+        [json,Headers] jsonreponse = check parseResponseToTuple(response);
         return mapJsonToDatabaseType(jsonreponse);   
-    }
-
-    # To list all databases inside a resource
-    # + return - If successful, returns DBList. Else returns error.  
-    public remote function getAllDatabases() returns @tainted DBList|error{
-        http:Request req = new;
-        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES]);
-        HeaderParamaters header = mapParametersToHeaderType(GET,requestPath);
-
-        req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
-        var response = self.azureCosmosClient->get(requestPath,req);
-        json jsonresponse = check parseResponseToJson(response);
-        return mapJsonToDbList(jsonresponse); 
     }
 
     # To retrive a given database inside a resource
@@ -73,21 +60,35 @@ public  client class Client {
 
         req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
         var response = self.azureCosmosClient->get(requestPath,req);
-        json jsonresponse = check parseResponseToJson(response);
-        return mapJsonToDatabaseType(jsonresponse);  
+        [json,Headers] jsonreponse = check parseResponseToTuple(response);
+        return mapJsonToDatabaseType(jsonreponse);  
+    }
+
+    # To list all databases inside a resource
+    # + return - If successful, returns DBList. Else returns error.  
+    public remote function getAllDatabases() returns @tainted DatabaseList|error{
+        http:Request req = new;
+        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES]);
+        HeaderParamaters header = mapParametersToHeaderType(GET,requestPath);
+
+        req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
+        var response = self.azureCosmosClient->get(requestPath,req);
+        [json,Headers] jsonresponse = check parseResponseToTuple(response);
+        return mapJsonToDbList(jsonresponse); 
     }
 
     # To retrive a given database inside a resource
     # + dbName -  id/name of the database to retrieve
     # + return - If successful, returns string specifying delete is sucessfull. Else returns error.  
-    public remote function deleteDatabase(string dbName) returns @tainted string|error{
+    public remote function deleteDatabase(string dbName) returns @tainted DeleteResponse|error{
         http:Request req = new;
         string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,dbName]);
         HeaderParamaters header = mapParametersToHeaderType(DELETE,requestPath);
 
         req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
         var response = self.azureCosmosClient->delete(requestPath,req);
-        return check getDeleteResponse(response);
+        [string,Headers] jsonresponse = check parseDeleteResponseToTuple(response);
+        return  mapTupleToDeleteresponse(jsonresponse);
     }
 
     # To create a collection inside a database
@@ -113,6 +114,11 @@ public  client class Client {
         var response = self.azureCosmosClient->post(requestPath,req);
         json jsonresponse = check parseResponseToJson(response);
         return mapJsonToCollectionType(jsonresponse);
+    }
+
+    public remote function replaceProvisionedThroughput(@tainted ContainerProperties properties, ThroughputProperties? 
+    throughputProperties) returns @tainted Collection|error {
+        return self->createContainer(properties,(),throughputProperties);
     }
 
     # To retrive  all collections inside a database
@@ -209,9 +215,10 @@ public  client class Client {
     #To list all the documents inside a collection
     # x-ms-consistency-level, x-ms-session-token, A-IM, x-ms-continuation and If-None-Match headers are not handled**
     # + properties - object of type ContainerProperties
+    # + continuationToken - The continuation token returned from previous document request
     # + itemcount - Optional integer number of documents to be listed in document list (Default is 100)
     # + return - If successful, returns DocumentList. Else returns error. 
-    public remote function getDocumentList(@tainted DocumentProperties properties, int? itemcount = ()) returns 
+    public remote function getDocumentList(@tainted DocumentProperties properties, int? itemcount = (),string? continuationToken =()) returns 
     @tainted DocumentList|DocumentListIterable|error{ 
         http:Request req = new;
         string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.dbName,RESOURCE_PATH_COLLECTIONS,
@@ -222,8 +229,12 @@ public  client class Client {
         if itemcount is int{
             req = check setHeadersforItemCount(req,itemcount);
         }
+        if continuationToken is string{
+            req.setHeader("x-ms-continuation",continuationToken);
+        }
         var response = self.azureCosmosClient->get(requestPath,req);
         json jsonresponse = check parseResponseToJson(response);
+        
         if response is http:Response{
             var continuation = getHeaderIfExist(response,"x-ms-continuation");
             if response.hasHeader("x-ms-continuation") {
@@ -235,37 +246,7 @@ public  client class Client {
         return list;    
     }
 
-    #A function to handle 'x-ms-continuation' header value which is used for pagination
-    # + properties - object of type ContainerProperties
-    # + continuationToken - The continuation token returned from previous document request
-    # + itemcount - Optional integer number of documents to be listed in document list (Default is 100)
-    # + return - 
-    public remote function documentListGetNextPage(@tainted DocumentProperties properties,string continuationToken, 
-    int? itemcount = ()) returns @tainted DocumentList|DocumentListIterable|error{
-
-        http:Request req = new;
-        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.dbName,RESOURCE_PATH_COLLECTIONS,properties.colName,
-        RESOURCE_PATH_DOCUMENTS]);
-        HeaderParamaters header = mapParametersToHeaderType(GET,requestPath);
-
-        req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
-        req.setHeader("x-ms-continuation",continuationToken);
-        if itemcount is int{
-            req = check setHeadersforItemCount(req,itemcount);
-        }
-        var response = self.azureCosmosClient->get(requestPath,req);
-        json jsonresponse = check parseResponseToJson(response);
-        if response is http:Response{
-            var continuation = getHeaderIfExist(response,"x-ms-continuation");
-            if response.hasHeader("x-ms-continuation") {
-                DocumentListIterable list =  check mapJsonToDocumentListIterable(jsonresponse); 
-                return list;    
-            }
-        }
-        DocumentList list =  check mapJsonToDocumentList(jsonresponse); 
-        return list;  
-        
-    }
+    //nextpage
 
     #To list one document inside a collection
     # ********x-ms-consistency-level, x-ms-session-token and If-None-Match headers are not handled******
@@ -351,10 +332,10 @@ public  client class Client {
     # is registered and executed against a collection as a single transaction.
     # + dbName -  id/name of the database which collection is in.
     # + colName - id/name of collection which stored procedure is in.
-    # + sproc - 
+    # + storedProcedure - 
     # + sprocId -
     # + return - If successful, returns a StoredProcedure. Else returns error. 
-    public remote function createStoredProcedure(string dbName, string colName, string sproc, string sprocId) returns 
+    public remote function createStoredProcedure(string dbName, string colName, string storedProcedure, string sprocId) returns 
     @tainted StoredProcedure|error{
         http:Request req = new;
         string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,dbName,RESOURCE_PATH_COLLECTIONS,colName,
@@ -362,7 +343,7 @@ public  client class Client {
         HeaderParamaters header = mapParametersToHeaderType(POST,requestPath);
         json spbody = {
             id: sprocId,
-            body:sproc
+            body:storedProcedure
         };
 
         req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);

@@ -6,20 +6,41 @@ public type HeaderParamaters record {|
     string resourceId = "";
 |};
 
+public type Headers record {|
+    string? continuationHeader?;
+    string? sessionTokenHeader?;
+    string? requestChargeHeader?;
+    string? resourceUsageHeader?;
+    string? itemCountHeader?;
+    string? etagHeader?;
+    string? dateHeader?;
+
+|};
+
 public type Database record {
     string id = "";
-    string _rid = "";
-    int _ts = 0;
-    string _self = "";
-    string _etag = "";
-    string _colls = "";
-    string _users = "";
+    Headers reponseHeaders?;
 };
 
-public type DBList record {
+public type DatabaseList record {
     string _rid = "";
     Database[] Databases = [];
+    Headers? reponseHeaders = ();
 };
+
+public type DocumentProperties record {|
+    string dbName = "";
+    string colName = "";
+    string? documentId = ();
+    any? partitionKey = ();
+|};
+
+public type ContainerProperties record {|
+    string dbName = "";
+    string colName = "";
+    json? partitionKey = ();
+|};
+
 
 //conflict resolution policy must be included
 public type Collection record {
@@ -144,18 +165,10 @@ public type ThroughputProperties record {
     json? maxThroughput = ();
 };
 
-public type DocumentProperties record {|
-    string dbName = "";
-    string colName = "";
-    string? documentId = ();
-    any? partitionKey = ();
-|};
-
-public type ContainerProperties record {|
-    string dbName = "";
-    string colName = "";
-    json? partitionKey = ();
-|};
+public type DeleteResponse record {
+    string message = "";
+    Headers reponseHeaders?;
+};
 
 public type AzureError distinct error;
 

@@ -22,7 +22,7 @@ function createDB(){
     io:println("--------------Create database------------------------\n\n");
 
     Client AzureCosmosClient = new(config);
-    var result = AzureCosmosClient->createDatabase("heloo");
+    var result = AzureCosmosClient->createDatabase("hiiiii2");
     if (result is Database) {
         io:println(result);
     } else {
@@ -95,7 +95,7 @@ function listAllDB(){
 
     Client AzureCosmosClient = new(config);
     var result = AzureCosmosClient->getAllDatabases();
-    if (result is DBList) {
+    if (result is DatabaseList) {
         io:println(result);
     } else {
         test:assertFail(msg = result.message());
@@ -126,7 +126,7 @@ function deleteDB(){
     io:println("--------------Delete one databse------------------------\n\n");
 
     Client AzureCosmosClient = new(config);
-    var result = AzureCosmosClient->deleteDatabase("heloo");
+    var result = AzureCosmosClient->deleteDatabase("tempdb2");
     io:println(result);
     io:println("\n\n");
 }
@@ -358,7 +358,7 @@ function getNextPageOfDocumentList(){
     DocumentProperties dc = {};
     dc.dbName = "hikall";
     dc.colName = "mycollection1";
-    var result = AzureCosmosClient->documentListGetNextPage(dc,string `{"token":"nXh6ANTE4QoHAAAAAAAAAA==","range":{"min":"","max":"FF"}}`,7);
+    var result = AzureCosmosClient->getDocumentList(dc,2,string `{"token":"nXh6ANTE4QoHAAAAAAAAAA==","range":{"min":"","max":"FF"}}`);
     if (result is DocumentList|DocumentListIterable) {
         io:println(result);
     } else {

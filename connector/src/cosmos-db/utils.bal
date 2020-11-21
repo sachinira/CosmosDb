@@ -7,6 +7,18 @@ import ballerina/http;
 import ballerina/stringutils;
 import ballerina/lang.'string as str;
 
+function parseResponseToTuple(http:Response|http:ClientError httpResponse) returns  @tainted [json,Headers]|error{
+    var responseBody = check parseResponseToJson(httpResponse);
+    var responseHeaders = check parseHeadersToObject(httpResponse);
+    return [responseBody,responseHeaders];
+}
+
+function parseDeleteResponseToTuple(http:Response|http:ClientError httpResponse) returns  @tainted [string,Headers]|error{
+    var responseBody = check getDeleteResponse(httpResponse);
+    var responseHeaders = check parseHeadersToObject(httpResponse);
+    return [responseBody,responseHeaders];
+}
+
 # To handle sucess or error reponses to requests
 # + httpResponse - http:Response or http:ClientError returned from an http:Request
 # + return - If successful, returns json. Else returns error.  
@@ -22,6 +34,7 @@ function parseResponseToJson(http:Response|http:ClientError httpResponse) return
                     code = jsonResponse.'error.toString();
                 }
                 string message = jsonResponse.message.toString();
+                //errors handle 400 401 403 408 409
                 string errorMessage = httpResponse.statusCode.toString() + " " + httpResponse.reasonPhrase; 
                 if (code != "") {
                     errorMessage += " - " + code;
@@ -29,8 +42,6 @@ function parseResponseToJson(http:Response|http:ClientError httpResponse) return
                 errorMessage += " : " + message;
                 return prepareError(errorMessage);
             }
-            var header = getHeaderIfExist(httpResponse,"x-ms-continuation");
-            jsonResponse = check jsonResponse.mergeJson(header);
             return jsonResponse;
         } else {
             return prepareError("Error occurred while accessing the JSON payload of the response");
@@ -40,27 +51,54 @@ function parseResponseToJson(http:Response|http:ClientError httpResponse) return
     }
 }
 
-function getHeaderIfExist(http:Response httpResponse,string headername) returns @tainted json?{
-        if httpResponse.hasHeader(headername) {
-            return {continuation: httpResponse.getHeader(headername)};
-        }else{
-            return ();
-        }
-}
-
-
 # To handle the delete responses which return without a json payload
 # + httpResponse - http:Response or http:ClientError returned from an http:Request
 # + return - If successful, returns string. Else returns error.  
 function getDeleteResponse(http:Response|http:ClientError httpResponse) returns @tainted string|error{
     if (httpResponse is http:Response) {
         if(httpResponse.statusCode == http:STATUS_NO_CONTENT){
-            return string `Deleted Sucessfully ${httpResponse.statusCode}`;
-        } else {// if 404 error 401 error
-            return prepareError(string `Error occurred while invoking the REST API"${httpResponse.statusCode}`);
+            return string `${httpResponse.statusCode} Deleted Sucessfully`;
+        } else if (httpResponse.statusCode == http:STATUS_NOT_FOUND) {
+            return string `${httpResponse.statusCode} The resource/item with specified id is not found.`;
+        } else{
+            return prepareError(string `${httpResponse.statusCode} Error occurred while invoking the REST API.`);
         }
     } else {
         return prepareError("Error occurred while invoking the REST API");
+    }
+}
+
+function parseHeadersToObject(http:Response|http:ClientError httpResponse) returns @tainted Headers|error{
+    Headers responseHeaders = {};
+    if (httpResponse is http:Response) {
+        responseHeaders.continuationHeader = getHeaderIfExist(httpResponse,"x-ms-continuation");
+        responseHeaders.sessionTokenHeader = getHeaderIfExist(httpResponse,"x-ms-session-token");
+        responseHeaders.requestChargeHeader = getHeaderIfExist(httpResponse,"x-ms-request-charge");
+        responseHeaders.resourceUsageHeader = getHeaderIfExist(httpResponse,"x-ms-resource-usage");
+        responseHeaders.itemCountHeader = getHeaderIfExist(httpResponse,"x-ms-item-count");
+        responseHeaders.etagHeader = getHeaderIfExist(httpResponse,"etag");
+        responseHeaders.dateHeader = getHeaderIfExist(httpResponse,"Date");
+        return responseHeaders;
+
+    } else {
+        return prepareError("Error occurred while invoking the REST API");
+    }
+}
+
+function getHeaderIfExist(http:Response httpResponse,string headername) returns @tainted string?{
+    if httpResponse.hasHeader(headername) {
+        return httpResponse.getHeader(headername);
+    }else{
+        return ();
+    }
+}
+
+function mapRequest(http:Request? req) returns http:Request { 
+    http:Request newRequest = new;
+    if req is http:Request{
+        return req;
+    } else {
+        return newRequest;
     }
 }
 
