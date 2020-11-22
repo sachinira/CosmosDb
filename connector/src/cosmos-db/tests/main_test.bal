@@ -3,16 +3,16 @@ import ballerina/test;
 import ballerina/java;
 
 AzureCosmosConfiguration config = {
-    baseUrl: BASE_URL,
-    masterKey: MASTER_KEY,
-    host: HOST,
-    tokenType: TOKEN_TYPE,
-    tokenVersion: TOKEN_VERSION
+    baseUrl : BASE_URL,
+    masterKey : MASTER_KEY,
+    host : HOST,
+    tokenType : TOKEN_TYPE,
+    tokenVersion : TOKEN_VERSION
 };
 
 function createRandomUUID() returns handle = @java:Method {
-    name: "randomUUID",
-    'class: "java.util.UUID"
+    name : "randomUUID",
+    'class : "java.util.UUID"
 } external;
 
 @test:Config{
@@ -40,7 +40,7 @@ function createDBWithManualThroughput(){
     Client AzureCosmosClient = new(config);
     ThroughputProperties tp = {};
     tp.throughput = 600; 
-    var result = AzureCosmosClient->createDatabase("heloodb",tp);
+    var result = AzureCosmosClient->createDatabase("heloodb", tp);
     if (result is Database) {
         io:println(result);
     } else {
@@ -58,8 +58,7 @@ function createDBWithAutoscaling(){
     Client AzureCosmosClient = new(config);
     ThroughputProperties tp = {};
     tp.maxThroughput = {"maxThroughput": 4000};
-
-    var result = AzureCosmosClient->createDatabase("helooauto",tp);
+    var result = AzureCosmosClient->createDatabase("helooauto", tp);
     if (result is Database) {
         io:println(result);
     } else {
@@ -76,9 +75,9 @@ function createDBWithBothHeaders(){
 
     Client AzureCosmosClient = new(config);
     ThroughputProperties tp = {};
-    tp.maxThroughput = {"maxThroughput": 4000};
+    tp.maxThroughput = {"maxThroughput" : 4000};
     tp.throughput = 600; 
-    var result = AzureCosmosClient->createDatabase("helooboth",tp);
+    var result = AzureCosmosClient->createDatabase("helooboth", tp);
     if (result is Database) {
         io:println(result);
     } else {
@@ -88,7 +87,7 @@ function createDBWithBothHeaders(){
 }
 
 @test:Config{
-   enable: false
+   //enable: false
 }
 function listAllDB(){
     io:println("--------------List All databases------------------------\n\n");
@@ -104,7 +103,7 @@ function listAllDB(){
 }
 
 @test:Config{
-    enable: false
+    //enable: false
 }
 function listOneDB(){
     io:println("--------------List one database------------------------\n\n");
@@ -143,7 +142,6 @@ function createContainer(){
     pk.paths = ["/AccountNumber"];
     pk.kind = "Hash";
     pk.Version = 2;
-
     ContainerProperties con = {};
     con.partitionKey = pk;
     con.databaseId = "hikall";
@@ -184,18 +182,15 @@ function createCollectionWithManualThroughputAndIndexingPolicy(){
     
     ThroughputProperties tp = {};
     tp.throughput = 600; 
-    
-    
     PartitionKey pk = {};
     pk.paths = ["/AccountNumber"];
     pk.kind = "Hash";
     pk.Version = 2;
-
     ContainerProperties con = {};
     con.partitionKey = pk;
     con.databaseId = "hikall";
     con.containerId = "mycollect";
-    var result = AzureCosmosClient->createContainer(con,tp);
+    var result = AzureCosmosClient->createContainer(con, tp);
     if (result is Container) {
         io:println(result);
     } else {
@@ -223,7 +218,7 @@ function getAllCollections(){
 }
 
 @test:Config{
-    enable: false
+    //enable: false
 }
 function getOneCollection(){
     io:println("--------------Get One collection-----------------------\n\n");
@@ -231,7 +226,7 @@ function getOneCollection(){
     Client AzureCosmosClient = new(config);
     ContainerProperties con = {};
     con.databaseId = "hikall";
-    con.containerId = "mycollect";
+    con.containerId = "mycollection1";
     var result = AzureCosmosClient->getContainer(con);
     if (result is Container) {
         io:println(result);
@@ -319,17 +314,14 @@ function createDocument(){
     };   
     json|error finalj =  body.mergeJson(custombody);
     DocumentProperties dc = {};
-
     dc.databaseId="hikall";
     dc.containerId="mycollection1";
     dc.partitionKey=<json>custombody.AccountNumber;
-
     RequestOptions reqOptions = {
         isUpsertRequest:true
     };
-
     if finalj is json{
-        var result = AzureCosmosClient->createDocument(dc,finalj,reqOptions);
+        var result = AzureCosmosClient->createDocument(dc, finalj, reqOptions);
         if result is Document {
             io:println(result);
         } else {
@@ -350,7 +342,6 @@ function GetDocumentList(){
     DocumentProperties dc = {};
     dc.databaseId = "hikall";
     dc.containerId = "mycollection1";
-
     var result = AzureCosmosClient->getDocumentList(dc);
     if (result is DocumentList) {
         io:println(result);
@@ -370,11 +361,9 @@ function getNextPageOfDocumentList(){
     DocumentProperties dc = {};
     dc.databaseId = "hikall";
     dc.containerId = "mycollection1";
-
     RequestOptions options = {};
     options.maxItemCount = 4;
     options.continuationToken = "{token:'nXh6ANTE4QoIAAAAAAAAAA==',range:{min:'',max:'FF'}}";//convert this to string
-
     var result = AzureCosmosClient->getDocumentList(dc,options);
     if (result is DocumentList) {
         io:println(result);
@@ -396,7 +385,6 @@ function GetOneDocument(){
     dc.containerId = "mycollection1";
     dc.partitionKey = 1234;
     dc.documentId = "10b40edd-d94e-4677-aa0b-eeeab1f7c470";
-
     var result = AzureCosmosClient->getDocument(dc);
     if (result is Document) {
         io:println(result);
@@ -418,7 +406,6 @@ function replaceDocument(){
     dc.containerId = "mycollection1";
     dc.partitionKey = 1234;
     dc.documentId = "8f014bef-691e-4732-99f0-9b7af94cb9c2";
-
     json id = {
         "id": dc.documentId
     };
@@ -477,7 +464,6 @@ function deleteDocument(){
     dc.containerId = "mycollection1";
     dc.partitionKey = 1234;
     dc.documentId = "69a2c93a-42e6-487e-b6f3-1a355f1afd19";
-
     var result = AzureCosmosClient->deleteDocument(dc);  
     if result is DeleteResponse {
         io:println(result);
@@ -595,7 +581,6 @@ function deleteOneSproc(){
     properties.databaseId = "hikall";
     properties.containerId = "mycollection1";
     properties.storedProcedureId = sprocId; 
-
     var result = AzureCosmosClient->deleteStoredProcedure(properties);   
     if result is DeleteResponse {
         io:println(result);

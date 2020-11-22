@@ -1,14 +1,4 @@
-
-function mapCommonElements(json jsonPayload)returns @tainted Common|error{
-    Common comm = {};
-    comm._rid = jsonPayload._rid.toString();
-    comm._ts = convertToInt(jsonPayload._ts);
-    comm._self  =jsonPayload._self.toString();
-    comm._etag  = jsonPayload._etag.toString();
-    return comm;
-}
-
-function mapParametersToHeaderType(string httpVerb,string url) returns HeaderParamaters {
+function mapParametersToHeaderType(string httpVerb, string url) returns HeaderParamaters {
     HeaderParamaters params = {};
     params.verb = httpVerb;
     params.resourceType = getResourceType(url);
@@ -16,22 +6,20 @@ function mapParametersToHeaderType(string httpVerb,string url) returns HeaderPar
     return params;
 }
 
-function mapJsonToDatabaseType([json,Headers] jsonPayload) returns Database {
+function mapJsonToDatabaseType([json, Headers] jsonPayload) returns Database {
     json payload;
     Headers headers;
     [payload,headers] = jsonPayload;
-    
     Database db = {};
     db.id = payload.id.toString();
     db.reponseHeaders = headers;
     return db;
 }
 
-function mapJsonToDbList([json,Headers] jsonPayload) returns @tainted DatabaseList {
+function mapJsonToDbList([json, Headers] jsonPayload) returns @tainted DatabaseList {
     json payload;
     Headers headers;
     [payload,headers] = jsonPayload;
-    
     DatabaseList dbl = {};
     dbl._rid =payload._rid.toString();
     dbl.Databases =  convertToDatabaseArray(<json[]>payload.Databases);
@@ -39,18 +27,17 @@ function mapJsonToDbList([json,Headers] jsonPayload) returns @tainted DatabaseLi
     return dbl;
 }
 
-function mapTupleToDeleteresponse([string,Headers] jsonPayload)returns @tainted DeleteResponse {
+function mapTupleToDeleteresponse([string, Headers] jsonPayload)returns @tainted DeleteResponse {
     string message;
     Headers headers;
     [message,headers] = jsonPayload;
-    
     DeleteResponse deleteResponse = {};
     deleteResponse.message =message;
     deleteResponse.reponseHeaders = headers;
     return deleteResponse;
 }
 
-function mapJsonToCollectionType([json,Headers] jsonPayload)returns @tainted Container {
+function mapJsonToCollectionType([json, Headers] jsonPayload)returns @tainted Container {
     json payload;
     Headers headers;
     [payload,headers] = jsonPayload;
@@ -100,12 +87,11 @@ function convertJsonToPartitionKey(json jsonPayload) returns @tainted PartitionK
     return pk;
 }
 
-function mapJsonToCollectionListType([json,Headers] jsonPayload) returns @tainted ContainerList {
+function mapJsonToCollectionListType([json, Headers] jsonPayload) returns @tainted ContainerList {
     ContainerList cll = {};
     json payload;
     Headers headers;
     [payload,headers] = jsonPayload;
-
     cll._rid = payload._rid.toString();
     cll._count = convertToInt(payload._count);
     cll.DocumentCollections = convertToCollectionArray(<json[]>payload.DocumentCollections);
@@ -113,28 +99,24 @@ function mapJsonToCollectionListType([json,Headers] jsonPayload) returns @tainte
     return cll;
 }
 
-function mapJsonToPartitionKeyType([json,Headers] jsonPayload) returns @tainted PartitionKeyList {
+function mapJsonToPartitionKeyType([json, Headers] jsonPayload) returns @tainted PartitionKeyList {
     PartitionKeyList pkl = {};
     PartitionKeyRange pkr = {};
     json payload;
     Headers headers;
     [payload,headers] = jsonPayload;
-
     pkl._rid = payload._rid.toString();
     pkl.PartitionKeyRanges = convertToPartitionKeyRangeArray(<json[]>payload.PartitionKeyRanges);
     pkl.reponseHeaders = headers;
     pkl._count = convertToInt(payload._count);
-
-
     return pkl;
 }
 
-function mapJsonToPartitionKeyRange([json,Headers] jsonPayload) returns @tainted PartitionKeyRange {
+function mapJsonToPartitionKeyRange([json, Headers] jsonPayload) returns @tainted PartitionKeyRange {
     PartitionKeyRange pkr = {};
     json payload;
     Headers headers;
     [payload,headers] = jsonPayload;
-    
     pkr.id = payload.id.toString();
     pkr.minInclusive = payload.minInclusive.toString();
     pkr.maxExclusive = payload.maxExclusive.toString();
@@ -143,33 +125,30 @@ function mapJsonToPartitionKeyRange([json,Headers] jsonPayload) returns @tainted
     return pkr;
 }
 
-function mapJsonToDocument([json,Headers] jsonPayload) returns @tainted Document|error {  
+function mapJsonToDocument([json, Headers] jsonPayload) returns @tainted Document|error {  
     Document doc = {};
     json payload;
     Headers headers;
     [payload,headers] = jsonPayload;
-    
     doc.id = payload.id.toString();
     doc.document = check payload.cloneWithType(anydata);
     doc.reponseHeaders = headers;
     return doc;
 }
 
-function mapJsonToDocumentList([json,Headers] jsonPayload) returns @tainted DocumentList|error {
+function mapJsonToDocumentList([json, Headers] jsonPayload) returns @tainted DocumentList|error {
     DocumentList documentlist = {};
     json payload;
     Headers headers;
     [payload,headers] = jsonPayload;
-
     documentlist._rid = payload._rid.toString();
     documentlist._count = convertToInt(payload._count);
     documentlist.documents = check convertToDocumentArray(<json[]>payload.Documents);
     documentlist.reponseHeaders = headers;
-
     return documentlist;
 } 
 
-function mapJsonToStoredProcedure([json,Headers] jsonPayload)returns @tainted StoredProcedure|error {
+function mapJsonToStoredProcedure([json, Headers] jsonPayload)returns @tainted StoredProcedure|error {
     StoredProcedure sproc = {};
     json payload;
     Headers headers;
@@ -180,11 +159,12 @@ function mapJsonToStoredProcedure([json,Headers] jsonPayload)returns @tainted St
     return sproc;
 }
 
-function mapJsonToStoredProcedureList([json,Headers] jsonPayload)returns @tainted StoredProcedureList|error {
+function mapJsonToStoredProcedureList([json, Headers] jsonPayload)returns @tainted StoredProcedureList|error {
     StoredProcedureList sproclist = {};
     json payload;
     Headers headers;
     [payload,headers] = jsonPayload;
+
     sproclist._rid = payload._rid.toString();
     sproclist.storedprocedures = convertToStoredProcedureArray(<json[]>payload.StoredProcedures);
     sproclist._count = convertToInt(payload._count);//headers
@@ -240,7 +220,6 @@ function convertToCollectionArray(json[] sourceCollectionArrayJsonObject) return
         collections[i].allowMaterializedViews = convertToBoolean(jsonCollection.allowMaterializedViews);
         collections[i].indexingPolicy = mapJsonToIndexingPolicy(<json>jsonCollection.indexingPolicy);
         collections[i].partitionKey = convertJsonToPartitionKey(<json>jsonCollection.partitionKey);
-
         i = i + 1;
     }
     return collections;
@@ -250,7 +229,6 @@ function convertToPartitionKeyRangeArray(json[] sourceAprtitionKeyArrayJsonObjec
     PartitionKeyRange[] pkranges = [];
     int i = 0;
     foreach json jsonPartitionKey in sourceAprtitionKeyArrayJsonObject {
-        //pkranges[i] = mapJsonToPartitionKeyRange([jsonCollection,()]);
         pkranges[i].id = jsonPartitionKey.id.toString();
         pkranges[i].minInclusive = jsonPartitionKey.minInclusive.toString();
         pkranges[i].maxExclusive = jsonPartitionKey.maxExclusive.toString();

@@ -13,7 +13,8 @@ function parseResponseToTuple(http:Response|http:ClientError httpResponse) retur
     return [responseBody,responseHeaders];
 }
 
-function parseDeleteResponseToTuple(http:Response|http:ClientError httpResponse) returns  @tainted [string,Headers]|error{
+function parseDeleteResponseToTuple(http:Response|http:ClientError httpResponse) returns  @tainted 
+[string,Headers]|error{
     var responseBody = check getDeleteResponse(httpResponse);
     var responseHeaders = check parseHeadersToObject(httpResponse);
     return [responseBody,responseHeaders];
@@ -34,7 +35,7 @@ function parseResponseToJson(http:Response|http:ClientError httpResponse) return
                     code = jsonResponse.'error.toString();
                 }
                 string message = jsonResponse.message.toString();
-                //errors handle 400 401 403 408 409
+                //errors handle 400 401 403 408 409 404
                 string errorMessage = httpResponse.statusCode.toString() + " " + httpResponse.reasonPhrase; 
                 if (code != "") {
                     errorMessage += " - " + code;
@@ -85,7 +86,7 @@ function parseHeadersToObject(http:Response|http:ClientError httpResponse) retur
     }
 }
 
-function getHeaderIfExist(http:Response httpResponse,string headername) returns @tainted string?{
+function getHeaderIfExist(http:Response httpResponse, string headername) returns @tainted string?{
     if httpResponse.hasHeader(headername) {
         return httpResponse.getHeader(headername);
     }else{
@@ -113,7 +114,6 @@ function prepareError(string message, error? err = ()) returns error {
     }
     return azureError;
 }
-
 
 # Returns the prepared URL.
 # + paths - An array of paths prefixes
@@ -158,18 +158,8 @@ function mergeTwoArrays(any[] array1, any[] array2) returns any[]{
     }
     return array1;
 }
-//not needed
-public function setIndexingHeader(http:Request req, string indexingDirectory) returns http:Request|error{
-    req.setHeader("x-ms-indexing-directive",indexingDirectory);
-    return req;
-}
-//not needed
-public function setUpsertHeader(http:Request req, boolean? upsert= ()) returns http:Request|error{
-    req.setHeader("x-ms-documentdb-is-upsert",upsert.toString());
-    return req;
-}
 
-public function setThroughputOrAutopilotHeader(http:Request req,ThroughputProperties? throughputProperties) returns 
+public function setThroughputOrAutopilotHeader(http:Request req, ThroughputProperties? throughputProperties) returns 
 http:Request|error{
 
     if throughputProperties is ThroughputProperties{
@@ -190,30 +180,6 @@ public function setPartitionKeyHeader(http:Request req, any pk) returns http:Req
     req.setHeader("x-ms-documentdb-partitionkey",string `[${pk.toString()}]`);
     return req;
 }
-//not needed
-public function setHeadersforItemCount(http:Request req, int? maxItemcount = ()) returns http:Request|error{
-    if maxItemcount is int{
-        req.setHeader("x-ms-max-item-count",maxItemcount.toString()); 
-    }
-    return req;
-
-}
-//no use
-public function setHeadersForConsistancy(http:Request req, string? consistancylevel = (), string? sessiontoken = ()) 
-returns http:Request|error{
-    //The override must be the same or weaker than the account’s configured consistency level.
-    req.setHeader("x-ms-consistency-level",consistancylevel.toString());
-    //Clients must echo the latest read value of this header during read requests for session consistency.
-    req.setHeader("x-ms-session-token",sessiontoken.toString());
-    return req;
-}
-//no use
-public function setHeadersForChangeFeed(http:Request req, string? aim = (), string? nonmatch = ()) returns 
-http:Request|error{
-    req.setHeader("A-IM",aim.toString());
-    req.setHeader("If-None-Match",nonmatch.toString());
-    return req;
-}
 
 public function enableCrossPartitionKeyHeader(http:Request req, boolean isignore) returns http:Request|error{
     req.setHeader("x-ms-documentdb-query-enablecrosspartition",isignore.toString());
@@ -224,11 +190,10 @@ public function setHeadersForQuery(http:Request req) returns http:Request|error{
     req.setHeader("Content-Type","application/query+json");
     req.setHeader("x-ms-documentdb-isquery","true");
     //req.setHeader("x-ms-documentdb-query-enablecrosspartition","true");
-
     return req;
 }
 
-public function setDocumentRequestOptions(http:Request req,RequestOptions requestOptions) returns http:Request|error{
+public function setDocumentRequestOptions(http:Request req, RequestOptions requestOptions) returns http:Request|error{
     if requestOptions.indexingDirective is string {
         req.setHeader("x-ms-indexing-directive",requestOptions.indexingDirective.toString());
     }
@@ -261,12 +226,6 @@ public function setDocumentRequestOptions(http:Request req,RequestOptions reques
     }
     return req;
 }
-
-//x-ms-documentdb-query-enablecrosspartition
-
-
-//If-Match
-//---------------
 
 # To attach required basic headers to call REST endpoint
 # + req - http:Request to add headers to

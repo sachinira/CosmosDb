@@ -1,5 +1,5 @@
 import ballerina/http;
-import ballerina/io;
+
 # Azure Cosmos DB Client object.
 # + azureCosmosClient - The HTTP Client
 public  client class Client {
@@ -30,16 +30,16 @@ public  client class Client {
     }
 
     # To create a database inside a resource
-    # + dbName -  id/name for the database
+    # + databaseId -  id/name for the database
     # + throughputProperties - Optional throughput parameter which will set 'x-ms-offer-throughput' header 
     # + return - If successful, returns Database. Else returns error.  
-    public remote function createDatabase(string dbName, ThroughputProperties? throughputProperties = ()) returns 
+    public remote function createDatabase(string databaseId, ThroughputProperties? throughputProperties = ()) returns 
     @tainted Database|error{
         http:Request req = new;
         string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES]);
         HeaderParamaters header = mapParametersToHeaderType(POST,requestPath);
         json body = {
-            id: dbName
+            id: databaseId
         };
 
         req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
@@ -51,11 +51,11 @@ public  client class Client {
     }
 
     # To retrive a given database inside a resource
-    # + dbName -  id/name of the database to retrieve
+    # + databaseId -  id/name of the database to retrieve
     # + return - If successful, returns Database. Else returns error.  
-    public remote function getDatabase(string dbName) returns @tainted Database|error{
+    public remote function getDatabase(string databaseId) returns @tainted Database|error{
         http:Request req = new;
-        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,dbName]);
+        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,databaseId]);
         HeaderParamaters header = mapParametersToHeaderType(GET,requestPath);
 
         req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
@@ -65,7 +65,7 @@ public  client class Client {
     }
 
     # To list all databases inside a resource
-    # + return - If successful, returns DBList. Else returns error.  
+    # + return - If successful, returns DatabaseList. Else returns error.  
     public remote function getAllDatabases() returns @tainted DatabaseList|error{
         http:Request req = new;
         string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES]);
@@ -78,11 +78,11 @@ public  client class Client {
     }
 
     # To retrive a given database inside a resource
-    # + dbName -  id/name of the database to retrieve
-    # + return - If successful, returns string specifying delete is sucessfull. Else returns error.  
-    public remote function deleteDatabase(string dbName) returns @tainted DeleteResponse|error{
+    # + databaseId -  id/name of the database to retrieve
+    # + return - If successful, returns DeleteResponse specifying delete is sucessfull. Else returns error.  
+    public remote function deleteDatabase(string databaseId) returns @tainted DeleteResponse|error{
         http:Request req = new;
-        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,dbName]);
+        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,databaseId]);
         HeaderParamaters header = mapParametersToHeaderType(DELETE,requestPath);
 
         req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
@@ -94,11 +94,12 @@ public  client class Client {
     # To create a collection inside a database
     # + properties - object of type ContainerProperties
     # + throughputProperties - Optional throughput parameter which will set 'x-ms-offer-throughput' header 
-    # + return - If successful, returns Collection. Else returns error.  
+    # + return - If successful, returns Container. Else returns error.  
     public remote function createContainer(@tainted ContainerProperties properties, 
     ThroughputProperties? throughputProperties = ()) returns @tainted Container|error{
         http:Request req = new;
-        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,<string>properties.databaseId,RESOURCE_PATH_COLLECTIONS]);
+        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,<string>properties.databaseId,
+        RESOURCE_PATH_COLLECTIONS]);
         HeaderParamaters header = mapParametersToHeaderType(POST,requestPath);
         
         json body = {
@@ -108,23 +109,27 @@ public  client class Client {
         json finalc = check body.mergeJson(<json>properties.indexingPolicy.cloneWithType(json));
         req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
         req = check setThroughputOrAutopilotHeader(req,throughputProperties);
-        req.setJsonPayload(<@untainted>finalc);
+        req.setJsonPayload(<@untainted>finalc);//??
         var response = self.azureCosmosClient->post(requestPath,req);
         [json,Headers] jsonreponse = check parseResponseToTuple(response);
         return mapJsonToCollectionType(jsonreponse);
     }
 
+    # To create a collection inside a database
+    # + properties - object of type ContainerProperties
+    # + throughputProperties - Optional throughput parameter which will set 'x-ms-offer-throughput' header 
+    # + return - If successful, returns Container. Else returns error. 
     public remote function replaceProvisionedThroughput(@tainted ContainerProperties properties, ThroughputProperties 
     throughputProperties) returns @tainted Container|error {
         return self->createContainer(properties,throughputProperties);
     }
 
     # To retrive  all collections inside a database
-    # + dbName -  id/name of the database collections are in.
-    # + return - If successful, returns CollectionList. Else returns error.  
-    public remote function getAllContainers(string dbName) returns @tainted ContainerList|error{
+    # + databaseId -  id/name of the database collections are in.
+    # + return - If successful, returns ContainerList. Else returns error.  
+    public remote function getAllContainers(string databaseId) returns @tainted ContainerList|error{
         http:Request req = new;
-        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,dbName,RESOURCE_PATH_COLLECTIONS]);
+        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,databaseId,RESOURCE_PATH_COLLECTIONS]);
         HeaderParamaters header = mapParametersToHeaderType(GET,requestPath);
 
         req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
@@ -135,10 +140,11 @@ public  client class Client {
 
     # To retrive  one collection inside a database
     # + properties - object of type ContainerProperties
-    # + return - If successful, returns Collection. Else returns error.  
+    # + return - If successful, returns Container. Else returns error.  
     public remote function getContainer(@tainted ContainerProperties properties) returns @tainted Container|error{
         http:Request req = new;
-        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_COLLECTIONS,properties.containerId]);
+        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_COLLECTIONS,
+        properties.containerId]);
         HeaderParamaters header = mapParametersToHeaderType(GET,requestPath);
 
         req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
@@ -149,10 +155,11 @@ public  client class Client {
 
     # To delete one collection inside a database
     # + properties - object of type ContainerProperties
-    # + return - If successful, returns string specifying delete is sucessfull. Else returns error.   
+    # + return - If successful, returns DeleteResponse specifying delete is sucessfull. Else returns error.   
     public remote function deleteContainer(@tainted ContainerProperties properties) returns @tainted DeleteResponse|error{
         http:Request req = new;
-        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_COLLECTIONS,properties.containerId]);
+        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_COLLECTIONS,
+        properties.containerId]);
         HeaderParamaters header = mapParametersToHeaderType(DELETE,requestPath);
 
         req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
@@ -162,12 +169,13 @@ public  client class Client {
     }
 
     # To retrieve a list of partition key ranges for the collection
-    # + dbName -  id/name of the database which collection is in.
-    # + colName - id/name of collection to where partition key range is in.
+    # + databaseId -  id/name of the database which collection is in.
+    # + collectionId - id/name of collection to where partition key range is in.
     # + return - If successful, returns PartitionKeyList. Else returns error.  
-    public remote function getPartitionKeyRanges(string dbName, string colName) returns @tainted PartitionKeyList|error{
+    public remote function getPartitionKeyRanges(string databaseId, string collectionId) returns @tainted 
+    PartitionKeyList|error{
         http:Request req = new;
-        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,dbName,RESOURCE_PATH_COLLECTIONS,colName,
+        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,databaseId,RESOURCE_PATH_COLLECTIONS,collectionId,
         RESOURCE_PATH_PK_RANGES]);
         HeaderParamaters header = mapParametersToHeaderType(GET,requestPath);
 
@@ -180,17 +188,15 @@ public  client class Client {
     //Replace Collection supports changing the indexing policy of a collection after creation. must be implemented here
 
     # To create a Document inside a collection
-    # + properties - object of type ContainerProperties
+    # + properties - object of type DocumentProperties
     # + document - Any json content that will include as the document.
-    # + requestOptions - Optional indexing directive parameter which will set 'x-ms-indexing-directive' header******
-    #                   The acceptable value is Include or Exclude. 
-    #                   -Include adds the document to the index.
-    #                   -Exclude omits the document from indexing.
+    # + requestOptions - object of type RequestOptions
     # + return - If successful, returns Document. Else returns error.  
     public remote function createDocument(@tainted DocumentProperties properties,json document,
     RequestOptions? requestOptions) returns @tainted Document|error{
         http:Request req = new;
-        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_COLLECTIONS,properties.containerId,
+        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_COLLECTIONS,
+        properties.containerId,
         RESOURCE_PATH_DOCUMENTS]);
         HeaderParamaters header = mapParametersToHeaderType(POST,requestPath);
 
@@ -207,13 +213,14 @@ public  client class Client {
 
     #To list one document inside a collection
     # x-ms-consistency-level, x-ms-session-token and If-None-Match headers are supported
-    # + properties - the value in the partition key field specified for the collection to *****
-    # + requestOptions -
+    # + properties - object of type DocumentProperties
+    # + requestOptions - object of type RequestOptions
     # + return - If successful, returns a Document. Else returns error. 
-    public remote function getDocument(@tainted DocumentProperties properties,RequestOptions? requestOptions = ()) returns 
-    @tainted Document|error{
+    public remote function getDocument(@tainted DocumentProperties properties,RequestOptions? requestOptions = ()) 
+    returns @tainted Document|error{
         http:Request req = new;
-        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_COLLECTIONS,properties.containerId,
+        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_COLLECTIONS,
+        properties.containerId,
         RESOURCE_PATH_DOCUMENTS,properties.documentId.toString()]);
         HeaderParamaters header = mapParametersToHeaderType(GET,requestPath);
 
@@ -228,13 +235,11 @@ public  client class Client {
     }
 
     #To list all the documents inside a collection
-    # 
-    # x-ms-consistency-level, x-ms-session-token, A-IM, x-ms-continuation and If-None-Match headers are supported
-    # + properties - object of type ContainerProperties
+    # + properties - object of type DocumentProperties
     # + requestOptions - The continuation token returned from previous document request******
     # + return - If successful, returns DocumentList. Else returns error. 
-    public remote function getDocumentList(@tainted DocumentProperties properties,RequestOptions? requestOptions = ()) returns 
-    @tainted DocumentList|error{ 
+    public remote function getDocumentList(@tainted DocumentProperties properties,RequestOptions? requestOptions = ()) 
+    returns @tainted DocumentList|error{ 
         http:Request req = new;
         string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_COLLECTIONS,
         properties.containerId,RESOURCE_PATH_DOCUMENTS]);
@@ -251,17 +256,16 @@ public  client class Client {
     }
 
     #To replace a document inside a collection
-    # 
-    # + properties - object of type ContainerProperties
+    # + properties - object of type DocumentProperties
     # + newDocument - json object for replacing the existing document
-    # + requestOptions -
+    # + requestOptions - object of type RequestOptions
     # set x-ms-documentdb-partitionkey header
     # + return - If successful, returns a Document. Else returns error. 
-    public remote function replaceDocument(@tainted DocumentProperties properties, json newDocument,RequestOptions? requestOptions = ()) 
-    returns @tainted Document|error{         
+    public remote function replaceDocument(@tainted DocumentProperties properties, json newDocument,
+    RequestOptions? requestOptions = ()) returns @tainted Document|error{         
         http:Request req = new;
-        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_COLLECTIONS,properties.containerId,
-        RESOURCE_PATH_DOCUMENTS,<string>properties.documentId]);
+        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_COLLECTIONS,
+        properties.containerId,RESOURCE_PATH_DOCUMENTS,<string>properties.documentId]);//error
         HeaderParamaters header = mapParametersToHeaderType(PUT,requestPath);
 
         req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
@@ -276,13 +280,13 @@ public  client class Client {
     }
 
     #To delete a document inside a collection
-    # + properties - object of type ContainerProperties
-    # + return - If successful, returns a string giving sucessfully deleted. Else returns error. 
+    # + properties - object of type DocumentProperties
+    # + return - If successful, returns a DeleteResponse giving sucessfully deleted. Else returns error. 
     public remote function deleteDocument(@tainted DocumentProperties properties) returns 
     @tainted DeleteResponse|error{  
         http:Request req = new;
-        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_COLLECTIONS,properties.containerId,
-        RESOURCE_PATH_DOCUMENTS,<string>properties.documentId]);
+        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_COLLECTIONS,
+        properties.containerId,RESOURCE_PATH_DOCUMENTS,<string>properties.documentId]);//error
         HeaderParamaters header = mapParametersToHeaderType(DELETE,requestPath);
 
         req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
@@ -294,19 +298,17 @@ public  client class Client {
 
     #To query documents inside a collection
     # Function does not work properly, x-ms-max-item-count header handled
-    # + properties - object of type ContainerProperties
+    # + properties - object of type DocumentProperties
     # + sqlQuery - json object containing the sql query
-    # + requestOptions - 
-    # set x-ms-documentdb-partitionkey header
+    # + requestOptions - object of type RequestOptions
     # + return - If successful, returns a json. Else returns error. 
-    public remote function queryDocument(@tainted DocumentProperties properties, Query sqlQuery, RequestOptions? requestOptions = ()) returns 
-    @tainted json|error{
+    public remote function queryDocument(@tainted DocumentProperties properties, Query sqlQuery, 
+    RequestOptions? requestOptions = ()) returns @tainted json|error{
         http:Request req = new;
-        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_COLLECTIONS,properties.containerId,
-        RESOURCE_PATH_DOCUMENTS]);
+        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_COLLECTIONS,
+        properties.containerId,RESOURCE_PATH_DOCUMENTS]);
         HeaderParamaters header = mapParametersToHeaderType(POST,requestPath);
 
-        io:println(sqlQuery);
         req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
         req = check setHeadersForQuery(req);
         req = check setPartitionKeyHeader(req,properties.partitionKey);
@@ -319,11 +321,11 @@ public  client class Client {
     #To create a new stored procedure inside a collection
     # A stored procedure is a piece of application logic written in JavaScript that 
     # is registered and executed against a collection as a single transaction.
-    # + properties - id/name of collection which stored procedure is in.
-    # + storedProcedure - 
+    # + properties - object of type StoredProcedureProperties
+    # + storedProcedure - object of Type storedProcedure
     # + return - If successful, returns a StoredProcedure. Else returns error. 
-    public remote function createStoredProcedure(@tainted StoredProcedureProperties properties, StoredProcedure storedProcedure) returns 
-    @tainted StoredProcedure|error{
+    public remote function createStoredProcedure(@tainted StoredProcedureProperties properties, 
+    StoredProcedure storedProcedure) returns @tainted StoredProcedure|error{
         http:Request req = new;
         string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_COLLECTIONS,properties.containerId,
         RESOURCE_PATH_STORED_POCEDURES]);
@@ -337,15 +339,14 @@ public  client class Client {
     }
 
     #To replace a stored procedure with new one inside a collection
-
-    # + storedProcedure - 
-    # + properties - 
+    # + properties - object of type StoredProcedureProperties
+    # + storedProcedure - object of Type storedProcedure
     # + return - If successful, returns a StoredProcedure. Else returns error. 
-    public remote function replaceStoredProcedure(@tainted StoredProcedureProperties properties, StoredProcedure storedProcedure) 
-    returns @tainted StoredProcedure|error{
+    public remote function replaceStoredProcedure(@tainted StoredProcedureProperties properties, 
+    StoredProcedure storedProcedure) returns @tainted StoredProcedure|error{
         http:Request req = new;
-        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_COLLECTIONS,properties.containerId,
-        RESOURCE_PATH_STORED_POCEDURES,<string>properties.storedProcedureId]);//check error
+        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_COLLECTIONS,
+        properties.containerId,RESOURCE_PATH_STORED_POCEDURES,<string>properties.storedProcedureId]);//check error
         HeaderParamaters header = mapParametersToHeaderType(PUT,requestPath);
 
         req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
@@ -356,13 +357,13 @@ public  client class Client {
     }
 
     #To list all stored procedures inside a collection
-    # + properties - id/name of collection which stored procedures are in.
+    # + properties - object of type StoredProcedureProperties
     # + return - If successful, returns a StoredProcedureList. Else returns error. 
     public remote function listStoredProcedures(@tainted StoredProcedureProperties properties) returns 
     @tainted StoredProcedureList|error{
         http:Request req = new;
-        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_COLLECTIONS,properties.containerId,
-        RESOURCE_PATH_STORED_POCEDURES]);
+        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_COLLECTIONS,
+        properties.containerId,RESOURCE_PATH_STORED_POCEDURES]);
         HeaderParamaters header = mapParametersToHeaderType(GET,requestPath);
 
         req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
@@ -372,13 +373,13 @@ public  client class Client {
     }
 
     #To delete a stored procedure inside a collection
-    # + properties - id of the stored procedure to be deleted
-    # + return - If successful, returns string specifying delete is sucessfull. Else returns error. 
+    # + properties - object of type StoredProcedureProperties
+    # + return - If successful, returns DeleteResponse specifying delete is sucessfull. Else returns error. 
     public remote function deleteStoredProcedure(@tainted StoredProcedureProperties properties) returns 
     @tainted DeleteResponse|error{
         http:Request req = new;
-        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_COLLECTIONS,properties.containerId,
-        RESOURCE_PATH_STORED_POCEDURES,<string>properties.storedProcedureId]);//check error        
+        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_COLLECTIONS,
+        properties.containerId,RESOURCE_PATH_STORED_POCEDURES,<string>properties.storedProcedureId]);//check error        
         HeaderParamaters header = mapParametersToHeaderType(DELETE,requestPath);
 
         req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
@@ -389,14 +390,14 @@ public  client class Client {
 
     #To execute a stored procedure inside a collection
     # ***********function only works correctly for string parameters************
-    # + properties - id of the stored procedure to be executed
+    # + properties - object of type StoredProcedureProperties
     # + parameters - The list of paramaters to pass to javascript function as an array.
     # + return - If successful, returns json with the output from the executed funxtion. Else returns error. 
     public remote function executeStoredProcedure(@tainted StoredProcedureProperties properties, any[]? parameters) 
     returns @tainted json|error{
         http:Request req = new;
-        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_COLLECTIONS,properties.containerId,
-        RESOURCE_PATH_STORED_POCEDURES,<string>properties.storedProcedureId]);//check error        
+        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_COLLECTIONS,
+        properties.containerId,RESOURCE_PATH_STORED_POCEDURES,<string>properties.storedProcedureId]);//check error        
         HeaderParamaters header = mapParametersToHeaderType(POST,requestPath);
 
         req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);

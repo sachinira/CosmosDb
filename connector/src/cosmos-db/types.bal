@@ -9,7 +9,7 @@ public type RequestOptions record {|
     boolean? isUpsertRequest = ();
     string? indexingDirective = ();
     int? maxItemCount = ();
-    string? continuationToken =();
+    string? continuationToken = ();
     string? consistancyLevel = ();//This is the consistency level override. The override must be the same 
     //or weaker than the account’s configured consistency level.
     string? sessionToken = ();
@@ -29,7 +29,6 @@ public type Headers record {|
     string? itemCountHeader = ();
     string? etagHeader = ();
     string? dateHeader = ();
-
 |};
 
 public type Database record {
@@ -67,7 +66,6 @@ public type ContainerList record {|
     Container[] DocumentCollections = [];
     Headers reponseHeaders?;
     int _count = 0;
-
 |};
 
 public type DocumentProperties record {|
@@ -77,18 +75,17 @@ public type DocumentProperties record {|
     any? partitionKey = ();
 |};
 
-public type Document record{|
+public type Document record {|
     string id = "";
-    any document ="";
+    any document = "";
     Headers reponseHeaders?;
 |};
 
 public type DocumentList record {|
-    string _rid= "";
+    string _rid = "";
     Document[] documents = [];
     Headers reponseHeaders?;
     int _count = 0;
-
 |};
 
 public type Query record {|
@@ -101,12 +98,12 @@ public type QueryParameter record {|
     string value = "";
 |};
 
-
 public type StoredProcedureProperties record {
     string databaseId = "";
     string containerId = "";
     string? storedProcedureId = ();
 };
+
 public type StoredProcedure record {
     string id = "";
     string body = "";
@@ -119,15 +116,6 @@ public type StoredProcedureList record {
     Headers reponseHeaders?;
     int _count = 0;
 };
-
-
-//common
-public type Common record {|
-    string _rid = "";
-    int _ts = 0;
-    string _self = "";
-    string _etag = "";
-|};
 
 public type ThroughputProperties record {
     int? throughput = ();
@@ -146,19 +134,19 @@ public type IndexingPolicy record {|
     IncludedPath[] excludedPaths = [];
 |};
 
-public  type IncludedPath record {|
+public type IncludedPath record {|
     string path = "";
     Index[] indexes?;
 |};
 
-public  type ExcludedPath record {|
+public type ExcludedPath record {|
     string path?;
 |};
 
 public type Index record {|
     string kind = "";
     string dataType = "";
-    int precision =-1;
+    int precision = -1;
 |};
 
 public type PartitionKey record {|
@@ -190,6 +178,4 @@ public type ConflictResolutionPolicyType record {|
     string conflictResolutionProcedure = "";
 |};
 
-
-public type AzureError distinct error;
-
+public type AzureError  distinct  error;
