@@ -1,0 +1,1 @@
+{"sachini/cosmos-db:0.1.0:Container":{"id":"string","allowMaterializedViews":"boolean","indexingPolicy":"sachini/cosmos-db:0.1.0:IndexingPolicy","partitionKey":"sachini/cosmos-db:0.1.0:PartitionKey","reponseHeaders":"sachini/cosmos-db:0.1.0:Headers"}}

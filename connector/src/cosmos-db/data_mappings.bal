@@ -50,21 +50,17 @@ function mapTupleToDeleteresponse([string,Headers] jsonPayload)returns @tainted 
     return deleteResponse;
 }
 
-function mapJsonToCollectionType(json jsonPayload)returns @tainted Collection {
-    Collection coll = {};
-    coll.id = jsonPayload.id.toString();
-    coll._rid = jsonPayload._rid.toString();
-    coll._ts = convertToInt(jsonPayload._ts);
-    coll._self = jsonPayload._self.toString();
-    coll._etag = jsonPayload._etag.toString();
-    coll._docs = jsonPayload._docs.toString();
-    coll._sprocs = jsonPayload._sprocs.toString();
-    coll._triggers =jsonPayload._triggers.toString();
-    coll._udfs=jsonPayload._udfs.toString();
-    coll._conflicts=jsonPayload._conflicts.toString();
-    coll.allowMaterializedViews = convertToBoolean(jsonPayload.allowMaterializedViews);
-    coll.indexingPolicy = mapJsonToIndexingPolicy(<json>jsonPayload.indexingPolicy);
-    coll.partitionKey = convertJsonToPartitionKey(<json>jsonPayload.partitionKey);
+function mapJsonToCollectionType([json,Headers] jsonPayload)returns @tainted Container {
+    json payload;
+    Headers headers;
+    [payload,headers] = jsonPayload;
+
+    Container coll = {};
+    coll.id = payload.id.toString();
+    coll.allowMaterializedViews = convertToBoolean(payload.allowMaterializedViews);
+    coll.indexingPolicy = mapJsonToIndexingPolicy(<json>payload.indexingPolicy);
+    coll.partitionKey = convertJsonToPartitionKey(<json>payload.partitionKey);
+    coll.reponseHeaders = headers;
     return coll;
 }
 
@@ -100,66 +96,76 @@ function convertJsonToPartitionKey(json jsonPayload) returns @tainted PartitionK
     PartitionKey pk = {};
     pk.paths = convertToStringArray(<json[]>jsonPayload.paths);
     pk.kind = jsonPayload.kind.toString();
-    pk.'version = convertToInt(jsonPayload.'version);
+    pk.'Version = convertToInt(jsonPayload.'version);
     return pk;
 }
 
-function mapJsonToCollectionListType(json jsonPayload) returns @tainted CollectionList {
-    CollectionList cll = {};
-    cll._rid = jsonPayload._rid.toString();
-    cll._count = convertToInt(jsonPayload._count);
-    cll.DocumentCollections = convertToCollectionArray(<json[]>jsonPayload.DocumentCollections);
+function mapJsonToCollectionListType([json,Headers] jsonPayload) returns @tainted ContainerList {
+    ContainerList cll = {};
+    json payload;
+    Headers headers;
+    [payload,headers] = jsonPayload;
+
+    cll._rid = payload._rid.toString();
+    cll._count = convertToInt(payload._count);
+    cll.DocumentCollections = convertToCollectionArray(<json[]>payload.DocumentCollections);
+    cll.reponseHeaders = headers;
     return cll;
 }
 
-function mapJsonToPartitionKeyType(json jsonPayload) returns @tainted PartitionKeyList {
+function mapJsonToPartitionKeyType([json,Headers] jsonPayload) returns @tainted PartitionKeyList {
     PartitionKeyList pkl = {};
-    pkl._rid = jsonPayload._rid.toString();
-    pkl.PartitionKeyRanges = convertToPartitionKeyRangeArray(<json[]>jsonPayload.PartitionKeyRanges);
+    PartitionKeyRange pkr = {};
+    json payload;
+    Headers headers;
+    [payload,headers] = jsonPayload;
+
+    pkl._rid = payload._rid.toString();
+    pkl.PartitionKeyRanges = convertToPartitionKeyRangeArray(<json[]>payload.PartitionKeyRanges);
+    pkl.reponseHeaders = headers;
+    pkl._count = convertToInt(payload._count);
+
+
     return pkl;
 }
 
-function mapJsonToPartitionKeyRange(json jsonPayload) returns @tainted PartitionKeyRanges {
-    PartitionKeyRanges pkr = {};
-    pkr._rid = jsonPayload._rid.toString();
-    pkr.id = jsonPayload.id.toString();
-    pkr._etag = jsonPayload._etag.toString();
-    pkr.minInclusive = jsonPayload.minInclusive.toString();
-    pkr.maxExclusive = jsonPayload.maxExclusive.toString();
-    pkr._self = jsonPayload._self.toString();
-    pkr.status = jsonPayload.status.toString();
-    pkr._ts = convertToInt(jsonPayload._ts);
+function mapJsonToPartitionKeyRange([json,Headers] jsonPayload) returns @tainted PartitionKeyRange {
+    PartitionKeyRange pkr = {};
+    json payload;
+    Headers headers;
+    [payload,headers] = jsonPayload;
+    
+    pkr.id = payload.id.toString();
+    pkr.minInclusive = payload.minInclusive.toString();
+    pkr.maxExclusive = payload.maxExclusive.toString();
+    pkr.status = payload.status.toString();
+    pkr.reponseHeaders = headers;
     return pkr;
 }
 
-function mapJsonToDocument(json jsonPayload) returns @tainted Document|error {  
+function mapJsonToDocument([json,Headers] jsonPayload) returns @tainted Document|error {  
     Document doc = {};
-    doc.id = jsonPayload.id.toString();
-    doc._rid = jsonPayload._rid.toString();
-    doc._ts = convertToInt(jsonPayload._ts);
-    doc._self  =jsonPayload._self.toString();
-    doc._etag  = jsonPayload._etag.toString();
-    doc._attachments  = jsonPayload._attachments.toString();
-    doc.document = check jsonPayload.cloneWithType(anydata);
+    json payload;
+    Headers headers;
+    [payload,headers] = jsonPayload;
+    
+    doc.id = payload.id.toString();
+    doc.document = check payload.cloneWithType(anydata);
+    doc.reponseHeaders = headers;
     return doc;
 }
 
-function mapJsonToDocumentList(json jsonPayload) returns @tainted DocumentList|error {
+function mapJsonToDocumentList([json,Headers] jsonPayload) returns @tainted DocumentList|error {
     DocumentList documentlist = {};
+    json payload;
+    Headers headers;
+    [payload,headers] = jsonPayload;
 
-    documentlist._rid = jsonPayload._rid.toString();
-    documentlist._count = convertToInt(jsonPayload._count);
-    documentlist.documents = convertToDocumentArray(<json[]>jsonPayload.Documents);
-    return documentlist;
-} 
+    documentlist._rid = payload._rid.toString();
+    documentlist._count = convertToInt(payload._count);
+    documentlist.documents = check convertToDocumentArray(<json[]>payload.Documents);
+    documentlist.reponseHeaders = headers;
 
-function mapJsonToDocumentListIterable(json jsonPayload) returns @tainted DocumentListIterable|error {
-    DocumentListIterable documentlist = {};
-
-    documentlist._rid = jsonPayload._rid.toString();
-    documentlist._count = convertToInt(jsonPayload._count);
-    documentlist.documents = convertToDocumentArray(<json[]>jsonPayload.Documents);
-    documentlist.continuation = jsonPayload.continuation.toString();
     return documentlist;
 } 
 
@@ -219,31 +225,42 @@ function convertToStringArray(json[] sourcePathArrayJsonObject) returns @tainted
     return strings;
 }
 
-function convertToCollectionArray(json[] sourceCollectionArrayJsonObject) returns @tainted Collection[] {
-    Collection[] collections = [];
+function convertToCollectionArray(json[] sourceCollectionArrayJsonObject) returns @tainted Container[] {
+    Container[] collections = [];
     int i = 0;
     foreach json jsonCollection in sourceCollectionArrayJsonObject {
-        collections[i] = mapJsonToCollectionType(jsonCollection);
+        collections[i].id = <string>jsonCollection.id;
+        collections[i].allowMaterializedViews = convertToBoolean(jsonCollection.allowMaterializedViews);
+        collections[i].indexingPolicy = mapJsonToIndexingPolicy(<json>jsonCollection.indexingPolicy);
+        collections[i].partitionKey = convertJsonToPartitionKey(<json>jsonCollection.partitionKey);
+
         i = i + 1;
     }
     return collections;
 }
 
-function convertToPartitionKeyRangeArray(json[] sourceCollectionArrayJsonObject) returns @tainted PartitionKeyRanges[] { 
-    PartitionKeyRanges[] pkranges = [];
+function convertToPartitionKeyRangeArray(json[] sourceAprtitionKeyArrayJsonObject) returns @tainted PartitionKeyRange[] { 
+    PartitionKeyRange[] pkranges = [];
     int i = 0;
-    foreach json jsonCollection in sourceCollectionArrayJsonObject {
-        pkranges[i] = mapJsonToPartitionKeyRange(jsonCollection);
+    foreach json jsonPartitionKey in sourceAprtitionKeyArrayJsonObject {
+        //pkranges[i] = mapJsonToPartitionKeyRange([jsonCollection,()]);
+        pkranges[i].id = jsonPartitionKey.id.toString();
+        pkranges[i].minInclusive = jsonPartitionKey.minInclusive.toString();
+        pkranges[i].maxExclusive = jsonPartitionKey.maxExclusive.toString();
+        pkranges[i].status = jsonPartitionKey.status.toString();
         i = i + 1;
     }
     return pkranges;
 }
 
-function convertToDocumentArray(json[] sourceDocumentArrayJsonObject) returns @tainted Document[] { 
+function convertToDocumentArray(json[] sourceDocumentArrayJsonObject) returns @tainted Document[]|error { 
     Document[] documents = [];
     int i = 0;
-    foreach json doc in sourceDocumentArrayJsonObject { 
-        documents[i] = <Document>mapJsonToDocument(doc);
+    foreach json document in sourceDocumentArrayJsonObject { 
+        documents[i].id = document.id.toString();
+        documents[i].document = check document.cloneWithType(anydata);
+        documents[i].id = document.id.toString();
+
         i = i + 1;
     }
     return documents;

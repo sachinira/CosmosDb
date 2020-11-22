@@ -139,16 +139,17 @@ function createContainer(){
 
     Client AzureCosmosClient = new(config);
     string throughput = "400";
+    PartitionKey pk = {};
+    pk.paths = ["/AccountNumber"];
+    pk.kind = "Hash";
+    pk.Version = 2;
+
     ContainerProperties con = {};
-    con.partitionKey = {  
-                            "paths": ["/AccountNumber"], 
-                            "kind": "Hash",
-                            "Version": 2
-                        };
-    con.dbName = "hikall";
-    con.colName = "mycollect";
+    con.partitionKey = pk;
+    con.databaseId = "hikall";
+    con.containerId = "new1";
     var result = AzureCosmosClient->createContainer(con);
-    if (result is Collection) {
+    if (result is Container) {
         io:println(result);
     } else {
         test:assertFail(msg = result.message());
@@ -179,18 +180,23 @@ function createCollectionWithManualThroughputAndIndexingPolicy(){
                                     }  
                                 ]  
                             };
+    
+    
     ThroughputProperties tp = {};
     tp.throughput = 600; 
+    
+    
+    PartitionKey pk = {};
+    pk.paths = ["/AccountNumber"];
+    pk.kind = "Hash";
+    pk.Version = 2;
+
     ContainerProperties con = {};
-    con.partitionKey = {  
-                            "paths": ["/AccountNumber"], 
-                            "kind": "Hash",
-                            "Version": 2
-                        };
-    con.dbName = "hikall";
-    con.colName = "mycollect";
-    var result = AzureCosmosClient->createContainer(con,indexingPolicy,tp);
-    if (result is Collection) {
+    con.partitionKey = pk;
+    con.databaseId = "hikall";
+    con.containerId = "mycollect";
+    var result = AzureCosmosClient->createContainer(con,tp);
+    if (result is Container) {
         io:println(result);
     } else {
         test:assertFail(msg = result.message());
@@ -208,7 +214,7 @@ function getAllCollections(){
 
     Client AzureCosmosClient = new(config);
     var result = AzureCosmosClient->getAllContainers("hikall");
-    if (result is CollectionList) {
+    if (result is ContainerList) {
         io:println(result);
     } else {
         test:assertFail(msg = result.message());
@@ -224,10 +230,10 @@ function getOneCollection(){
 
     Client AzureCosmosClient = new(config);
     ContainerProperties con = {};
-    con.dbName = "hikall";
-    con.colName = "mycollect";
+    con.databaseId = "hikall";
+    con.containerId = "mycollect";
     var result = AzureCosmosClient->getContainer(con);
-    if (result is Collection) {
+    if (result is Container) {
         io:println(result);
     } else {
         test:assertFail(msg = result.message());
@@ -236,15 +242,15 @@ function getOneCollection(){
 }
 
 @test:Config{
-    enable: false
+   enable: false
 }
 function deleteCollection(){
     io:println("--------------Delete one collection------------------------\n\n");
 
     Client AzureCosmosClient = new(config); 
     ContainerProperties con = {};
-    con.dbName = "hikall";
-    con.colName = "mycollec";
+    con.databaseId = "hikall";
+    con.containerId = "mycollect";
     var result = AzureCosmosClient->deleteContainer(con);
     io:println(result);
     io:println("\n\n");
@@ -313,12 +319,17 @@ function createDocument(){
     };   
     json|error finalj =  body.mergeJson(custombody);
     DocumentProperties dc = {};
-    dc.dbName = "hikall";
-    dc.colName = "mycollection1";
-    dc.partitionKey = <json>custombody.AccountNumber;
+
+    dc.databaseId="hikall";
+    dc.containerId="mycollection1";
+    dc.partitionKey=<json>custombody.AccountNumber;
+
+    RequestOptions reqOptions = {
+        isUpsertRequest:true
+    };
 
     if finalj is json{
-        var result = AzureCosmosClient->createDocument(dc,finalj,true);
+        var result = AzureCosmosClient->createDocument(dc,finalj,reqOptions);
         if result is Document {
             io:println(result);
         } else {
@@ -337,10 +348,11 @@ function GetDocumentList(){
 
     Client AzureCosmosClient = new(config);
     DocumentProperties dc = {};
-    dc.dbName = "hikall";
-    dc.colName = "mycollection1";
-    var result = AzureCosmosClient->getDocumentList(dc,4);
-    if (result is DocumentList|DocumentListIterable) {
+    dc.databaseId = "hikall";
+    dc.containerId = "mycollection1";
+
+    var result = AzureCosmosClient->getDocumentList(dc);
+    if (result is DocumentList) {
         io:println(result);
     } else {
         test:assertFail(msg = result.message());
@@ -356,10 +368,15 @@ function getNextPageOfDocumentList(){
 
     Client AzureCosmosClient = new(config);
     DocumentProperties dc = {};
-    dc.dbName = "hikall";
-    dc.colName = "mycollection1";
-    var result = AzureCosmosClient->getDocumentList(dc,2,string `{"token":"nXh6ANTE4QoHAAAAAAAAAA==","range":{"min":"","max":"FF"}}`);
-    if (result is DocumentList|DocumentListIterable) {
+    dc.databaseId = "hikall";
+    dc.containerId = "mycollection1";
+
+    RequestOptions options = {};
+    //options.maxItemCount = 4;
+    options.continuationToken = "{token:'nXh6ANTE4QoIAAAAAAAAAA==',range:{min:'',max:'FF'}}";//convert this to string
+
+    var result = AzureCosmosClient->getDocumentList(dc,options);
+    if (result is DocumentList) {
         io:println(result);
     } else {
         test:assertFail(msg = result.message());
@@ -375,10 +392,11 @@ function GetOneDocument(){
 
     Client AzureCosmosClient = new(config);
     DocumentProperties dc = {};
-    dc.dbName = "hikall";
-    dc.colName = "mycollection1";
+    dc.databaseId = "hikall";
+    dc.containerId = "mycollection1";
     dc.partitionKey = 1234;
     dc.documentId = "10b40edd-d94e-4677-aa0b-eeeab1f7c470";
+
     var result = AzureCosmosClient->getDocument(dc);
     if (result is Document) {
         io:println(result);
@@ -396,15 +414,16 @@ function replaceDocument(){
 
     Client AzureCosmosClient = new(config);
     DocumentProperties dc = {};
-    dc.dbName = "hikall";
-    dc.colName = "mycollection1";
+    dc.databaseId = "hikall";
+    dc.containerId = "mycollection1";
     dc.partitionKey = 1234;
     dc.documentId = "8f014bef-691e-4732-99f0-9b7af94cb9c2";
+
     json id = {
         "id": dc.documentId
     };
     json custom = {
-        "LastName": "seemee",  
+        "LastName": "hi",  
         "Parents": [  
             {  
             "FamilyName": null,  
@@ -447,17 +466,18 @@ function replaceDocument(){
 }
 
 @test:Config{
-    enable: false
+    //enable: false
 }
 function deleteDocument(){
     io:println("--------------Delete one document------------------------\n\n");
     
     Client AzureCosmosClient = new(config);
     DocumentProperties dc = {};
-    dc.dbName = "hikall";
-    dc.colName = "mycollection1";
+    dc.databaseId = "hikall";
+    dc.containerId = "mycollection1";
     dc.partitionKey = 1234;
-    dc.documentId = "308f807c-f7b8-40a1-8457-767bb498a62e";
+    dc.documentId = "69a2c93a-42e6-487e-b6f3-1a355f1afd19";
+
     var result = AzureCosmosClient->deleteDocument(dc);  
     if result is string {
         io:println(result);
@@ -475,8 +495,8 @@ function queryDocument(){
 
     Client AzureCosmosClient = new(config);
     DocumentProperties dc = {};
-    dc.dbName = "hikall";
-    dc.colName = "mycollection1";
+    dc.databaseId = "hikall";
+    dc.containerId = "mycollection1";
     dc.partitionKey = 1234;
     json query = {  
         "query": "SELECT * FROM Families f WHERE f.id = @id AND f.address.city = @city",  

@@ -1,1 +1,1 @@
-{"sachini/cosmos-db:0.1.0:PartitionKeyRanges":{"_rid":"string","id":"string","_etag":"string","minInclusive":"string","maxExclusive":"string","ridPrefix":"int","_self":"string","throughputFraction":"int","status":"string","_ts":"int"}}
+{"sachini/cosmos-db:0.1.0:PartitionKeyRanges":{"id":"string","minInclusive":"string","maxExclusive":"string","ridPrefix":"int","throughputFraction":"int","status":"string","reponseHeaders":"sachini/cosmos-db:0.1.0:Headers"}}

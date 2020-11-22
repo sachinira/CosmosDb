@@ -158,12 +158,12 @@ function mergeTwoArrays(any[] array1, any[] array2) returns any[]{
     }
     return array1;
 }
-
+//not needed
 public function setIndexingHeader(http:Request req, string indexingDirectory) returns http:Request|error{
     req.setHeader("x-ms-indexing-directive",indexingDirectory);
     return req;
 }
-
+//not needed
 public function setUpsertHeader(http:Request req, boolean? upsert= ()) returns http:Request|error{
     req.setHeader("x-ms-documentdb-is-upsert",upsert.toString());
     return req;
@@ -190,12 +190,15 @@ public function setPartitionKeyHeader(http:Request req, any pk) returns http:Req
     req.setHeader("x-ms-documentdb-partitionkey",string `[${pk.toString()}]`);
     return req;
 }
-
-public function setHeadersforItemCount(http:Request req, int? maxitemcount = ()) returns http:Request|error{
-    req.setHeader("x-ms-max-item-count",maxitemcount.toString()); 
+//not needed
+public function setHeadersforItemCount(http:Request req, int? maxItemcount = ()) returns http:Request|error{
+    if maxItemcount is int{
+        req.setHeader("x-ms-max-item-count",maxItemcount.toString()); 
+    }
     return req;
-}
 
+}
+//no use
 public function setHeadersForConsistancy(http:Request req, string? consistancylevel = (), string? sessiontoken = ()) 
 returns http:Request|error{
     //The override must be the same or weaker than the account’s configured consistency level.
@@ -204,7 +207,7 @@ returns http:Request|error{
     req.setHeader("x-ms-session-token",sessiontoken.toString());
     return req;
 }
-
+//no use
 public function setHeadersForChangeFeed(http:Request req, string? aim = (), string? nonmatch = ()) returns 
 http:Request|error{
     req.setHeader("A-IM",aim.toString());
@@ -220,6 +223,40 @@ public function enableCrossPartitionKeyHeader(http:Request req, boolean isignore
 public function setHeadersForQuery(http:Request req) returns http:Request|error{
     req.setHeader("Content-Type","application/query+json");
     req.setHeader("x-ms-documentdb-isquery","true");
+    return req;
+}
+
+public function setDocumentRequestOptions(http:Request req,RequestOptions requestOptions) returns http:Request|error{
+    if requestOptions.indexingDirective is string {
+        req.setHeader("x-ms-indexing-directive",requestOptions.indexingDirective.toString());
+    }
+    if requestOptions.isUpsertRequest == true {
+        req.setHeader("x-ms-documentdb-is-upsert",requestOptions.isUpsertRequest.toString());
+    }
+    if requestOptions.maxItemCount is int{
+        req.setHeader("x-ms-max-item-count",requestOptions.maxItemCount.toString()); 
+    }
+    if requestOptions.continuationToken is string{
+        req.setHeader("x-ms-continuation",requestOptions.continuationToken.toString());
+    }
+    if requestOptions.consistancyLevel is string {
+        req.setHeader("x-ms-consistency-level",requestOptions.consistancyLevel.toString());
+    }
+    if requestOptions.sessionToken is string {
+        req.setHeader("x-ms-session-token",requestOptions.sessionToken.toString());
+    }
+    if requestOptions.changeFeedOption is string{
+        req.setHeader("A-IM",requestOptions.changeFeedOption.toString()); 
+    }
+    if requestOptions.ifNoneMatch is string{
+        req.setHeader("If-None-Match",requestOptions.ifNoneMatch.toString());
+    }
+    if requestOptions.PartitionKeyRangeId is string{
+        req.setHeader("x-ms-documentdb-partitionkeyrangeid",requestOptions.PartitionKeyRangeId.toString());
+    }
+    if requestOptions.PartitionKeyRangeId is string{
+        req.setHeader("If-Match",requestOptions.PartitionKeyRangeId.toString());
+    }
     return req;
 }
 
