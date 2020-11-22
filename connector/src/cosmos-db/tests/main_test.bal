@@ -3,16 +3,16 @@ import ballerina/test;
 import ballerina/java;
 
 AzureCosmosConfiguration config = {
-    baseUrl: BASE_URL,
-    masterKey: MASTER_KEY,
-    host: HOST,
-    tokenType: TOKEN_TYPE,
-    tokenVersion: TOKEN_VERSION
+    baseUrl : BASE_URL,
+    masterKey : MASTER_KEY,
+    host : HOST,
+    tokenType : TOKEN_TYPE,
+    tokenVersion : TOKEN_VERSION
 };
 
 function createRandomUUID() returns handle = @java:Method {
-    name: "randomUUID",
-    'class: "java.util.UUID"
+    name : "randomUUID",
+    'class : "java.util.UUID"
 } external;
 
 @test:Config{
@@ -22,7 +22,7 @@ function createDB(){
     io:println("--------------Create database------------------------\n\n");
 
     Client AzureCosmosClient = new(config);
-    var result = AzureCosmosClient->createDatabase("heloo");
+    var result = AzureCosmosClient->createDatabase("hiiiii2");
     if (result is Database) {
         io:println(result);
     } else {
@@ -38,8 +38,9 @@ function createDBWithManualThroughput(){
     io:println("--------------Create with manual throguput------------------------\n\n");
 
     Client AzureCosmosClient = new(config);
-    int throughput = 600; 
-    var result = AzureCosmosClient->createDatabase("helooth",600);
+    ThroughputProperties tp = {};
+    tp.throughput = 600; 
+    var result = AzureCosmosClient->createDatabase("heloodb", tp);
     if (result is Database) {
         io:println(result);
     } else {
@@ -55,8 +56,9 @@ function createDBWithAutoscaling(){
     io:println("--------------Create with autoscaling throguput------------------------\n\n");
 
     Client AzureCosmosClient = new(config);
-    json scaling = {"maxThroughput": 4000};
-    var result = AzureCosmosClient->createDatabase("helooauto",(),scaling);
+    ThroughputProperties tp = {};
+    tp.maxThroughput = {"maxThroughput": 4000};
+    var result = AzureCosmosClient->createDatabase("helooauto", tp);
     if (result is Database) {
         io:println(result);
     } else {
@@ -72,9 +74,10 @@ function createDBWithBothHeaders(){
     io:println("--------------Create with autoscaling and throguput headers------------------------\n\n");
 
     Client AzureCosmosClient = new(config);
-    json scaling = {"maxThroughput": 4000};
-    int throughput = 800;
-    var result = AzureCosmosClient->createDatabase("helooboth",throughput,scaling);
+    ThroughputProperties tp = {};
+    tp.maxThroughput = {"maxThroughput" : 4000};
+    tp.throughput = 600; 
+    var result = AzureCosmosClient->createDatabase("helooboth", tp);
     if (result is Database) {
         io:println(result);
     } else {
@@ -90,8 +93,8 @@ function listAllDB(){
     io:println("--------------List All databases------------------------\n\n");
 
     Client AzureCosmosClient = new(config);
-    var result = AzureCosmosClient->listDatabases();
-    if (result is DBList) {
+    var result = AzureCosmosClient->getAllDatabases();
+    if (result is DatabaseList) {
         io:println(result);
     } else {
         test:assertFail(msg = result.message());
@@ -106,7 +109,7 @@ function listOneDB(){
     io:println("--------------List one database------------------------\n\n");
 
     Client AzureCosmosClient = new(config); 
-    var result = AzureCosmosClient->listOneDatabase("hikall");
+    var result = AzureCosmosClient->getDatabase("hikall");
     if (result is Database) {
         io:println(result);
     } else {
@@ -122,7 +125,7 @@ function deleteDB(){
     io:println("--------------Delete one databse------------------------\n\n");
 
     Client AzureCosmosClient = new(config);
-    var result = AzureCosmosClient->deleteDatabase("heloo");
+    var result = AzureCosmosClient->deleteDatabase("tempdb2");
     io:println(result);
     io:println("\n\n");
 }
@@ -130,18 +133,21 @@ function deleteDB(){
 @test:Config{
     enable: false
 }
-function createCollection(){
+function createContainer(){
     io:println("--------------Create Collection-----------------------\n\n");
 
     Client AzureCosmosClient = new(config);
-    json partitionkey = {  
-                            "paths": ["/AccountNumber"], 
-                            "kind": "Hash",
-                            "Version": 2
-                        };
     string throughput = "400";
-    var result = AzureCosmosClient->createCollection("hikall","mycollec",partitionkey);
-    if (result is Collection) {
+    PartitionKey pk = {};
+    pk.paths = ["/AccountNumber"];
+    pk.kind = "Hash";
+    pk.Version = 2;
+    ContainerProperties con = {};
+    con.partitionKey = pk;
+    con.databaseId = "hikall";
+    con.containerId = "new1";
+    var result = AzureCosmosClient->createContainer(con);
+    if (result is Container) {
         io:println(result);
     } else {
         test:assertFail(msg = result.message());
@@ -156,11 +162,6 @@ function createCollectionWithManualThroughputAndIndexingPolicy(){
     io:println("--------------Create Collection with manual throughput-----------------------\n\n");
 
     Client AzureCosmosClient = new(config);
-    json partitionkey = {  
-                            "paths": ["/AccountNumber"], 
-                            "kind": "Hash",
-                            "Version": 2
-                        };
     json indexingPolicy =   {  
                                 "automatic": true,  
                                 "indexingMode": "Consistent",  
@@ -177,10 +178,20 @@ function createCollectionWithManualThroughputAndIndexingPolicy(){
                                     }  
                                 ]  
                             };
-    int throughput = 400;
-    string collectionName = "mycoll";
-    var result = AzureCosmosClient->createCollection("heloo",collectionName,partitionkey,indexingPolicy,throughput);
-    if (result is Collection) {
+    
+    
+    ThroughputProperties tp = {};
+    tp.throughput = 600; 
+    PartitionKey pk = {};
+    pk.paths = ["/AccountNumber"];
+    pk.kind = "Hash";
+    pk.Version = 2;
+    ContainerProperties con = {};
+    con.partitionKey = pk;
+    con.databaseId = "hikall";
+    con.containerId = "mycollect";
+    var result = AzureCosmosClient->createContainer(con, tp);
+    if (result is Container) {
         io:println(result);
     } else {
         test:assertFail(msg = result.message());
@@ -191,14 +202,14 @@ function createCollectionWithManualThroughputAndIndexingPolicy(){
 //create collection with autoscale testcase comes here
 
 @test:Config{
-   //enable: false
+   enable: false
 }
 function getAllCollections(){
     io:println("--------------Get All collections-----------------------\n\n");
 
     Client AzureCosmosClient = new(config);
-    var result = AzureCosmosClient->getAllCollections("hikall");
-    if (result is CollectionList) {
+    var result = AzureCosmosClient->getAllContainers("hikall");
+    if (result is ContainerList) {
         io:println(result);
     } else {
         test:assertFail(msg = result.message());
@@ -207,14 +218,17 @@ function getAllCollections(){
 }
 
 @test:Config{
-   //enable: false
+    //enable: false
 }
 function getOneCollection(){
-    io:println("--------------Get One collections-----------------------\n\n");
+    io:println("--------------Get One collection-----------------------\n\n");
 
     Client AzureCosmosClient = new(config);
-    var result = AzureCosmosClient->getOneCollection("hikall","mycollection1");
-    if (result is Collection) {
+    ContainerProperties con = {};
+    con.databaseId = "hikall";
+    con.containerId = "mycollection1";
+    var result = AzureCosmosClient->getContainer(con);
+    if (result is Container) {
         io:println(result);
     } else {
         test:assertFail(msg = result.message());
@@ -223,19 +237,22 @@ function getOneCollection(){
 }
 
 @test:Config{
-    enable: false
+   enable: false
 }
 function deleteCollection(){
     io:println("--------------Delete one collection------------------------\n\n");
 
     Client AzureCosmosClient = new(config); 
-    var result = AzureCosmosClient->deleteCollection("tempdb","mycollection1");
+    ContainerProperties con = {};
+    con.databaseId = "hikall";
+    con.containerId = "mycollect";
+    var result = AzureCosmosClient->deleteContainer(con);
     io:println(result);
     io:println("\n\n");
 }
 
 @test:Config{
-   //enable: false
+   enable: false
 }
 function GetPartitionKeyRanges(){
     io:println("--------------Get partition key ranges------------------------\n\n");
@@ -251,7 +268,7 @@ function GetPartitionKeyRanges(){
 }
 
 @test:Config{
-  //enable: false
+  enable: false
 }
 function createDocument(){
     io:println("--------------Create One document------------------------\n\n");
@@ -296,8 +313,15 @@ function createDocument(){
             id: docid    
     };   
     json|error finalj =  body.mergeJson(custombody);
+    DocumentProperties dc = {};
+    dc.databaseId="hikall";
+    dc.containerId="mycollection1";
+    dc.partitionKey=<json>custombody.AccountNumber;
+    RequestOptions reqOptions = {
+        isUpsertRequest:true
+    };
     if finalj is json{
-        var result = AzureCosmosClient->createDocument("hikall","mycollection1",finalj,<json>custombody.AccountNumber,true);
+        var result = AzureCosmosClient->createDocument(dc, finalj, reqOptions);
         if result is Document {
             io:println(result);
         } else {
@@ -309,13 +333,38 @@ function createDocument(){
 
 //with indexing or upsert headers test case comes here
 @test:Config{
-   //enable: false
+   enable: false
 }
 function GetDocumentList(){
     io:println("--------------Get all documents in a collection------------------------\n\n");
 
     Client AzureCosmosClient = new(config);
-    var result = AzureCosmosClient->listAllDocuments("hikall","mycollection1",());
+    DocumentProperties dc = {};
+    dc.databaseId = "hikall";
+    dc.containerId = "mycollection1";
+    var result = AzureCosmosClient->getDocumentList(dc);
+    if (result is DocumentList) {
+        io:println(result);
+    } else {
+        test:assertFail(msg = result.message());
+    }
+    io:println("\n\n");
+}
+
+@test:Config{
+   enable: false
+}
+function getNextPageOfDocumentList(){
+    io:println("--------------Get next page documents in a collection------------------------\n\n");
+
+    Client AzureCosmosClient = new(config);
+    DocumentProperties dc = {};
+    dc.databaseId = "hikall";
+    dc.containerId = "mycollection1";
+    RequestOptions options = {};
+    options.maxItemCount = 4;
+    options.continuationToken = "{token:'nXh6ANTE4QoIAAAAAAAAAA==',range:{min:'',max:'FF'}}";//convert this to string
+    var result = AzureCosmosClient->getDocumentList(dc,options);
     if (result is DocumentList) {
         io:println(result);
     } else {
@@ -330,10 +379,13 @@ function GetDocumentList(){
 function GetOneDocument(){
     io:println("--------------Get one document------------------------\n\n");
 
-    string documentid = "308f807c-f7b8-40a1-8457-767bb498a62e";
-    int partitionkey = 1234;
     Client AzureCosmosClient = new(config);
-    var result = AzureCosmosClient->listOneDocument("hikall","mycollection1",documentid,partitionkey);
+    DocumentProperties dc = {};
+    dc.databaseId = "hikall";
+    dc.containerId = "mycollection1";
+    dc.partitionKey = 1234;
+    dc.documentId = "10b40edd-d94e-4677-aa0b-eeeab1f7c470";
+    var result = AzureCosmosClient->getDocument(dc);
     if (result is Document) {
         io:println(result);
     } else {
@@ -346,18 +398,19 @@ function GetOneDocument(){
     enable: false
 }
 function replaceDocument(){
-
     io:println("--------------Replace document------------------------\n\n");
 
     Client AzureCosmosClient = new(config);
-    string documentid = "308f807c-f7b8-40a1-8457-767bb498a62e";
-    int partitionkey = 1234;
+    DocumentProperties dc = {};
+    dc.databaseId = "hikall";
+    dc.containerId = "mycollection1";
+    dc.partitionKey = 1234;
+    dc.documentId = "8f014bef-691e-4732-99f0-9b7af94cb9c2";
     json id = {
-        "id": documentid,
-        "AccountNumber": partitionkey
+        "id": dc.documentId
     };
     json custom = {
-        "LastName": "seemee",  
+        "LastName": "hi",  
         "Parents": [  
             {  
             "FamilyName": null,  
@@ -381,6 +434,7 @@ function replaceDocument(){
             ]  
             }  
         ],  
+        "AccountNumber": <json>dc.partitionKey,
         "Address": {  
             "State": "WA",  
             "County": "King",  
@@ -389,7 +443,7 @@ function replaceDocument(){
         "IsRegistered": true
     };
     json|error finalj = custom.mergeJson(id);
-    var result = AzureCosmosClient->replaceDocument("hikall","mycollection1",<json>finalj,documentid,partitionkey);  
+    var result = AzureCosmosClient->replaceDocument(dc,<json>custom);  
     if result is Document {
         io:println(result);
     } else {
@@ -402,14 +456,16 @@ function replaceDocument(){
     enable: false
 }
 function deleteDocument(){
-
     io:println("--------------Delete one document------------------------\n\n");
     
     Client AzureCosmosClient = new(config);
-    string documentid = "308f807c-f7b8-40a1-8457-767bb498a62e";
-    int partitionkey = 1234;
-    var result = AzureCosmosClient->deleteDocument("hikall","mycollection1",documentid,partitionkey);  
-    if result is string {
+    DocumentProperties dc = {};
+    dc.databaseId = "hikall";
+    dc.containerId = "mycollection1";
+    dc.partitionKey = 1234;
+    dc.documentId = "69a2c93a-42e6-487e-b6f3-1a355f1afd19";
+    var result = AzureCosmosClient->deleteDocument(dc);  
+    if result is DeleteResponse {
         io:println(result);
     } else {
         test:assertFail(msg = result.message());
@@ -424,21 +480,15 @@ function queryDocument(){
     io:println("--------------Query one document-----------------------\n\n");
 
     Client AzureCosmosClient = new(config);
-    int partitionkey = 1234;
-    json query = {  
-        "query": "SELECT * FROM Families f WHERE f.id = @id AND f.address.city = @city",  
-        "parameters": [  
-            {  
-            "name": "@id",  
-            "value": "AndersenFamily"  
-            },  
-            {  
-            "name": "@city",  
-            "value": "NY"  
-            }  
-        ]  
-    };   
-    var result = AzureCosmosClient->queryDocument("hikall","mycollection1",query,partitionkey);   
+    DocumentProperties dc = {};
+    dc.databaseId = "hikall";
+    dc.containerId = "mycollection1";
+    dc.partitionKey = 1234;
+    Query sqlQuery = {};
+    QueryParameter[] params = [{name: "@familyId", value: "AndersenFamily"}];
+    sqlQuery.query = "SELECT * FROM mycollection1 f WHERE f.id = @familyId";
+    sqlQuery.parameters = params;
+    var result = AzureCosmosClient->queryDocument(dc,sqlQuery);   
     if result is json {
         io:println(result);
     } else {
@@ -448,16 +498,24 @@ function queryDocument(){
 }
 
 @test:Config{
-   //enable: false
+   enable: false
 }
 function createSproc(){
     io:println("-----------------Create stored procedure-----------------------\n\n");
 
     Client AzureCosmosClient = new(config);
     var uuid = createRandomUUID();
-    string sprocid = string `sproc-${uuid.toString()}`;
+    string sprocId = string `sproc-${uuid.toString()}`;
+    StoredProcedureProperties properties = {};
+    properties.databaseId = "hikall";
+    properties.containerId = "mycollection1";
+    properties.storedProcedureId = sprocId;
     string sproc = "function () {\r\n    var context = getContext();\r\n    var response = context.getResponse();\r\n\r\n    response.setBody(\"Hello, World\");\r\n}"; 
-    var result = AzureCosmosClient->createStoredProcedure("hikall","mycollection1",sproc,sprocid);  
+    StoredProcedure sp = {
+        id:sprocId,
+        body:sproc
+    };
+    var result = AzureCosmosClient->createStoredProcedure(properties,sp);  
     if result is StoredProcedure {
         io:println(result);
     } else {
@@ -473,26 +531,18 @@ function replaceSproc(){
     io:println("-----------------Replace stored procedure-----------------------\n\n");
 
     Client AzureCosmosClient = new(config);
-    string sprocid = "sproc-561d47d6-36d2-4fd5-b20e-143550737f55";
-    string sproc = "function (personToGreet) {\r\n    var context = getContext();\r\n    var response = context.getResponse();\r\n\r\n    response.setBody(\"Hello, \" + personToGreet);\r\n}"; 
-    var result = AzureCosmosClient->replaceStoredProcedure("hikall","mycollection1",sproc,sprocid);  
+    string sprocId = "sproc-50c4f0df-b25d-48ef-b936-d31a55798193";
+    StoredProcedureProperties properties = {};
+    properties.databaseId = "hikall";
+    properties.containerId = "mycollection1";
+    properties.storedProcedureId = sprocId;
+    string sproc = "function (personToGreet) {\r\n    var context = getContext();\r\n    var response = context.getResponse();\r\n\r\n    response.setBody(\"Hello, \" + personToGreet);\r\n}";
+    StoredProcedure sp = {
+        id:sprocId,
+        body:sproc
+    }; 
+    var result = AzureCosmosClient->replaceStoredProcedure(properties,sp);  
     if result is StoredProcedure {
-        io:println(result);
-    } else {
-        test:assertFail(msg = result.message());
-    }   
-    io:println("\n\n"); 
-}
-
-@test:Config{
-   //enable: false
-}
-function getAllSprocs(){
-    io:println("-----------------Get All Stored Procedures-----------------------\n\n");
-
-    Client AzureCosmosClient = new(config);
-    var result = AzureCosmosClient->listStoredProcedures("hikall","mycollection1");   
-    if result is StoredProcedureList {
         io:println(result);
     } else {
         test:assertFail(msg = result.message());
@@ -503,13 +553,36 @@ function getAllSprocs(){
 @test:Config{
    enable: false
 }
+function getAllSprocs(){
+    io:println("-----------------Get All Stored Procedures-----------------------\n\n");
+
+    Client AzureCosmosClient = new(config);
+    StoredProcedureProperties properties = {};
+    properties.databaseId = "hikall";
+    properties.containerId = "mycollection1";
+    var result = AzureCosmosClient->listStoredProcedures(properties);   
+    if result is StoredProcedureList {
+        io:println(result);
+    } else {
+        test:assertFail(msg = result.message());
+    }   
+    io:println("\n\n"); 
+}
+
+@test:Config{
+    enable: false
+}
 function deleteOneSproc(){
     io:println("-----------------Delete Stored Procedure-----------------------\n\n");
 
     Client AzureCosmosClient = new(config);
-    string sprocid = "sproc-561d47d6-36d2-4fd5-b20e-143550737f55";
-    var result = AzureCosmosClient->deleteStoredProcedure("hikall","mycollection1",sprocid);   
-    if result is json {
+    string sprocId = "sproc-50c4f0df-b25d-48ef-b936-d31a55798193";
+    StoredProcedureProperties properties = {};
+    properties.databaseId = "hikall";
+    properties.containerId = "mycollection1";
+    properties.storedProcedureId = sprocId; 
+    var result = AzureCosmosClient->deleteStoredProcedure(properties);   
+    if result is DeleteResponse {
         io:println(result);
     } else {
         test:assertFail(msg = result.message());
@@ -518,15 +591,19 @@ function deleteOneSproc(){
 }
 
 @test:Config{
-   //enable: false
+    enable: false
 }
 function executeOneSproc(){
     io:println("-----------------Execute Stored Procedure-----------------------\n\n");
 
     Client AzureCosmosClient = new(config);
-    string sprocid = "sproc-50c4f0df-b25d-48ef-b936-d31a55798193";
+    string sprocId = "sproc-6ddd056a-0846-430d-9dff-a35425b346ad";
+    StoredProcedureProperties properties = {};
+    properties.databaseId = "hikall";
+    properties.containerId = "mycollection1";
+    properties.storedProcedureId = sprocId; 
     string[] arrayofparameters = ["Sachi"];
-    var result = AzureCosmosClient->executeStoredProcedure("hikall","mycollection1",sprocid,arrayofparameters);   
+    var result = AzureCosmosClient->executeStoredProcedure(properties,arrayofparameters);   
     if result is json {
         io:println(result);
     } else {

@@ -1,1 +1,1 @@
-{"sachini/cosmos-db:0.1.0:CollectionList":{"_rid":"string","DocumentCollections":"sachini/cosmos-db:0.1.0:Collection[]","_count":"int"}}
+{"sachini/cosmos-db:0.1.0:CollectionList":{"_rid":"string","DocumentCollections":"sachini/cosmos-db:0.1.0:Container[]","_count":"int","reponseHeaders":"sachini/cosmos-db:0.1.0:Headers"}}

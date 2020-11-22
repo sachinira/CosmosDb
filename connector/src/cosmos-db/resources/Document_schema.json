@@ -1,1 +1,1 @@
-{"sachini/cosmos-db:0.1.0:Document":{"id":"string","document":"any","_rid":"string","_ts":"int","_self":"string","_etag":"string","_attachments":"string"}}
+{"sachini/cosmos-db:0.1.0:Document":{"id":"string","document":"any","reponseHeaders":"sachini/cosmos-db:0.1.0:Headers"}}

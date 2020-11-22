@@ -7,13 +7,25 @@ import ballerina/http;
 import ballerina/stringutils;
 import ballerina/lang.'string as str;
 
+function parseResponseToTuple(http:Response|http:ClientError httpResponse) returns  @tainted [json,Headers]|error{
+    var responseBody = check parseResponseToJson(httpResponse);
+    var responseHeaders = check parseHeadersToObject(httpResponse);
+    return [responseBody,responseHeaders];
+}
+
+function parseDeleteResponseToTuple(http:Response|http:ClientError httpResponse) returns  @tainted 
+[string,Headers]|error{
+    var responseBody = check getDeleteResponse(httpResponse);
+    var responseHeaders = check parseHeadersToObject(httpResponse);
+    return [responseBody,responseHeaders];
+}
+
 # To handle sucess or error reponses to requests
 # + httpResponse - http:Response or http:ClientError returned from an http:Request
 # + return - If successful, returns json. Else returns error.  
 function parseResponseToJson(http:Response|http:ClientError httpResponse) returns @tainted json|error { 
     if (httpResponse is http:Response) {
         var jsonResponse = httpResponse.getJsonPayload();
-
         if (jsonResponse is json) {
             if (httpResponse.statusCode != http:STATUS_OK && httpResponse.statusCode != http:STATUS_CREATED) {
                 string code = "";    
@@ -23,6 +35,7 @@ function parseResponseToJson(http:Response|http:ClientError httpResponse) return
                     code = jsonResponse.'error.toString();
                 }
                 string message = jsonResponse.message.toString();
+                //errors handle 400 401 403 408 409 404
                 string errorMessage = httpResponse.statusCode.toString() + " " + httpResponse.reasonPhrase; 
                 if (code != "") {
                     errorMessage += " - " + code;
@@ -45,12 +58,48 @@ function parseResponseToJson(http:Response|http:ClientError httpResponse) return
 function getDeleteResponse(http:Response|http:ClientError httpResponse) returns @tainted string|error{
     if (httpResponse is http:Response) {
         if(httpResponse.statusCode == http:STATUS_NO_CONTENT){
-            return string `Deleted Sucessfully ${httpResponse.statusCode}`;
-        } else {// if 404 error 401 error
-            return prepareError(string `Error occurred while invoking the REST API"${httpResponse.statusCode}`);
+            return string `${httpResponse.statusCode} Deleted Sucessfully`;
+        } else if (httpResponse.statusCode == http:STATUS_NOT_FOUND) {
+            return string `${httpResponse.statusCode} The resource/item with specified id is not found.`;
+        } else{
+            return prepareError(string `${httpResponse.statusCode} Error occurred while invoking the REST API.`);
         }
     } else {
         return prepareError("Error occurred while invoking the REST API");
+    }
+}
+
+function parseHeadersToObject(http:Response|http:ClientError httpResponse) returns @tainted Headers|error{
+    Headers responseHeaders = {};
+    if (httpResponse is http:Response) {
+        responseHeaders.continuationHeader = getHeaderIfExist(httpResponse,"x-ms-continuation");
+        responseHeaders.sessionTokenHeader = getHeaderIfExist(httpResponse,"x-ms-session-token");
+        responseHeaders.requestChargeHeader = getHeaderIfExist(httpResponse,"x-ms-request-charge");
+        responseHeaders.resourceUsageHeader = getHeaderIfExist(httpResponse,"x-ms-resource-usage");
+        responseHeaders.itemCountHeader = getHeaderIfExist(httpResponse,"x-ms-item-count");
+        responseHeaders.etagHeader = getHeaderIfExist(httpResponse,"etag");
+        responseHeaders.dateHeader = getHeaderIfExist(httpResponse,"Date");
+        return responseHeaders;
+
+    } else {
+        return prepareError("Error occurred while invoking the REST API");
+    }
+}
+
+function getHeaderIfExist(http:Response httpResponse, string headername) returns @tainted string?{
+    if httpResponse.hasHeader(headername) {
+        return httpResponse.getHeader(headername);
+    }else{
+        return ();
+    }
+}
+
+function mapRequest(http:Request? req) returns http:Request { 
+    http:Request newRequest = new;
+    if req is http:Request{
+        return req;
+    } else {
+        return newRequest;
     }
 }
 
@@ -65,7 +114,6 @@ function prepareError(string message, error? err = ()) returns error {
     }
     return azureError;
 }
-
 
 # Returns the prepared URL.
 # + paths - An array of paths prefixes
@@ -111,53 +159,25 @@ function mergeTwoArrays(any[] array1, any[] array2) returns any[]{
     return array1;
 }
 
-public function setIndexingHeader(http:Request req, string indexingDirectory) returns http:Request|error{
-    req.setHeader("x-ms-indexing-directive",indexingDirectory);
-    return req;
-}
-
-public function setUpsertHeader(http:Request req, boolean? upsert= ()) returns http:Request|error{
-    req.setHeader("x-ms-documentdb-is-upsert",upsert.toString());
-    return req;
-}
-
-public function setThroughputOrAutopilotHeader(http:Request req,int? throughput = (),json? option =()) returns 
+public function setThroughputOrAutopilotHeader(http:Request req, ThroughputProperties? throughputProperties) returns 
 http:Request|error{
-    if throughput is int &&  option is () {
-        //validate throughput The minimum is 400 up to 1,000,000 (or higher by requesting a limit increase).
-        req.setHeader("x-ms-offer-throughput",option.toString());
-    } else if throughput is () &&  option != () {
-        req.setHeader("x-ms-cosmos-offer-autopilot-settings",option.toString());
-    } else if throughput is int &&  option != () {
-        return 
-        prepareError("Cannot set both x-ms-offer-throughput and x-ms-cosmos-offer-autopilot-settings headers at once");
+
+    if throughputProperties is ThroughputProperties{
+        if throughputProperties.throughput is int &&  throughputProperties.maxThroughput is () {
+            //validate throughput The minimum is 400 up to 1,000,000 (or higher by requesting a limit increase).
+            req.setHeader("x-ms-offer-throughput",throughputProperties.maxThroughput.toString());
+        } else if throughputProperties.throughput is () &&  throughputProperties.maxThroughput != () {
+            req.setHeader("x-ms-cosmos-offer-autopilot-settings",throughputProperties.maxThroughput.toString());
+        } else if throughputProperties.throughput is int &&  throughputProperties.maxThroughput != () {
+            return 
+            prepareError("Cannot set both x-ms-offer-throughput and x-ms-cosmos-offer-autopilot-settings headers at once");
+        }
     }
     return req;
 }
 
 public function setPartitionKeyHeader(http:Request req, any pk) returns http:Request|error{
     req.setHeader("x-ms-documentdb-partitionkey",string `[${pk.toString()}]`);
-    return req;
-}
-
-public function setHeadersforItemCount(http:Request req, int? maxitemcount = ()) returns http:Request|error{
-    req.setHeader("x-ms-max-item-count",maxitemcount.toString()); 
-    return req;
-}
-
-public function setHeadersForConsistancy(http:Request req, string? consistancylevel = (), string? sessiontoken = ()) 
-returns http:Request|error{
-    //The override must be the same or weaker than the account’s configured consistency level.
-    req.setHeader("x-ms-consistency-level",consistancylevel.toString());
-    //Clients must echo the latest read value of this header during read requests for session consistency.
-    req.setHeader("x-ms-session-token",sessiontoken.toString());
-    return req;
-}
-
-public function setHeadersForChangeFeed(http:Request req, string? aim = (), string? nonmatch = ()) returns 
-http:Request|error{
-    req.setHeader("A-IM",aim.toString());
-    req.setHeader("If-None-Match",nonmatch.toString());
     return req;
 }
 
@@ -168,18 +188,44 @@ public function enableCrossPartitionKeyHeader(http:Request req, boolean isignore
 
 public function setHeadersForQuery(http:Request req) returns http:Request|error{
     req.setHeader("Content-Type","application/query+json");
-    req.setHeader("x-ms-documentdb-isquery","True");
+    req.setHeader("x-ms-documentdb-isquery","true");
+    //req.setHeader("x-ms-documentdb-query-enablecrosspartition","true");
     return req;
 }
 
-//PartitionKeyRanges this can be used for incremental readfeed with the x-ms-documentdb-partitionkeyrangeid header.
-//x-ms-documentdb-partitionkeyrangeid
-
-//x-ms-documentdb-query-enablecrosspartition
-
-
-//If-Match
-//---------------
+public function setDocumentRequestOptions(http:Request req, RequestOptions requestOptions) returns http:Request|error{
+    if requestOptions.indexingDirective is string {
+        req.setHeader("x-ms-indexing-directive",requestOptions.indexingDirective.toString());
+    }
+    if requestOptions.isUpsertRequest == true {
+        req.setHeader("x-ms-documentdb-is-upsert",requestOptions.isUpsertRequest.toString());
+    }
+    if requestOptions.maxItemCount is int{
+        req.setHeader("x-ms-max-item-count",requestOptions.maxItemCount.toString()); 
+    }
+    if requestOptions.continuationToken is string{
+        req.setHeader("x-ms-continuation",requestOptions.continuationToken.toString());
+    }
+    if requestOptions.consistancyLevel is string {
+        req.setHeader("x-ms-consistency-level",requestOptions.consistancyLevel.toString());
+    }
+    if requestOptions.sessionToken is string {
+        req.setHeader("x-ms-session-token",requestOptions.sessionToken.toString());
+    }
+    if requestOptions.changeFeedOption is string{
+        req.setHeader("A-IM",requestOptions.changeFeedOption.toString()); 
+    }
+    if requestOptions.ifNoneMatch is string{
+        req.setHeader("If-None-Match",requestOptions.ifNoneMatch.toString());
+    }
+    if requestOptions.PartitionKeyRangeId is string{
+        req.setHeader("x-ms-documentdb-partitionkeyrangeid",requestOptions.PartitionKeyRangeId.toString());
+    }
+    if requestOptions.PartitionKeyRangeId is string{
+        req.setHeader("If-Match",requestOptions.PartitionKeyRangeId.toString());
+    }
+    return req;
+}
 
 # To attach required basic headers to call REST endpoint
 # + req - http:Request to add headers to

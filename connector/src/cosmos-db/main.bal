@@ -30,340 +30,289 @@ public  client class Client {
     }
 
     # To create a database inside a resource
-    # + dbName -  id/name for the database
-    # + throughput - Optional throughput parameter which will set 'x-ms-offer-throughput' header 
-    # + autoscale - Optional throughput parameter which will set 'x-ms-cosmos-offer-autopilot-settings' header
+    # + databaseId -  id/name for the database
+    # + throughputProperties - Optional throughput parameter which will set 'x-ms-offer-throughput' header 
     # + return - If successful, returns Database. Else returns error.  
-    public remote function createDatabase(string dbName, int? throughput = (), json? autoscale = ()) returns 
+    public remote function createDatabase(string databaseId, ThroughputProperties? throughputProperties = ()) returns 
     @tainted Database|error{
         http:Request req = new;
         string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES]);
         HeaderParamaters header = mapParametersToHeaderType(POST,requestPath);
         json body = {
-            id: dbName
+            id: databaseId
         };
 
         req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
-        req = check setThroughputOrAutopilotHeader(req,throughput,autoscale);
+        req = check setThroughputOrAutopilotHeader(req,throughputProperties);
         req.setJsonPayload(body);
         var response = self.azureCosmosClient->post(requestPath,req);
-        json jsonreponse = check parseResponseToJson(response);
+        [json,Headers] jsonreponse = check parseResponseToTuple(response);
         return mapJsonToDatabaseType(jsonreponse);   
     }
 
+    # To retrive a given database inside a resource
+    # + databaseId -  id/name of the database to retrieve
+    # + return - If successful, returns Database. Else returns error.  
+    public remote function getDatabase(string databaseId) returns @tainted Database|error{
+        http:Request req = new;
+        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,databaseId]);
+        HeaderParamaters header = mapParametersToHeaderType(GET,requestPath);
+
+        req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
+        var response = self.azureCosmosClient->get(requestPath,req);
+        [json,Headers] jsonreponse = check parseResponseToTuple(response);
+        return mapJsonToDatabaseType(jsonreponse);  
+    }
+
     # To list all databases inside a resource
-    # + return - If successful, returns DBList. Else returns error.  
-    public remote function listDatabases() returns @tainted DBList|error{
+    # + return - If successful, returns DatabaseList. Else returns error.  
+    public remote function getAllDatabases() returns @tainted DatabaseList|error{
         http:Request req = new;
         string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES]);
         HeaderParamaters header = mapParametersToHeaderType(GET,requestPath);
 
         req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
         var response = self.azureCosmosClient->get(requestPath,req);
-        json jsonresponse = check parseResponseToJson(response);
+        [json,Headers] jsonresponse = check parseResponseToTuple(response);
         return mapJsonToDbList(jsonresponse); 
     }
 
     # To retrive a given database inside a resource
-    # + dbName -  id/name of the database to retrieve
-    # + return - If successful, returns Database. Else returns error.  
-    public remote function listOneDatabase(string dbName) returns @tainted Database|error{
+    # + databaseId -  id/name of the database to retrieve
+    # + return - If successful, returns DeleteResponse specifying delete is sucessfull. Else returns error.  
+    public remote function deleteDatabase(string databaseId) returns @tainted DeleteResponse|error{
         http:Request req = new;
-        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,dbName]);
-        HeaderParamaters header = mapParametersToHeaderType(GET,requestPath);
-
-        req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
-        var response = self.azureCosmosClient->get(requestPath,req);
-        json jsonresponse = check parseResponseToJson(response);
-        return mapJsonToDatabaseType(jsonresponse);  
-    }
-
-    # To retrive a given database inside a resource
-    # + dbName -  id/name of the database to retrieve
-    # + return - If successful, returns string specifying delete is sucessfull. Else returns error.  
-    public remote function deleteDatabase(string dbName) returns @tainted string|error{
-        http:Request req = new;
-        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,dbName]);
+        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,databaseId]);
         HeaderParamaters header = mapParametersToHeaderType(DELETE,requestPath);
 
         req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
         var response = self.azureCosmosClient->delete(requestPath,req);
-        return check getDeleteResponse(response);
+        [string,Headers] jsonresponse = check parseDeleteResponseToTuple(response);
+        return  mapTupleToDeleteresponse(jsonresponse);
     }
 
     # To create a collection inside a database
-    # + dbName -  id/name for the database
-    # + colName - id/name for collection
-    # + partitionKey - json object for specifying properties of partition key. If the REST API version is 
-    # 2018-12-31 or higher, 
-    #                   the collection must include a partitionKey definition.
-    # + indexingPolicy - Optional json object to configure indexing policy. By default, the indexing is automatic 
-    # for all document paths within the collection.
-    # + throughput - Optional throughput parameter which will set 'x-ms-offer-throughput' header 
-    # + autoscale - Optional throughput parameter which will set 'x-ms-cosmos-offer-autopilot-settings' header
-    # + return - If successful, returns Collection. Else returns error.  
-    public remote function createCollection(string dbName, string colName, json partitionKey, json? indexingPolicy = (), 
-    int? throughput = (),json? autoscale = ()) returns @tainted Collection|error{
+    # + properties - object of type ContainerProperties
+    # + throughputProperties - Optional throughput parameter which will set 'x-ms-offer-throughput' header 
+    # + return - If successful, returns Container. Else returns error.  
+    public remote function createContainer(@tainted ContainerProperties properties, 
+    ThroughputProperties? throughputProperties = ()) returns @tainted Container|error{
         http:Request req = new;
-        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,dbName,RESOURCE_PATH_COLLECTIONS]);
+        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,<string>properties.databaseId,
+        RESOURCE_PATH_COLLECTIONS]);
         HeaderParamaters header = mapParametersToHeaderType(POST,requestPath);
+        
         json body = {
-            "id": colName,
-            "partitionKey": partitionKey
+            "id": properties.containerId,
+            "partitionKey": <json>properties.partitionKey.cloneWithType(json)
         };
-        json finalc = check body.mergeJson(indexingPolicy);
-
+        json finalc = check body.mergeJson(<json>properties.indexingPolicy.cloneWithType(json));
         req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
-        req = check setThroughputOrAutopilotHeader(req,throughput,autoscale);
-        req.setJsonPayload(finalc);
+        req = check setThroughputOrAutopilotHeader(req,throughputProperties);
+        req.setJsonPayload(<@untainted>finalc);//??
         var response = self.azureCosmosClient->post(requestPath,req);
-        json jsonresponse = check parseResponseToJson(response);
-        return mapJsonToCollectionType(jsonresponse);
+        [json,Headers] jsonreponse = check parseResponseToTuple(response);
+        return mapJsonToCollectionType(jsonreponse);
+    }
+
+    # To create a collection inside a database
+    # + properties - object of type ContainerProperties
+    # + throughputProperties - Optional throughput parameter which will set 'x-ms-offer-throughput' header 
+    # + return - If successful, returns Container. Else returns error. 
+    public remote function replaceProvisionedThroughput(@tainted ContainerProperties properties, ThroughputProperties 
+    throughputProperties) returns @tainted Container|error {
+        return self->createContainer(properties,throughputProperties);
     }
 
     # To retrive  all collections inside a database
-    # + dbName -  id/name of the database collections are in.
-    # + return - If successful, returns CollectionList. Else returns error.  
-    public remote function getAllCollections(string dbName) returns @tainted CollectionList|error{
+    # + databaseId -  id/name of the database collections are in.
+    # + return - If successful, returns ContainerList. Else returns error.  
+    public remote function getAllContainers(string databaseId) returns @tainted ContainerList|error{
         http:Request req = new;
-        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,dbName,RESOURCE_PATH_COLLECTIONS]);
+        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,databaseId,RESOURCE_PATH_COLLECTIONS]);
         HeaderParamaters header = mapParametersToHeaderType(GET,requestPath);
 
         req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
         var response = self.azureCosmosClient->get(requestPath,req);
-        json jsonresponse = check parseResponseToJson(response);
-        return mapJsonToCollectionListType(jsonresponse);
+        [json,Headers] jsonreponse = check parseResponseToTuple(response);
+        return mapJsonToCollectionListType(jsonreponse);
     }
 
     # To retrive  one collection inside a database
-    # + dbName -  id/name of the database which collection is in.
-    # + colName - id/name of collection to retrive.
-    # + return - If successful, returns Collection. Else returns error.  
-    public remote function getOneCollection(string dbName,string colName) returns @tainted Collection|error{
+    # + properties - object of type ContainerProperties
+    # + return - If successful, returns Container. Else returns error.  
+    public remote function getContainer(@tainted ContainerProperties properties) returns @tainted Container|error{
         http:Request req = new;
-        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,dbName,RESOURCE_PATH_COLLECTIONS,colName]);
+        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_COLLECTIONS,
+        properties.containerId]);
         HeaderParamaters header = mapParametersToHeaderType(GET,requestPath);
 
         req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
         var response = self.azureCosmosClient->get(requestPath,req);
-        json jsonresponse = check parseResponseToJson(response);
-        return mapJsonToCollectionType(jsonresponse);
+        [json,Headers] jsonreponse = check parseResponseToTuple(response);
+        return mapJsonToCollectionType(jsonreponse);
     }
 
     # To delete one collection inside a database
-    # + dbName -  id/name of the database which collection is in.
-    # + colName - id/name of collection to delete.
-    # + return - If successful, returns string specifying delete is sucessfull. Else returns error.   
-    public remote function deleteCollection(string dbName, string colName) returns @tainted string|error{
+    # + properties - object of type ContainerProperties
+    # + return - If successful, returns DeleteResponse specifying delete is sucessfull. Else returns error.   
+    public remote function deleteContainer(@tainted ContainerProperties properties) returns @tainted DeleteResponse|error{
         http:Request req = new;
-        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,dbName,RESOURCE_PATH_COLLECTIONS,colName]);
+        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_COLLECTIONS,
+        properties.containerId]);
         HeaderParamaters header = mapParametersToHeaderType(DELETE,requestPath);
 
         req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
         var response = self.azureCosmosClient->delete(requestPath,req);
-        return check getDeleteResponse(response);
+        [string,Headers] jsonresponse = check parseDeleteResponseToTuple(response);
+        return  mapTupleToDeleteresponse(jsonresponse);
     }
 
     # To retrieve a list of partition key ranges for the collection
-    # + dbName -  id/name of the database which collection is in.
-    # + colName - id/name of collection to where partition key range is in.
+    # + databaseId -  id/name of the database which collection is in.
+    # + collectionId - id/name of collection to where partition key range is in.
     # + return - If successful, returns PartitionKeyList. Else returns error.  
-    public remote function getPartitionKeyRanges(string dbName, string colName) returns @tainted PartitionKeyList|error{
+    public remote function getPartitionKeyRanges(string databaseId, string collectionId) returns @tainted 
+    PartitionKeyList|error{
         http:Request req = new;
-        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,dbName,RESOURCE_PATH_COLLECTIONS,colName,
+        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,databaseId,RESOURCE_PATH_COLLECTIONS,collectionId,
         RESOURCE_PATH_PK_RANGES]);
         HeaderParamaters header = mapParametersToHeaderType(GET,requestPath);
 
         req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
         var response = self.azureCosmosClient->get(requestPath,req);
-        json jsonresponse = check parseResponseToJson(response);
-        return mapJsonToPartitionKeyType(jsonresponse);
+        [json,Headers] jsonreponse = check parseResponseToTuple(response);
+        return mapJsonToPartitionKeyType(jsonreponse);
     }
 
     //Replace Collection supports changing the indexing policy of a collection after creation. must be implemented here
 
-
     # To create a Document inside a collection
-    # + dbName -  id/name for the database
-    # + colName - id/name for collection
-    # + partitionKey -  value for the partition key field specified for the collection  to set 
-    # x-ms-documentdb-partitionkey header.
+    # + properties - object of type DocumentProperties
     # + document - Any json content that will include as the document.
-    # + isUpsert - Optional boolean value to specify if this request is updating an existing document 
-    #               (If set to true, Cosmos DB creates the document with the ID (and partition key value if applicable) 
-    #               if it doesn’t exist, or update the document if it exists.)
-    # + indexingDir - Optional indexing directive parameter which will set 'x-ms-indexing-directive' header
-    #                   The acceptable value is Include or Exclude. 
-    #                   -Include adds the document to the index.
-    #                   -Exclude omits the document from indexing.
+    # + requestOptions - object of type RequestOptions
     # + return - If successful, returns Document. Else returns error.  
-    public remote function createDocument(string dbName, string colName, json document,any partitionKey, 
-    boolean? isUpsert = (), string? indexingDir = ()) returns @tainted Document|error{
+    public remote function createDocument(@tainted DocumentProperties properties,json document,
+    RequestOptions? requestOptions) returns @tainted Document|error{
         http:Request req = new;
-        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,dbName,RESOURCE_PATH_COLLECTIONS,colName,
+        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_COLLECTIONS,
+        properties.containerId,
         RESOURCE_PATH_DOCUMENTS]);
         HeaderParamaters header = mapParametersToHeaderType(POST,requestPath);
 
         req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
-        req = check setPartitionKeyHeader(req,partitionKey);
-        if indexingDir is string {
-            req = check setIndexingHeader(req,indexingDir);
-        }
-        if isUpsert == true {
-            req = check setUpsertHeader(req,isUpsert);
-        }
+        req = check setPartitionKeyHeader(req,properties.partitionKey);
+        if requestOptions is RequestOptions{
+            req = check setDocumentRequestOptions(req,requestOptions);
+        }        
         req.setJsonPayload(document);
         var response = self.azureCosmosClient->post(requestPath,req);
-        json jsonresponse = check parseResponseToJson(response);
-        return mapJsonToDocument(jsonresponse);
-    }
-
-    
-    #To list all the documents inside a collection
-    # x-ms-consistency-level, x-ms-session-token, A-IM, x-ms-continuation and If-None-Match headers are not handled**
-    # + dbName -  id/name of the database which collection is in.
-    # + colName - id/name of collection which documents are in.
-    # + itemcount - Optional integer number of documents to be listed in document list (Default is 100)
-    # + return - If successful, returns DocumentList. Else returns error. 
-    public remote function listAllDocuments(string dbName, string colName, int? itemcount = ()) returns 
-    @tainted DocumentList|error{ 
-        http:Request req = new;
-        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,dbName,RESOURCE_PATH_COLLECTIONS,colName,
-        RESOURCE_PATH_DOCUMENTS]);
-        HeaderParamaters header = mapParametersToHeaderType(GET,requestPath);
-
-        req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
-        if itemcount is int{
-            req = check setHeadersforItemCount(req,itemcount);
-        }
-        var response = self.azureCosmosClient->get(requestPath,req);
-        json jsonresponse = check parseResponseToJson(response);
-        DocumentList list =  check mapJsonToDocumentList(jsonresponse); 
-        return list;    
-    }
-
-    #A partially implemented function to handle 'x-ms-continuation' header value which is used for pagination
-    # + dbName -  id/name of the database which collection is in.
-    # + colName - id/name of collection to retrive.
-    # + resp -
-    # + req -
-    # + list1 - 
-    # + return - 
-    public remote function createRequestAgain(http:Response resp, http:Request req, string dbName, string colName, 
-    DocumentList list1) returns @tainted DocumentList|error{
-        //if response is http:Response && response.hasHeader("x-ms-continuation") {
-
-            //if there is continuation header
-
-             //createRequestAgain(response,req,dbname,colname,l);
-        //}
-        
-        DocumentList newd = {};
-        string verb = "GET"; 
-        string resourceId = string `dbs/${dbName}/colls/${colName}`;
-        
-        //var reqn = check setHeaders(req,self.apiVersion,self.host,verb,self.resourceTypedoc,resourceId,self.masterKey,
-        //self.keyType,self.tokenVersion);
-        //reqn.setHeader("x-ms-continuation",resp.getHeader("x-ms-continuation"));
-        //var response2 = self.azureCosmosClient->get(string `/dbs/${dbName}/colls/${colName}/docs`,reqn);
-
-        //json jsonresponse2 = check parseResponseToJson(response2);
-        //DocumentList list2 =  check mapJsonToDocumentList(jsonresponse2);
-
-        //Document[] l = <Document[]>mergeTwoArrays(list1.documents,list2.documents);
-        //int count = list2._count + list1._count;
-
-        //newd.documents = l;
-        //newd._count =count;
-
-        return newd;
+        [json,Headers] jsonreponse = check parseResponseToTuple(response);
+        return mapJsonToDocument(jsonreponse);
     }
 
     #To list one document inside a collection
-    # ********x-ms-consistency-level, x-ms-session-token and If-None-Match headers are not handled******
-    # + dbName -  id/name of the database which collection is in.
-    # + colName - id/name of collection which documents are in.
-    # + documentId - id of the document to be retrieved
-    # + partitionKey - the value in the partition key field specified for the collection to 
-    # set x-ms-documentdb-partitionkey header
+    # x-ms-consistency-level, x-ms-session-token and If-None-Match headers are supported
+    # + properties - object of type DocumentProperties
+    # + requestOptions - object of type RequestOptions
     # + return - If successful, returns a Document. Else returns error. 
-    public remote function listOneDocument(string dbName, string colName, string documentId, any partitionKey) returns 
-    @tainted Document|error{
+    public remote function getDocument(@tainted DocumentProperties properties,RequestOptions? requestOptions = ()) 
+    returns @tainted Document|error{
         http:Request req = new;
-        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,dbName,RESOURCE_PATH_COLLECTIONS,colName,
-        RESOURCE_PATH_DOCUMENTS,documentId]);
+        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_COLLECTIONS,
+        properties.containerId,
+        RESOURCE_PATH_DOCUMENTS,properties.documentId.toString()]);
         HeaderParamaters header = mapParametersToHeaderType(GET,requestPath);
 
         req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
-        req = check setPartitionKeyHeader(req,partitionKey);
+        req = check setPartitionKeyHeader(req,properties.partitionKey);
+        if requestOptions is RequestOptions{
+            req = check setDocumentRequestOptions(req,requestOptions);
+        }
         var response = self.azureCosmosClient->get(requestPath,req);
-        json jsonresponse = check parseResponseToJson(response);
-        return mapJsonToDocument(jsonresponse);
+        [json,Headers] jsonreponse = check parseResponseToTuple(response);
+        return mapJsonToDocument(jsonreponse);
+    }
+
+    #To list all the documents inside a collection
+    # + properties - object of type DocumentProperties
+    # + requestOptions - The continuation token returned from previous document request******
+    # + return - If successful, returns DocumentList. Else returns error. 
+    public remote function getDocumentList(@tainted DocumentProperties properties,RequestOptions? requestOptions = ()) 
+    returns @tainted DocumentList|error{ 
+        http:Request req = new;
+        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_COLLECTIONS,
+        properties.containerId,RESOURCE_PATH_DOCUMENTS]);
+        HeaderParamaters header = mapParametersToHeaderType(GET,requestPath);
+
+        req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
+        if requestOptions is RequestOptions{
+            req = check setDocumentRequestOptions(req,requestOptions);
+        }
+        var response = self.azureCosmosClient->get(requestPath,req);
+        [json,Headers] jsonreponse = check parseResponseToTuple(response);
+        DocumentList list =  check mapJsonToDocumentList(jsonreponse); 
+        return list;    
     }
 
     #To replace a document inside a collection
-    # *******x-ms-indexing-directive and If-Match headers are not handled******
-    # + dbName -  id/name of the database which collection is in.
-    # + colName - id/name of collection which document is in.
-    # + document - json object for replacing the existing document
-    # + documentId - id of the document to be replaced
-    # + partitionKey - the value in the partition key field specified for the collection to 
+    # + properties - object of type DocumentProperties
+    # + newDocument - json object for replacing the existing document
+    # + requestOptions - object of type RequestOptions
     # set x-ms-documentdb-partitionkey header
     # + return - If successful, returns a Document. Else returns error. 
-    public remote function replaceDocument(string dbName, string colName, json document, string documentId, 
-    any partitionKey) returns @tainted Document|error{         
+    public remote function replaceDocument(@tainted DocumentProperties properties, json newDocument,
+    RequestOptions? requestOptions = ()) returns @tainted Document|error{         
         http:Request req = new;
-        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,dbName,RESOURCE_PATH_COLLECTIONS,colName,
-        RESOURCE_PATH_DOCUMENTS,documentId]);
+        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_COLLECTIONS,
+        properties.containerId,RESOURCE_PATH_DOCUMENTS,<string>properties.documentId]);//error
         HeaderParamaters header = mapParametersToHeaderType(PUT,requestPath);
 
         req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
-        req = check setPartitionKeyHeader(req,partitionKey);
-        req.setJsonPayload(document);
+        req = check setPartitionKeyHeader(req,properties.partitionKey);
+        if requestOptions is RequestOptions{
+            req = check setDocumentRequestOptions(req,requestOptions);
+        }
+        req.setJsonPayload(newDocument);
         var response = self.azureCosmosClient->put(requestPath,req);
-        json jsonresponse = check parseResponseToJson(response);
-        return mapJsonToDocument(jsonresponse);
+        [json,Headers] jsonreponse = check parseResponseToTuple(response);
+        return mapJsonToDocument(jsonreponse);
     }
 
     #To delete a document inside a collection
-    # + dbName -  id/name of the database which collection is in.
-    # + colName - id/name of collection which document is in.
-    # + documentId - id of the document to be deleted
-    # + partitionKey - the value in the partition key field specified for the collection to 
-    # set x-ms-documentdb-partitionkey header
-    # + return - If successful, returns a string giving sucessfully deleted. Else returns error. 
-    public remote function deleteDocument(string dbName, string colName, string documentId, any partitionKey) returns 
-    @tainted string|error{  
+    # + properties - object of type DocumentProperties
+    # + return - If successful, returns a DeleteResponse giving sucessfully deleted. Else returns error. 
+    public remote function deleteDocument(@tainted DocumentProperties properties) returns 
+    @tainted DeleteResponse|error{  
         http:Request req = new;
-        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,dbName,RESOURCE_PATH_COLLECTIONS,colName,
-        RESOURCE_PATH_DOCUMENTS,documentId]);
+        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_COLLECTIONS,
+        properties.containerId,RESOURCE_PATH_DOCUMENTS,<string>properties.documentId]);//error
         HeaderParamaters header = mapParametersToHeaderType(DELETE,requestPath);
 
         req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
-        req = check setPartitionKeyHeader(req,partitionKey);
+        req = check setPartitionKeyHeader(req,properties.partitionKey);
         var response = self.azureCosmosClient->delete(requestPath,req);
-        return getDeleteResponse(response);
+        [string,Headers] jsonresponse = check parseDeleteResponseToTuple(response);
+        return  mapTupleToDeleteresponse(jsonresponse);
     }
 
     #To query documents inside a collection
-    # *********Function does not work properly, x-ms-max-item-count header is not handled*********
-    # + dbName -  id/name of the database which collection is in.
-    # + colName - id/name of collection which document is in.
+    # Function does not work properly, x-ms-max-item-count header handled
+    # + properties - object of type DocumentProperties
     # + sqlQuery - json object containing the sql query
-    # + partitionKey - the value in the partition key field specified for the collection to 
-    # set x-ms-documentdb-partitionkey header
+    # + requestOptions - object of type RequestOptions
     # + return - If successful, returns a json. Else returns error. 
-    public remote function queryDocument(string dbName, string colName, json sqlQuery, any partitionKey) returns 
-    @tainted json|error{
+    public remote function queryDocument(@tainted DocumentProperties properties, Query sqlQuery, 
+    RequestOptions? requestOptions = ()) returns @tainted json|error{
         http:Request req = new;
-        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,dbName,RESOURCE_PATH_COLLECTIONS,colName,
-        RESOURCE_PATH_DOCUMENTS]);
+        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_COLLECTIONS,
+        properties.containerId,RESOURCE_PATH_DOCUMENTS]);
         HeaderParamaters header = mapParametersToHeaderType(POST,requestPath);
 
         req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
         req = check setHeadersForQuery(req);
-        req = check setPartitionKeyHeader(req,partitionKey);
-        req.setJsonPayload(sqlQuery);
+        req = check setPartitionKeyHeader(req,properties.partitionKey);
+        req.setPayload(sqlQuery);
         var response = self.azureCosmosClient->post(requestPath,req);
         json jsonresponse = check parseResponseToJson(response);
         return (jsonresponse);
@@ -372,97 +321,83 @@ public  client class Client {
     #To create a new stored procedure inside a collection
     # A stored procedure is a piece of application logic written in JavaScript that 
     # is registered and executed against a collection as a single transaction.
-    # + dbName -  id/name of the database which collection is in.
-    # + colName - id/name of collection which stored procedure is in.
-    # + sproc - 
-    # + sprocId -
+    # + properties - object of type StoredProcedureProperties
+    # + storedProcedure - object of Type storedProcedure
     # + return - If successful, returns a StoredProcedure. Else returns error. 
-    public remote function createStoredProcedure(string dbName, string colName, string sproc, string sprocId) returns 
-    @tainted StoredProcedure|error{
+    public remote function createStoredProcedure(@tainted StoredProcedureProperties properties, 
+    StoredProcedure storedProcedure) returns @tainted StoredProcedure|error{
         http:Request req = new;
-        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,dbName,RESOURCE_PATH_COLLECTIONS,colName,
+        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_COLLECTIONS,properties.containerId,
         RESOURCE_PATH_STORED_POCEDURES]);
         HeaderParamaters header = mapParametersToHeaderType(POST,requestPath);
-        json spbody = {
-            id: sprocId,
-            body:sproc
-        };
 
         req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
-        req.setJsonPayload(spbody);
+        req.setJsonPayload(<json>storedProcedure.cloneWithType(json));//error
         var response = self.azureCosmosClient->post(requestPath,req);
-        json jsonreponse = check parseResponseToJson(response);
-        return mapJsonToSproc(jsonreponse);    
+        [json,Headers] jsonResponse = check parseResponseToTuple(response);
+        return mapJsonToStoredProcedure(jsonResponse);    
     }
 
     #To replace a stored procedure with new one inside a collection
-    # + dbName -  id/name of the database which collection is in.
-    # + colName - id/name of collection which stored procedure is in.
-    # + storedProcedure - 
-    # + sprocId - 
+    # + properties - object of type StoredProcedureProperties
+    # + storedProcedure - object of Type storedProcedure
     # + return - If successful, returns a StoredProcedure. Else returns error. 
-    public remote function replaceStoredProcedure(string dbName, string colName, string storedProcedure, string sprocId) 
-    returns @tainted StoredProcedure|error{
+    public remote function replaceStoredProcedure(@tainted StoredProcedureProperties properties, 
+    StoredProcedure storedProcedure) returns @tainted StoredProcedure|error{
         http:Request req = new;
-        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,dbName,RESOURCE_PATH_COLLECTIONS,colName,
-        RESOURCE_PATH_STORED_POCEDURES,sprocId]);
+        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_COLLECTIONS,
+        properties.containerId,RESOURCE_PATH_STORED_POCEDURES,<string>properties.storedProcedureId]);//check error
         HeaderParamaters header = mapParametersToHeaderType(PUT,requestPath);
-        json spbody = <@untainted> {
-            id: sprocId,
-            body:storedProcedure
-        };
 
         req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
-        req.setJsonPayload(spbody);
+        req.setJsonPayload(<json>storedProcedure.cloneWithType(json));//error
         var response = self.azureCosmosClient->put(requestPath,req);
-        json jsonreponse = check parseResponseToJson(response);
-        return mapJsonToSproc(jsonreponse);  
+        [json,Headers] jsonResponse = check parseResponseToTuple(response);
+        return mapJsonToStoredProcedure(jsonResponse);  
     }
 
     #To list all stored procedures inside a collection
-    # + dbName -  id/name of the database which collection is in.
-    # + colName - id/name of collection which stored procedures are in.
+    # + properties - object of type StoredProcedureProperties
     # + return - If successful, returns a StoredProcedureList. Else returns error. 
-    public remote function listStoredProcedures(string dbName, string colName) returns 
+    public remote function listStoredProcedures(@tainted StoredProcedureProperties properties) returns 
     @tainted StoredProcedureList|error{
         http:Request req = new;
-        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,dbName,RESOURCE_PATH_COLLECTIONS,colName,
-        RESOURCE_PATH_STORED_POCEDURES]);
+        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_COLLECTIONS,
+        properties.containerId,RESOURCE_PATH_STORED_POCEDURES]);
         HeaderParamaters header = mapParametersToHeaderType(GET,requestPath);
 
         req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
         var response = self.azureCosmosClient->get(requestPath,req);
-        json jsonreponse = check parseResponseToJson(response);
-        return mapJsonToSprocList(jsonreponse);  
+        [json,Headers] jsonResponse = check parseResponseToTuple(response);
+        return mapJsonToStoredProcedureList(jsonResponse);  
     }
 
     #To delete a stored procedure inside a collection
-    # + dbName -  id/name of the database which collection is in.
-    # + colName - id/name of collection which stored procedure is in.
-    # + sprocId - id of the stored procedure to be deleted
-    # + return - If successful, returns string specifying delete is sucessfull. Else returns error. 
-    public remote function deleteStoredProcedure(string dbName, string colName, string sprocId) returns 
-    @tainted json|error{
+    # + properties - object of type StoredProcedureProperties
+    # + return - If successful, returns DeleteResponse specifying delete is sucessfull. Else returns error. 
+    public remote function deleteStoredProcedure(@tainted StoredProcedureProperties properties) returns 
+    @tainted DeleteResponse|error{
         http:Request req = new;
-        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,dbName,RESOURCE_PATH_COLLECTIONS,colName,RESOURCE_PATH_STORED_POCEDURES,sprocId]);
+        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_COLLECTIONS,
+        properties.containerId,RESOURCE_PATH_STORED_POCEDURES,<string>properties.storedProcedureId]);//check error        
         HeaderParamaters header = mapParametersToHeaderType(DELETE,requestPath);
 
         req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
         var response = self.azureCosmosClient->delete(requestPath,req);
-        return getDeleteResponse(response);   
+        [string,Headers] jsonresponse = check parseDeleteResponseToTuple(response);
+        return  mapTupleToDeleteresponse(jsonresponse);
     }
 
     #To execute a stored procedure inside a collection
     # ***********function only works correctly for string parameters************
-    # + dbName -  id/name of the database which collection is in.
-    # + colName - id/name of collection which stored procedure is in.
-    # + sprocId - id of the stored procedure to be executed
+    # + properties - object of type StoredProcedureProperties
     # + parameters - The list of paramaters to pass to javascript function as an array.
     # + return - If successful, returns json with the output from the executed funxtion. Else returns error. 
-    public remote function executeStoredProcedure(string dbName, string colName, string sprocId, any[]? parameters) 
+    public remote function executeStoredProcedure(@tainted StoredProcedureProperties properties, any[]? parameters) 
     returns @tainted json|error{
         http:Request req = new;
-        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,dbName,RESOURCE_PATH_COLLECTIONS,colName,RESOURCE_PATH_STORED_POCEDURES,sprocId]);
+        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_COLLECTIONS,
+        properties.containerId,RESOURCE_PATH_STORED_POCEDURES,<string>properties.storedProcedureId]);//check error        
         HeaderParamaters header = mapParametersToHeaderType(POST,requestPath);
 
         req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
