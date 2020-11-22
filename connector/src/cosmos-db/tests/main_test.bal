@@ -372,7 +372,7 @@ function getNextPageOfDocumentList(){
     dc.containerId = "mycollection1";
 
     RequestOptions options = {};
-    //options.maxItemCount = 4;
+    options.maxItemCount = 4;
     options.continuationToken = "{token:'nXh6ANTE4QoIAAAAAAAAAA==',range:{min:'',max:'FF'}}";//convert this to string
 
     var result = AzureCosmosClient->getDocumentList(dc,options);
@@ -466,7 +466,7 @@ function replaceDocument(){
 }
 
 @test:Config{
-    //enable: false
+    enable: false
 }
 function deleteDocument(){
     io:println("--------------Delete one document------------------------\n\n");
@@ -479,7 +479,7 @@ function deleteDocument(){
     dc.documentId = "69a2c93a-42e6-487e-b6f3-1a355f1afd19";
 
     var result = AzureCosmosClient->deleteDocument(dc);  
-    if result is string {
+    if result is DeleteResponse {
         io:println(result);
     } else {
         test:assertFail(msg = result.message());
@@ -498,20 +498,11 @@ function queryDocument(){
     dc.databaseId = "hikall";
     dc.containerId = "mycollection1";
     dc.partitionKey = 1234;
-    json query = {  
-        "query": "SELECT * FROM Families f WHERE f.id = @id AND f.address.city = @city",  
-        "parameters": [  
-            {  
-            "name": "@id",  
-            "value": "AndersenFamily"  
-            },  
-            {  
-            "name": "@city",  
-            "value": "NY"  
-            }  
-        ]  
-    };   
-    var result = AzureCosmosClient->queryDocument(dc,query);   
+    Query sqlQuery = {};
+    QueryParameter[] params = [{name: "@familyId", value: "AndersenFamily"}];
+    sqlQuery.query = "SELECT * FROM mycollection1 f WHERE f.id = @familyId";
+    sqlQuery.parameters = params;
+    var result = AzureCosmosClient->queryDocument(dc,sqlQuery);   
     if result is json {
         io:println(result);
     } else {
@@ -528,9 +519,17 @@ function createSproc(){
 
     Client AzureCosmosClient = new(config);
     var uuid = createRandomUUID();
-    string sprocid = string `sproc-${uuid.toString()}`;
+    string sprocId = string `sproc-${uuid.toString()}`;
+    StoredProcedureProperties properties = {};
+    properties.databaseId = "hikall";
+    properties.containerId = "mycollection1";
+    properties.storedProcedureId = sprocId;
     string sproc = "function () {\r\n    var context = getContext();\r\n    var response = context.getResponse();\r\n\r\n    response.setBody(\"Hello, World\");\r\n}"; 
-    var result = AzureCosmosClient->createStoredProcedure("hikall","mycollection1",sproc,sprocid);  
+    StoredProcedure sp = {
+        id:sprocId,
+        body:sproc
+    };
+    var result = AzureCosmosClient->createStoredProcedure(properties,sp);  
     if result is StoredProcedure {
         io:println(result);
     } else {
@@ -546,9 +545,17 @@ function replaceSproc(){
     io:println("-----------------Replace stored procedure-----------------------\n\n");
 
     Client AzureCosmosClient = new(config);
-    string sprocid = "sproc-561d47d6-36d2-4fd5-b20e-143550737f55";
-    string sproc = "function (personToGreet) {\r\n    var context = getContext();\r\n    var response = context.getResponse();\r\n\r\n    response.setBody(\"Hello, \" + personToGreet);\r\n}"; 
-    var result = AzureCosmosClient->replaceStoredProcedure("hikall","mycollection1",sproc,sprocid);  
+    string sprocId = "sproc-50c4f0df-b25d-48ef-b936-d31a55798193";
+    StoredProcedureProperties properties = {};
+    properties.databaseId = "hikall";
+    properties.containerId = "mycollection1";
+    properties.storedProcedureId = sprocId;
+    string sproc = "function (personToGreet) {\r\n    var context = getContext();\r\n    var response = context.getResponse();\r\n\r\n    response.setBody(\"Hello, \" + personToGreet);\r\n}";
+    StoredProcedure sp = {
+        id:sprocId,
+        body:sproc
+    }; 
+    var result = AzureCosmosClient->replaceStoredProcedure(properties,sp);  
     if result is StoredProcedure {
         io:println(result);
     } else {
@@ -564,7 +571,10 @@ function getAllSprocs(){
     io:println("-----------------Get All Stored Procedures-----------------------\n\n");
 
     Client AzureCosmosClient = new(config);
-    var result = AzureCosmosClient->listStoredProcedures("hikall","mycollection1");   
+    StoredProcedureProperties properties = {};
+    properties.databaseId = "hikall";
+    properties.containerId = "mycollection1";
+    var result = AzureCosmosClient->listStoredProcedures(properties);   
     if result is StoredProcedureList {
         io:println(result);
     } else {
@@ -574,15 +584,20 @@ function getAllSprocs(){
 }
 
 @test:Config{
-   enable: false
+    enable: false
 }
 function deleteOneSproc(){
     io:println("-----------------Delete Stored Procedure-----------------------\n\n");
 
     Client AzureCosmosClient = new(config);
-    string sprocid = "sproc-561d47d6-36d2-4fd5-b20e-143550737f55";
-    var result = AzureCosmosClient->deleteStoredProcedure("hikall","mycollection1",sprocid);   
-    if result is json {
+    string sprocId = "sproc-50c4f0df-b25d-48ef-b936-d31a55798193";
+    StoredProcedureProperties properties = {};
+    properties.databaseId = "hikall";
+    properties.containerId = "mycollection1";
+    properties.storedProcedureId = sprocId; 
+
+    var result = AzureCosmosClient->deleteStoredProcedure(properties);   
+    if result is DeleteResponse {
         io:println(result);
     } else {
         test:assertFail(msg = result.message());
@@ -591,15 +606,19 @@ function deleteOneSproc(){
 }
 
 @test:Config{
-   enable: false
+    enable: false
 }
 function executeOneSproc(){
     io:println("-----------------Execute Stored Procedure-----------------------\n\n");
 
     Client AzureCosmosClient = new(config);
-    string sprocid = "sproc-50c4f0df-b25d-48ef-b936-d31a55798193";
+    string sprocId = "sproc-6ddd056a-0846-430d-9dff-a35425b346ad";
+    StoredProcedureProperties properties = {};
+    properties.databaseId = "hikall";
+    properties.containerId = "mycollection1";
+    properties.storedProcedureId = sprocId; 
     string[] arrayofparameters = ["Sachi"];
-    var result = AzureCosmosClient->executeStoredProcedure("hikall","mycollection1",sprocid,arrayofparameters);   
+    var result = AzureCosmosClient->executeStoredProcedure(properties,arrayofparameters);   
     if result is json {
         io:println(result);
     } else {

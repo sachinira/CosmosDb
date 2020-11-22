@@ -169,19 +169,26 @@ function mapJsonToDocumentList([json,Headers] jsonPayload) returns @tainted Docu
     return documentlist;
 } 
 
-function mapJsonToSproc(json jsonPayload)returns @tainted StoredProcedure|error {
+function mapJsonToStoredProcedure([json,Headers] jsonPayload)returns @tainted StoredProcedure|error {
     StoredProcedure sproc = {};
-    sproc.body = jsonPayload.body.toString();
-    sproc.id = jsonPayload.id.toString();
-    sproc.common = check mapCommonElements(jsonPayload);
+    json payload;
+    Headers headers;
+    [payload,headers] = jsonPayload;
+    sproc.id = payload.id.toString();
+    sproc.body = payload.body.toString();
+    sproc.reponseHeaders = headers;
     return sproc;
 }
 
-function mapJsonToSprocList(json jsonPayload)returns @tainted StoredProcedureList|error {
+function mapJsonToStoredProcedureList([json,Headers] jsonPayload)returns @tainted StoredProcedureList|error {
     StoredProcedureList sproclist = {};
-    sproclist._rid = jsonPayload._rid.toString();
-    sproclist.storedprocedures = convertToSprocArray(<json[]>jsonPayload.StoredProcedures);
-    sproclist._count = convertToInt(jsonPayload._count);
+    json payload;
+    Headers headers;
+    [payload,headers] = jsonPayload;
+    sproclist._rid = payload._rid.toString();
+    sproclist.storedprocedures = convertToStoredProcedureArray(<json[]>payload.StoredProcedures);
+    sproclist._count = convertToInt(payload._count);//headers
+    sproclist.reponseHeaders = headers;
     return sproclist;
 }
 
@@ -260,18 +267,19 @@ function convertToDocumentArray(json[] sourceDocumentArrayJsonObject) returns @t
         documents[i].id = document.id.toString();
         documents[i].document = check document.cloneWithType(anydata);
         documents[i].id = document.id.toString();
-
         i = i + 1;
     }
     return documents;
 }
 
-function convertToSprocArray(json[] sourceSprocArrayJsonObject) returns @tainted StoredProcedure[] { 
+function convertToStoredProcedureArray(json[] sourceSprocArrayJsonObject) returns @tainted StoredProcedure[] { 
     StoredProcedure[] sprocs = [];
     int i = 0;
-    foreach json sproc in sourceSprocArrayJsonObject { 
-        sprocs[i] = <StoredProcedure>mapJsonToSproc(sproc);
+    foreach json storedProcedure in sourceSprocArrayJsonObject { 
+        sprocs[i].id = storedProcedure.id.toString();
+        sprocs[i].body = storedProcedure.body.toString();
         i = i + 1;
+
     }
     return sprocs;
 }

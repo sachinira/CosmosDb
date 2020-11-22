@@ -91,15 +91,32 @@ public type DocumentList record {|
 
 |};
 
+public type Query record {|
+    string query = "";
+    QueryParameter[] parameters = [];
+|};
+
+public type QueryParameter record {|
+    string name = "";
+    string value = "";
+|};
+
+
+public type StoredProcedureProperties record {
+    string databaseId = "";
+    string containerId = "";
+    string? storedProcedureId = ();
+};
 public type StoredProcedure record {
-    string body = "";
     string id = "";
-    Common common = {};
+    string body = "";
+    Headers reponseHeaders?;
 };
 
 public type StoredProcedureList record {
     string _rid = "";
     StoredProcedure[] storedprocedures = [];
+    Headers reponseHeaders?;
     int _count = 0;
 };
 

@@ -223,6 +223,8 @@ public function enableCrossPartitionKeyHeader(http:Request req, boolean isignore
 public function setHeadersForQuery(http:Request req) returns http:Request|error{
     req.setHeader("Content-Type","application/query+json");
     req.setHeader("x-ms-documentdb-isquery","true");
+    //req.setHeader("x-ms-documentdb-query-enablecrosspartition","true");
+
     return req;
 }
 
@@ -259,9 +261,6 @@ public function setDocumentRequestOptions(http:Request req,RequestOptions reques
     }
     return req;
 }
-
-//PartitionKeyRanges this can be used for incremental readfeed with the x-ms-documentdb-partitionkeyrangeid header.
-//x-ms-documentdb-partitionkeyrangeid
 
 //x-ms-documentdb-query-enablecrosspartition
 

@@ -1,5 +1,5 @@
 import ballerina/http;
-
+import ballerina/io;
 # Azure Cosmos DB Client object.
 # + azureCosmosClient - The HTTP Client
 public  client class Client {
@@ -228,6 +228,7 @@ public  client class Client {
     }
 
     #To list all the documents inside a collection
+    # 
     # x-ms-consistency-level, x-ms-session-token, A-IM, x-ms-continuation and If-None-Match headers are supported
     # + properties - object of type ContainerProperties
     # + requestOptions - The continuation token returned from previous document request******
@@ -278,7 +279,7 @@ public  client class Client {
     # + properties - object of type ContainerProperties
     # + return - If successful, returns a string giving sucessfully deleted. Else returns error. 
     public remote function deleteDocument(@tainted DocumentProperties properties) returns 
-    @tainted string|error{  
+    @tainted DeleteResponse|error{  
         http:Request req = new;
         string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_COLLECTIONS,properties.containerId,
         RESOURCE_PATH_DOCUMENTS,<string>properties.documentId]);
@@ -287,7 +288,8 @@ public  client class Client {
         req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
         req = check setPartitionKeyHeader(req,properties.partitionKey);
         var response = self.azureCosmosClient->delete(requestPath,req);
-        return getDeleteResponse(response);
+        [string,Headers] jsonresponse = check parseDeleteResponseToTuple(response);
+        return  mapTupleToDeleteresponse(jsonresponse);
     }
 
     #To query documents inside a collection
@@ -297,17 +299,18 @@ public  client class Client {
     # + requestOptions - 
     # set x-ms-documentdb-partitionkey header
     # + return - If successful, returns a json. Else returns error. 
-    public remote function queryDocument(@tainted DocumentProperties properties, json sqlQuery,RequestOptions? requestOptions = ()) returns 
+    public remote function queryDocument(@tainted DocumentProperties properties, Query sqlQuery, RequestOptions? requestOptions = ()) returns 
     @tainted json|error{
         http:Request req = new;
         string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_COLLECTIONS,properties.containerId,
         RESOURCE_PATH_DOCUMENTS]);
         HeaderParamaters header = mapParametersToHeaderType(POST,requestPath);
 
+        io:println(sqlQuery);
         req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
         req = check setHeadersForQuery(req);
         req = check setPartitionKeyHeader(req,properties.partitionKey);
-        req.setJsonPayload(sqlQuery);
+        req.setPayload(sqlQuery);
         var response = self.azureCosmosClient->post(requestPath,req);
         json jsonresponse = check parseResponseToJson(response);
         return (jsonresponse);
@@ -316,97 +319,84 @@ public  client class Client {
     #To create a new stored procedure inside a collection
     # A stored procedure is a piece of application logic written in JavaScript that 
     # is registered and executed against a collection as a single transaction.
-    # + dbName -  id/name of the database which collection is in.
-    # + colName - id/name of collection which stored procedure is in.
+    # + properties - id/name of collection which stored procedure is in.
     # + storedProcedure - 
-    # + sprocId -
     # + return - If successful, returns a StoredProcedure. Else returns error. 
-    public remote function createStoredProcedure(string dbName, string colName, string storedProcedure, string sprocId) returns 
+    public remote function createStoredProcedure(@tainted StoredProcedureProperties properties, StoredProcedure storedProcedure) returns 
     @tainted StoredProcedure|error{
         http:Request req = new;
-        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,dbName,RESOURCE_PATH_COLLECTIONS,colName,
+        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_COLLECTIONS,properties.containerId,
         RESOURCE_PATH_STORED_POCEDURES]);
         HeaderParamaters header = mapParametersToHeaderType(POST,requestPath);
-        json spbody = {
-            id: sprocId,
-            body:storedProcedure
-        };
 
         req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
-        req.setJsonPayload(spbody);
+        req.setJsonPayload(<json>storedProcedure.cloneWithType(json));//error
         var response = self.azureCosmosClient->post(requestPath,req);
-        json jsonreponse = check parseResponseToJson(response);
-        return mapJsonToSproc(jsonreponse);    
+        [json,Headers] jsonResponse = check parseResponseToTuple(response);
+        return mapJsonToStoredProcedure(jsonResponse);    
     }
 
     #To replace a stored procedure with new one inside a collection
-    # + dbName -  id/name of the database which collection is in.
-    # + colName - id/name of collection which stored procedure is in.
+
     # + storedProcedure - 
-    # + sprocId - 
+    # + properties - 
     # + return - If successful, returns a StoredProcedure. Else returns error. 
-    public remote function replaceStoredProcedure(string dbName, string colName, string storedProcedure, string sprocId) 
+    public remote function replaceStoredProcedure(@tainted StoredProcedureProperties properties, StoredProcedure storedProcedure) 
     returns @tainted StoredProcedure|error{
         http:Request req = new;
-        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,dbName,RESOURCE_PATH_COLLECTIONS,colName,
-        RESOURCE_PATH_STORED_POCEDURES,sprocId]);
+        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_COLLECTIONS,properties.containerId,
+        RESOURCE_PATH_STORED_POCEDURES,<string>properties.storedProcedureId]);//check error
         HeaderParamaters header = mapParametersToHeaderType(PUT,requestPath);
-        json spbody = <@untainted> {
-            id: sprocId,
-            body:storedProcedure
-        };
 
         req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
-        req.setJsonPayload(spbody);
+        req.setJsonPayload(<json>storedProcedure.cloneWithType(json));//error
         var response = self.azureCosmosClient->put(requestPath,req);
-        json jsonreponse = check parseResponseToJson(response);
-        return mapJsonToSproc(jsonreponse);  
+        [json,Headers] jsonResponse = check parseResponseToTuple(response);
+        return mapJsonToStoredProcedure(jsonResponse);  
     }
 
     #To list all stored procedures inside a collection
-    # + dbName -  id/name of the database which collection is in.
-    # + colName - id/name of collection which stored procedures are in.
+    # + properties - id/name of collection which stored procedures are in.
     # + return - If successful, returns a StoredProcedureList. Else returns error. 
-    public remote function listStoredProcedures(string dbName, string colName) returns 
+    public remote function listStoredProcedures(@tainted StoredProcedureProperties properties) returns 
     @tainted StoredProcedureList|error{
         http:Request req = new;
-        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,dbName,RESOURCE_PATH_COLLECTIONS,colName,
+        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_COLLECTIONS,properties.containerId,
         RESOURCE_PATH_STORED_POCEDURES]);
         HeaderParamaters header = mapParametersToHeaderType(GET,requestPath);
 
         req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
         var response = self.azureCosmosClient->get(requestPath,req);
-        json jsonreponse = check parseResponseToJson(response);
-        return mapJsonToSprocList(jsonreponse);  
+        [json,Headers] jsonResponse = check parseResponseToTuple(response);
+        return mapJsonToStoredProcedureList(jsonResponse);  
     }
 
     #To delete a stored procedure inside a collection
-    # + dbName -  id/name of the database which collection is in.
-    # + colName - id/name of collection which stored procedure is in.
-    # + sprocId - id of the stored procedure to be deleted
+    # + properties - id of the stored procedure to be deleted
     # + return - If successful, returns string specifying delete is sucessfull. Else returns error. 
-    public remote function deleteStoredProcedure(string dbName, string colName, string sprocId) returns 
-    @tainted json|error{
+    public remote function deleteStoredProcedure(@tainted StoredProcedureProperties properties) returns 
+    @tainted DeleteResponse|error{
         http:Request req = new;
-        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,dbName,RESOURCE_PATH_COLLECTIONS,colName,RESOURCE_PATH_STORED_POCEDURES,sprocId]);
+        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_COLLECTIONS,properties.containerId,
+        RESOURCE_PATH_STORED_POCEDURES,<string>properties.storedProcedureId]);//check error        
         HeaderParamaters header = mapParametersToHeaderType(DELETE,requestPath);
 
         req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
         var response = self.azureCosmosClient->delete(requestPath,req);
-        return getDeleteResponse(response);   
+        [string,Headers] jsonresponse = check parseDeleteResponseToTuple(response);
+        return  mapTupleToDeleteresponse(jsonresponse);
     }
 
     #To execute a stored procedure inside a collection
     # ***********function only works correctly for string parameters************
-    # + dbName -  id/name of the database which collection is in.
-    # + colName - id/name of collection which stored procedure is in.
-    # + sprocId - id of the stored procedure to be executed
+    # + properties - id of the stored procedure to be executed
     # + parameters - The list of paramaters to pass to javascript function as an array.
     # + return - If successful, returns json with the output from the executed funxtion. Else returns error. 
-    public remote function executeStoredProcedure(string dbName, string colName, string sprocId, any[]? parameters) 
+    public remote function executeStoredProcedure(@tainted StoredProcedureProperties properties, any[]? parameters) 
     returns @tainted json|error{
         http:Request req = new;
-        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,dbName,RESOURCE_PATH_COLLECTIONS,colName,RESOURCE_PATH_STORED_POCEDURES,sprocId]);
+        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_COLLECTIONS,properties.containerId,
+        RESOURCE_PATH_STORED_POCEDURES,<string>properties.storedProcedureId]);//check error        
         HeaderParamaters header = mapParametersToHeaderType(POST,requestPath);
 
         req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
