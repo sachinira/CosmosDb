@@ -38,6 +38,22 @@ function createDB(){
 }
 
 @test:Config{
+    //enable: false
+}
+function createIfNotExist(){
+    io:println("--------------Create database if not exist------------------------\n\n");
+
+    Client AzureCosmosClient = new(config);
+    var result = AzureCosmosClient->createDatabaseIfNotExist("hiiiii3");
+    if (result is Database?) {
+        io:println(result);
+    } else {
+        test:assertFail(msg = result.message());
+    }
+    io:println("\n\n");
+}
+
+@test:Config{
     enable: false
 }
 function createDBWithManualThroughput(){
@@ -154,6 +170,31 @@ function createContainer(){
     con.containerId = "new1";
     var result = AzureCosmosClient->createContainer(con);
     if (result is Container) {
+        io:println(result);
+    } else {
+        test:assertFail(msg = result.message());
+    } 
+    io:println("\n\n");
+}
+
+@test:Config{
+    enable: false
+}
+function createContainerIfNotExist(){
+    io:println("--------------Create Collection-----------------------\n\n");
+
+    Client AzureCosmosClient = new(config);
+    string throughput = "400";
+    PartitionKey pk = {};
+    pk.paths = ["/AccountNumber"];
+    pk.kind = "Hash";
+    pk.Version = 2;
+    ContainerProperties con = {};
+    con.partitionKey = pk;
+    con.databaseId = "hikall";
+    con.containerId = "new2";
+    var result = AzureCosmosClient->createContainerIfNotExist(con);
+    if (result is Container?) {
         io:println(result);
     } else {
         test:assertFail(msg = result.message());

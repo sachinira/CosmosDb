@@ -43,6 +43,19 @@ public  client class Client {
         return mapJsonToDatabaseType(jsonreponse);   
     }
 
+    # To create a database inside a resource
+    # + databaseId -  id/name for the database
+    # + throughputProperties - Optional throughput parameter which will set 'x-ms-offer-throughput' header 
+    # + return - If successful, returns Database. Else returns error.  
+    public remote function createDatabaseIfNotExist(string databaseId, ThroughputProperties? throughputProperties = ()) returns 
+    @tainted Database?|error{
+        var result = self->getDatabase(databaseId);
+        if result is error{
+            return self->createDatabase(databaseId,throughputProperties);
+        }
+        return ();  
+    }
+
     # To retrive a given database inside a resource
     # + databaseId -  id/name of the database to retrieve
     # + return - If successful, returns Database. Else returns error.  
@@ -106,6 +119,19 @@ public  client class Client {
         var response = self.azureCosmosClient->post(requestPath,req);
         [json,Headers] jsonreponse = check parseResponseToTuple(response);
         return mapJsonToCollectionType(jsonreponse);
+    }
+
+    # To create a database inside a resource
+    # + properties -  object of type ContainerProperties
+    # + throughputProperties - Optional throughput parameter which will set 'x-ms-offer-throughput' header 
+    # + return - If successful, returns Database. Else returns error.  
+    public remote function createContainerIfNotExist(@tainted ContainerProperties properties, 
+    ThroughputProperties? throughputProperties = ()) returns @tainted Container?|error{
+        var result = self->getContainer(properties);
+        if result is error{
+            return self->createContainer(properties,throughputProperties);
+        }
+        return ();  
     }
 
     # To create a collection inside a database
