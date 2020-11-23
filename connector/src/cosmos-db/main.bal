@@ -215,8 +215,7 @@ public  client class Client {
     RequestOptions? requestOptions) returns @tainted Document|error{
         http:Request req = new;
         string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_COLLECTIONS,
-        properties.containerId,
-        RESOURCE_PATH_DOCUMENTS]);
+        properties.containerId,RESOURCE_PATH_DOCUMENTS]);
         HeaderParamaters header = mapParametersToHeaderType(POST,requestPath);
 
         req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
@@ -239,8 +238,7 @@ public  client class Client {
     returns @tainted Document|error{
         http:Request req = new;
         string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_COLLECTIONS,
-        properties.containerId,
-        RESOURCE_PATH_DOCUMENTS,properties.documentId.toString()]);
+        properties.containerId,RESOURCE_PATH_DOCUMENTS,properties.documentId.toString()]);
         HeaderParamaters header = mapParametersToHeaderType(GET,requestPath);
 
         req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
