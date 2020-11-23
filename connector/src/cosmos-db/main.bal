@@ -18,15 +18,8 @@ public  client class Client {
         self.host = azureConfig.host;
         self.keyType = azureConfig.tokenType;
         self.tokenVersion = azureConfig.tokenVersion;
-
-        self.azureCosmosClient = new (self.baseUrl, {
-            secureSocket: {
-                trustStore: {
-                    path: "/usr/lib/ballerina/distributions/ballerina-slp4/bre/security/ballerinaTruststore.p12",
-                    password: "ballerina"
-                }
-            }
-        });
+        http:ClientConfiguration httpClientConfig = {secureSocket: azureConfig.secureSocketConfig};
+        self.azureCosmosClient = new (self.baseUrl,httpClientConfig);
     }
 
     # To create a database inside a resource
@@ -327,8 +320,8 @@ public  client class Client {
     public remote function createStoredProcedure(@tainted StoredProcedureProperties properties, 
     StoredProcedure storedProcedure) returns @tainted StoredProcedure|error{
         http:Request req = new;
-        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_COLLECTIONS,properties.containerId,
-        RESOURCE_PATH_STORED_POCEDURES]);
+        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_COLLECTIONS,
+        properties.containerId,RESOURCE_PATH_STORED_POCEDURES]);
         HeaderParamaters header = mapParametersToHeaderType(POST,requestPath);
 
         req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
@@ -409,10 +402,3 @@ public  client class Client {
 
 }
 
-public type AzureCosmosConfiguration record {|
-    string baseUrl;    
-    string masterKey;
-    string host;
-    string tokenType;
-    string tokenVersion;
-|};

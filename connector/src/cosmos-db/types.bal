@@ -1,3 +1,14 @@
+import ballerina/http;
+
+public type AzureCosmosConfiguration record {|
+    string baseUrl;    
+    string masterKey;
+    string host;
+    string tokenType;
+    string tokenVersion;
+    http:ClientSecureSocket? secureSocketConfig;
+|};
+
 public type HeaderParamaters record {|
     string verb = "";
     string apiVersion = API_VERSION;

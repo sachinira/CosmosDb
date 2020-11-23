@@ -7,7 +7,13 @@ AzureCosmosConfiguration config = {
     masterKey : MASTER_KEY,
     host : HOST,
     tokenType : TOKEN_TYPE,
-    tokenVersion : TOKEN_VERSION
+    tokenVersion : TOKEN_VERSION,
+    secureSocketConfig : {
+                trustStore: {
+                    path: "/usr/lib/ballerina/distributions/ballerina-slp4/bre/security/ballerinaTruststore.p12",
+                    password: "ballerina"
+                }
+            }
 };
 
 function createRandomUUID() returns handle = @java:Method {
