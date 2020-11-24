@@ -1,5 +1,5 @@
 import ballerina/http;
-
+//import ballerina/io;
 # Azure Cosmos DB Client object.
 # + azureCosmosClient - The HTTP Client
 public  client class Client {
@@ -18,36 +18,45 @@ public  client class Client {
         self.host = azureConfig.host;
         self.keyType = azureConfig.tokenType;
         self.tokenVersion = azureConfig.tokenVersion;
+        http:ClientConfiguration httpClientConfig = {secureSocket: azureConfig.secureSocketConfig};
+        self.azureCosmosClient = new (self.baseUrl,httpClientConfig);
+    }
 
-        self.azureCosmosClient = new (self.baseUrl, {
-            secureSocket: {
-                trustStore: {
-                    path: "/usr/lib/ballerina/distributions/ballerina-slp4/bre/security/ballerinaTruststore.p12",
-                    password: "ballerina"
-                }
-            }
-        });
+    # To create a database inside a resource
+    # + properties -  id/name for the database
+    # + throughputProperties - Optional throughput parameter which will set 'x-ms-offer-throughput' header 
+    # + return - If successful, returns Database. Else returns error.  
+    public remote function createDatabase(DatabaseProperties properties, ThroughputProperties? throughputProperties = ()) returns 
+    @tainted Database|error{
+        json jsonPayload;
+        http:Request req = new;
+        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES]);
+        HeaderParamaters header = mapParametersToHeaderType(POST,requestPath);
+        if properties.id == "" {
+            return prepareError("Invalid database id: Cannot be empty");
+        }
+        json|error payload = properties.cloneWithType(json);
+        if payload is json {
+            req.setJsonPayload(payload);
+        }
+        req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
+        req = check setThroughputOrAutopilotHeader(req,throughputProperties);
+        var response = self.azureCosmosClient->post(requestPath,req);
+        [json,Headers] jsonreponse = check parseResponseToTuple(response);
+        return mapJsonToDatabaseType(jsonreponse);   
     }
 
     # To create a database inside a resource
     # + databaseId -  id/name for the database
     # + throughputProperties - Optional throughput parameter which will set 'x-ms-offer-throughput' header 
     # + return - If successful, returns Database. Else returns error.  
-    public remote function createDatabase(string databaseId, ThroughputProperties? throughputProperties = ()) returns 
-    @tainted Database|error{
-        http:Request req = new;
-        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES]);
-        HeaderParamaters header = mapParametersToHeaderType(POST,requestPath);
-        json body = {
-            id: databaseId
-        };
-
-        req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
-        req = check setThroughputOrAutopilotHeader(req,throughputProperties);
-        req.setJsonPayload(body);
-        var response = self.azureCosmosClient->post(requestPath,req);
-        [json,Headers] jsonreponse = check parseResponseToTuple(response);
-        return mapJsonToDatabaseType(jsonreponse);   
+    public remote function createDatabaseIfNotExist(string databaseId, ThroughputProperties? throughputProperties = ()) 
+    returns @tainted Database?|error{
+        var result = self->getDatabase(databaseId);
+        if result is error{
+            //return self->createDatabase(databaseId,throughputProperties);
+        }
+        return ();  
     }
 
     # To retrive a given database inside a resource
@@ -98,7 +107,7 @@ public  client class Client {
     public remote function createContainer(@tainted ContainerProperties properties, 
     ThroughputProperties? throughputProperties = ()) returns @tainted Container|error{
         http:Request req = new;
-        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,<string>properties.databaseId,
+        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,
         RESOURCE_PATH_COLLECTIONS]);
         HeaderParamaters header = mapParametersToHeaderType(POST,requestPath);
         
@@ -113,6 +122,19 @@ public  client class Client {
         var response = self.azureCosmosClient->post(requestPath,req);
         [json,Headers] jsonreponse = check parseResponseToTuple(response);
         return mapJsonToCollectionType(jsonreponse);
+    }
+
+    # To create a database inside a resource
+    # + properties -  object of type ContainerProperties
+    # + throughputProperties - Optional throughput parameter which will set 'x-ms-offer-throughput' header 
+    # + return - If successful, returns Database. Else returns error.  
+    public remote function createContainerIfNotExist(@tainted ContainerProperties properties, 
+    ThroughputProperties? throughputProperties = ()) returns @tainted Container?|error{
+        var result = self->getContainer(properties);
+        if result is error{
+            return self->createContainer(properties,throughputProperties);
+        }
+        return ();  
     }
 
     # To create a collection inside a database
@@ -196,14 +218,13 @@ public  client class Client {
     RequestOptions? requestOptions) returns @tainted Document|error{
         http:Request req = new;
         string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_COLLECTIONS,
-        properties.containerId,
-        RESOURCE_PATH_DOCUMENTS]);
+        properties.containerId,RESOURCE_PATH_DOCUMENTS]);
         HeaderParamaters header = mapParametersToHeaderType(POST,requestPath);
 
         req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
         req = check setPartitionKeyHeader(req,properties.partitionKey);
         if requestOptions is RequestOptions{
-            req = check setDocumentRequestOptions(req,requestOptions);
+            req = check setRequestOptions(req,requestOptions);
         }        
         req.setJsonPayload(document);
         var response = self.azureCosmosClient->post(requestPath,req);
@@ -220,14 +241,13 @@ public  client class Client {
     returns @tainted Document|error{
         http:Request req = new;
         string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_COLLECTIONS,
-        properties.containerId,
-        RESOURCE_PATH_DOCUMENTS,properties.documentId.toString()]);
+        properties.containerId,RESOURCE_PATH_DOCUMENTS,properties.documentId.toString()]);
         HeaderParamaters header = mapParametersToHeaderType(GET,requestPath);
 
         req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
         req = check setPartitionKeyHeader(req,properties.partitionKey);
         if requestOptions is RequestOptions{
-            req = check setDocumentRequestOptions(req,requestOptions);
+            req = check setRequestOptions(req,requestOptions);
         }
         var response = self.azureCosmosClient->get(requestPath,req);
         [json,Headers] jsonreponse = check parseResponseToTuple(response);
@@ -247,7 +267,7 @@ public  client class Client {
 
         req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
         if requestOptions is RequestOptions{
-            req = check setDocumentRequestOptions(req,requestOptions);
+            req = check setRequestOptions(req,requestOptions);
         }
         var response = self.azureCosmosClient->get(requestPath,req);
         [json,Headers] jsonreponse = check parseResponseToTuple(response);
@@ -271,7 +291,7 @@ public  client class Client {
         req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
         req = check setPartitionKeyHeader(req,properties.partitionKey);
         if requestOptions is RequestOptions{
-            req = check setDocumentRequestOptions(req,requestOptions);
+            req = check setRequestOptions(req,requestOptions);
         }
         req.setJsonPayload(newDocument);
         var response = self.azureCosmosClient->put(requestPath,req);
@@ -327,8 +347,8 @@ public  client class Client {
     public remote function createStoredProcedure(@tainted StoredProcedureProperties properties, 
     StoredProcedure storedProcedure) returns @tainted StoredProcedure|error{
         http:Request req = new;
-        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_COLLECTIONS,properties.containerId,
-        RESOURCE_PATH_STORED_POCEDURES]);
+        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_COLLECTIONS,
+        properties.containerId,RESOURCE_PATH_STORED_POCEDURES]);
         HeaderParamaters header = mapParametersToHeaderType(POST,requestPath);
 
         req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
@@ -409,10 +429,3 @@ public  client class Client {
 
 }
 
-public type AzureCosmosConfiguration record {|
-    string baseUrl;    
-    string masterKey;
-    string host;
-    string tokenType;
-    string tokenVersion;
-|};

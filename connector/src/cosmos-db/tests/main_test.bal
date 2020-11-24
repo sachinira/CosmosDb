@@ -7,7 +7,13 @@ AzureCosmosConfiguration config = {
     masterKey : MASTER_KEY,
     host : HOST,
     tokenType : TOKEN_TYPE,
-    tokenVersion : TOKEN_VERSION
+    tokenVersion : TOKEN_VERSION,
+    secureSocketConfig : {
+                trustStore: {
+                    path: "/usr/lib/ballerina/distributions/ballerina-slp4/bre/security/ballerinaTruststore.p12",
+                    password: "ballerina"
+                }
+            }
 };
 
 function createRandomUUID() returns handle = @java:Method {
@@ -16,14 +22,35 @@ function createRandomUUID() returns handle = @java:Method {
 } external;
 
 @test:Config{
-    enable: false
+    //enable: false
 }
 function createDB(){
     io:println("--------------Create database------------------------\n\n");
 
     Client AzureCosmosClient = new(config);
-    var result = AzureCosmosClient->createDatabase("hiiiii2");
+
+    DatabaseProperties db = {};
+    db.id = "h";
+    var result = AzureCosmosClient->createDatabase(db);
     if (result is Database) {
+        io:println(result);
+    } else {
+        test:assertFail(msg = result.message());
+    }
+    io:println("\n\n");
+}
+
+@test:Config{
+    enable: false
+}
+function createIfNotExist(){
+    io:println("--------------Create database if not exist------------------------\n\n");
+
+    Client AzureCosmosClient = new(config);
+    DatabaseProperties db = {};
+    db.id = "Heloo";
+    var result = AzureCosmosClient->createDatabaseIfNotExist("hiiiii3");
+    if (result is Database?) {
         io:println(result);
     } else {
         test:assertFail(msg = result.message());
@@ -40,7 +67,9 @@ function createDBWithManualThroughput(){
     Client AzureCosmosClient = new(config);
     ThroughputProperties tp = {};
     tp.throughput = 600; 
-    var result = AzureCosmosClient->createDatabase("heloodb", tp);
+    DatabaseProperties db = {};
+    db.id = "Heloo";
+    var result = AzureCosmosClient->createDatabase(db, tp);
     if (result is Database) {
         io:println(result);
     } else {
@@ -56,9 +85,11 @@ function createDBWithAutoscaling(){
     io:println("--------------Create with autoscaling throguput------------------------\n\n");
 
     Client AzureCosmosClient = new(config);
+    DatabaseProperties db = {};
+    db.id = "Heloo";
     ThroughputProperties tp = {};
     tp.maxThroughput = {"maxThroughput": 4000};
-    var result = AzureCosmosClient->createDatabase("helooauto", tp);
+    var result = AzureCosmosClient->createDatabase(db, tp);
     if (result is Database) {
         io:println(result);
     } else {
@@ -77,7 +108,9 @@ function createDBWithBothHeaders(){
     ThroughputProperties tp = {};
     tp.maxThroughput = {"maxThroughput" : 4000};
     tp.throughput = 600; 
-    var result = AzureCosmosClient->createDatabase("helooboth", tp);
+    DatabaseProperties db = {};
+    db.id = "Heloo";
+    var result = AzureCosmosClient->createDatabase(db, tp);
     if (result is Database) {
         io:println(result);
     } else {
@@ -131,7 +164,7 @@ function deleteDB(){
 }
 
 @test:Config{
-    enable: false
+    //enable: false
 }
 function createContainer(){
     io:println("--------------Create Collection-----------------------\n\n");
@@ -141,13 +174,38 @@ function createContainer(){
     PartitionKey pk = {};
     pk.paths = ["/AccountNumber"];
     pk.kind = "Hash";
-    pk.Version = 2;
+    pk.'version = 2;
     ContainerProperties con = {};
     con.partitionKey = pk;
     con.databaseId = "hikall";
-    con.containerId = "new1";
+    con.containerId = "heeyl";
     var result = AzureCosmosClient->createContainer(con);
     if (result is Container) {
+        io:println(result);
+    } else {
+        test:assertFail(msg = result.message());
+    } 
+    io:println("\n\n");
+}
+
+@test:Config{
+    enable: false
+}
+function createContainerIfNotExist(){
+    io:println("--------------Create Collection-----------------------\n\n");
+
+    Client AzureCosmosClient = new(config);
+    string throughput = "400";
+    PartitionKey pk = {};
+    pk.paths = ["/AccountNumber"];
+    pk.kind = "Hash";
+    pk.'version = 2;
+    ContainerProperties con = {};
+    con.partitionKey = pk;
+    con.databaseId = "hikall";
+    con.containerId = "new2";
+    var result = AzureCosmosClient->createContainerIfNotExist(con);
+    if (result is Container?) {
         io:println(result);
     } else {
         test:assertFail(msg = result.message());
@@ -185,7 +243,7 @@ function createCollectionWithManualThroughputAndIndexingPolicy(){
     PartitionKey pk = {};
     pk.paths = ["/AccountNumber"];
     pk.kind = "Hash";
-    pk.Version = 2;
+    pk.'version = 2;
     ContainerProperties con = {};
     con.partitionKey = pk;
     con.databaseId = "hikall";

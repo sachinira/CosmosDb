@@ -1,3 +1,14 @@
+import ballerina/http;
+
+public type AzureCosmosConfiguration record {|
+    string baseUrl;    
+    string masterKey;
+    string host;
+    string tokenType;
+    string tokenVersion;
+    http:ClientSecureSocket? secureSocketConfig;
+|};
+
 public type HeaderParamaters record {|
     string verb = "";
     string apiVersion = API_VERSION;
@@ -29,6 +40,10 @@ public type Headers record {|
     string? itemCountHeader = ();
     string? etagHeader = ();
     string? dateHeader = ();
+|};
+
+public type DatabaseProperties record {|
+    string id = "";
 |};
 
 public type Database record {
@@ -152,7 +167,7 @@ public type Index record {|
 public type PartitionKey record {|
     string[] paths = [];
     string kind = "";
-    int 'Version?;
+    int? 'version = ();
 |};
 
 public type PartitionKeyList record {|

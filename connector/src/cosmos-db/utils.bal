@@ -28,19 +28,12 @@ function parseResponseToJson(http:Response|http:ClientError httpResponse) return
         var jsonResponse = httpResponse.getJsonPayload();
         if (jsonResponse is json) {
             if (httpResponse.statusCode != http:STATUS_OK && httpResponse.statusCode != http:STATUS_CREATED) {
-                string code = "";    
-                if (jsonResponse?.error_code != ()) {
-                    code = jsonResponse.error_code.toString();
-                } else if (jsonResponse?.'error != ()) {
-                    code = jsonResponse.'error.toString();
-                }
                 string message = jsonResponse.message.toString();
-                //errors handle 400 401 403 408 409 404
                 string errorMessage = httpResponse.statusCode.toString() + " " + httpResponse.reasonPhrase; 
-                if (code != "") {
-                    errorMessage += " - " + code;
+                var stoppingIndex = message.indexOf("ActivityId");
+                if stoppingIndex is int{
+                    errorMessage += " : " + message.substring(0,stoppingIndex);
                 }
-                errorMessage += " : " + message;
                 return prepareError(errorMessage);
             }
             return jsonResponse;
@@ -101,18 +94,6 @@ function mapRequest(http:Request? req) returns http:Request {
     } else {
         return newRequest;
     }
-}
-
-# To create a custom error instance
-# + return - returns error.  
-function prepareError(string message, error? err = ()) returns error { 
-    error azureError;
-    if (err is error) {
-        azureError = AzureError(message, err);
-    } else {
-        azureError = AzureError(message);
-    }
-    return azureError;
 }
 
 # Returns the prepared URL.
@@ -193,7 +174,7 @@ public function setHeadersForQuery(http:Request req) returns http:Request|error{
     return req;
 }
 
-public function setDocumentRequestOptions(http:Request req, RequestOptions requestOptions) returns http:Request|error{
+public function setRequestOptions(http:Request req, RequestOptions requestOptions) returns http:Request|error{
     if requestOptions.indexingDirective is string {
         req.setHeader("x-ms-indexing-directive",requestOptions.indexingDirective.toString());
     }
@@ -242,7 +223,7 @@ HeaderParamaters params) returns http:Request|error{
     req.setHeader("Accept","*/*");
     req.setHeader("Connection","keep-alive");
 
-    string? date = check getTime();
+    string?|error date = getTime();
     if date is string
     {
         string? s = generateTokenNew(params.verb,params.resourceType,params.resourceId,keyToken,tokenType,tokenVersion);
@@ -250,10 +231,10 @@ HeaderParamaters params) returns http:Request|error{
         if s is string {
             req.setHeader("Authorization",s);
         } else {
-            io:println("token is null");
+            return prepareError("Authorization token is null");
         }
     } else {
-        io:println("date is null");
+        return prepareError("Date header is invalid/null");
     }
     return req;
 }
@@ -350,3 +331,7 @@ handle tokenVersion) returns handle = @java:Method {
     name: "generate",
     'class: "com.sachini.TokenCreate"
 } external;
+
+function validateContainerProperties(ContainerProperties properties){
+    
+}
