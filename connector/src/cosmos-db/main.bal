@@ -47,26 +47,28 @@ public  client class Client {
     }
 
     # To create a database inside a resource
-    # + databaseId -  id/name for the database
+    # + properties -  id/name for the database
     # + throughputProperties - Optional throughput parameter which will set 'x-ms-offer-throughput' header 
     # + return - If successful, returns Database. Else returns error.  
-    public remote function createDatabaseIfNotExist(string databaseId, ThroughputProperties? throughputProperties = ()) 
+    public remote function createDatabaseIfNotExist(DatabaseProperties properties, ThroughputProperties? throughputProperties = ()) 
     returns @tainted Database?|error{
-        var result = self->getDatabase(databaseId);
+        var result = self->getDatabase(properties);
         if result is error{
-            //return self->createDatabase(databaseId,throughputProperties);
+            return self->createDatabase(properties,throughputProperties);
         }
         return ();  
     }
 
     # To retrive a given database inside a resource
-    # + databaseId -  id/name of the database to retrieve
+    # + properties -  id/name of the database to retrieve
     # + return - If successful, returns Database. Else returns error.  
-    public remote function getDatabase(string databaseId) returns @tainted Database|error{
+    public remote function getDatabase(DatabaseProperties properties) returns @tainted Database|error{
         http:Request req = new;
-        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,databaseId]);
+        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.id]);
         HeaderParamaters header = mapParametersToHeaderType(GET,requestPath);
-
+        if properties.id == "" {
+            return prepareError("Invalid database id: Cannot be empty");
+        }
         req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
         var response = self.azureCosmosClient->get(requestPath,req);
         [json,Headers] jsonreponse = check parseResponseToTuple(response);
@@ -87,13 +89,15 @@ public  client class Client {
     }
 
     # To retrive a given database inside a resource
-    # + databaseId -  id/name of the database to retrieve
+    # + properties -  id/name of the database to retrieve
     # + return - If successful, returns DeleteResponse specifying delete is sucessfull. Else returns error.  
-    public remote function deleteDatabase(string databaseId) returns @tainted DeleteResponse|error{
+    public remote function deleteDatabase(DatabaseProperties properties) returns @tainted DeleteResponse|error{
         http:Request req = new;
-        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,databaseId]);
+        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.id]);
         HeaderParamaters header = mapParametersToHeaderType(DELETE,requestPath);
-
+        if properties.id == "" {
+            return prepareError("Invalid database id: Cannot be empty");
+        }
         req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
         var response = self.azureCosmosClient->delete(requestPath,req);
         [string,Headers] jsonresponse = check parseDeleteResponseToTuple(response);

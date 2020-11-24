@@ -65,13 +65,13 @@ function getDeleteResponse(http:Response|http:ClientError httpResponse) returns 
 function parseHeadersToObject(http:Response|http:ClientError httpResponse) returns @tainted Headers|error{
     Headers responseHeaders = {};
     if (httpResponse is http:Response) {
-        responseHeaders.continuationHeader = getHeaderIfExist(httpResponse,"x-ms-continuation");
-        responseHeaders.sessionTokenHeader = getHeaderIfExist(httpResponse,"x-ms-session-token");
-        responseHeaders.requestChargeHeader = getHeaderIfExist(httpResponse,"x-ms-request-charge");
-        responseHeaders.resourceUsageHeader = getHeaderIfExist(httpResponse,"x-ms-resource-usage");
-        responseHeaders.itemCountHeader = getHeaderIfExist(httpResponse,"x-ms-item-count");
-        responseHeaders.etagHeader = getHeaderIfExist(httpResponse,"etag");
-        responseHeaders.dateHeader = getHeaderIfExist(httpResponse,"Date");
+        responseHeaders.continuationHeader = getHeaderIfExist(httpResponse,CONTINUATION_HEADER);
+        responseHeaders.sessionTokenHeader = getHeaderIfExist(httpResponse,SESSION_TOKEN_HEADER);
+        responseHeaders.requestChargeHeader = getHeaderIfExist(httpResponse,REQUEST_CHARGE_HEADER);
+        responseHeaders.resourceUsageHeader = getHeaderIfExist(httpResponse,RESOURCE_USAGE_HEADER);
+        responseHeaders.itemCountHeader = getHeaderIfExist(httpResponse,ITEM_COUNT_HEADER);
+        responseHeaders.etagHeader = getHeaderIfExist(httpResponse,ETAG_HEADER);
+        responseHeaders.dateHeader = getHeaderIfExist(httpResponse,RESPONSE_DATE_HEADER);
         return responseHeaders;
 
     } else {
@@ -142,13 +142,11 @@ function mergeTwoArrays(any[] array1, any[] array2) returns any[]{
 
 public function setThroughputOrAutopilotHeader(http:Request req, ThroughputProperties? throughputProperties) returns 
 http:Request|error{
-
-    if throughputProperties is ThroughputProperties{
+  if throughputProperties is ThroughputProperties {
         if throughputProperties.throughput is int &&  throughputProperties.maxThroughput is () {
-            //validate throughput The minimum is 400 up to 1,000,000 (or higher by requesting a limit increase).
-            req.setHeader("x-ms-offer-throughput",throughputProperties.maxThroughput.toString());
+            req.setHeader(THROUGHPUT_HEADER, throughputProperties.maxThroughput.toString());
         } else if throughputProperties.throughput is () &&  throughputProperties.maxThroughput != () {
-            req.setHeader("x-ms-cosmos-offer-autopilot-settings",throughputProperties.maxThroughput.toString());
+            req.setHeader(AUTOPILET_THROUGHPUT_HEADER, throughputProperties.maxThroughput.toString());
         } else if throughputProperties.throughput is int &&  throughputProperties.maxThroughput != () {
             return 
             prepareError("Cannot set both x-ms-offer-throughput and x-ms-cosmos-offer-autopilot-settings headers at once");
@@ -218,18 +216,18 @@ public function setRequestOptions(http:Request req, RequestOptions requestOption
 # + return - If successful, returns same http:Request with newly appended headers. Else returns error.  
 public function setHeaders(http:Request req, string host, string keyToken, string tokenType, string tokenVersion,
 HeaderParamaters params) returns http:Request|error{
-    req.setHeader("x-ms-version",params.apiVersion);
-    req.setHeader("Host",host);
-    req.setHeader("Accept","*/*");
-    req.setHeader("Connection","keep-alive");
+    req.setHeader(API_VERSION_HEADER,params.apiVersion);
+    req.setHeader(HOST_HEADER,host);
+    req.setHeader(ACCEPT_HEADER,"*/*");
+    req.setHeader(CONNECTION_HEADER,"keep-alive");
 
     string?|error date = getTime();
     if date is string
     {
         string? s = generateTokenNew(params.verb,params.resourceType,params.resourceId,keyToken,tokenType,tokenVersion);
-        req.setHeader("x-ms-date",date);
+        req.setHeader(DATE_HEADER,date);
         if s is string {
-            req.setHeader("Authorization",s);
+            req.setHeader(AUTHORIZATION_HEADER,s);
         } else {
             return prepareError("Authorization token is null");
         }
@@ -260,7 +258,7 @@ string tokenVersion) returns string?{
 #               (in "HTTP-date" format as defined by RFC 7231 Date/Time Formats). Else returns error.  
 public function getTime() returns string?|error{
     time:Time time1 = time:currentTime();
-    var time2 = check time:toTimeZone(time1, "Europe/London");
+    var time2 = check time:toTimeZone(time1, GMT_ZONE);
     string|error timeString = time:format(time2, "EEE, dd MMM yyyy HH:mm:ss z");
     return timeString;
 }
