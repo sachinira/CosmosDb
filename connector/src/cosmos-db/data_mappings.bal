@@ -83,7 +83,7 @@ function convertJsonToPartitionKey(json jsonPayload) returns @tainted PartitionK
     PartitionKey pk = {};
     pk.paths = convertToStringArray(<json[]>jsonPayload.paths);
     pk.kind = jsonPayload.kind.toString();
-    pk.'Version = convertToInt(jsonPayload.'version);
+    pk.'version = convertToInt(jsonPayload.'version);
     return pk;
 }
 

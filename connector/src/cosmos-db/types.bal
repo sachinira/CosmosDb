@@ -42,6 +42,10 @@ public type Headers record {|
     string? dateHeader = ();
 |};
 
+public type DatabaseProperties record {|
+    string id = "";
+|};
+
 public type Database record {
     string id = "";
     Headers reponseHeaders?;
@@ -163,7 +167,7 @@ public type Index record {|
 public type PartitionKey record {|
     string[] paths = [];
     string kind = "";
-    int 'Version?;
+    int? 'version = ();
 |};
 
 public type PartitionKeyList record {|
