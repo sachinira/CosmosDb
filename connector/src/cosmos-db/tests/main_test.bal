@@ -49,7 +49,7 @@ function createIfNotExist(){
     Client AzureCosmosClient = new(config);
     DatabaseProperties db = {};
     db.id = "Heloo";
-    var result = AzureCosmosClient->createDatabaseIfNotExist("hiiiii3");
+    var result = AzureCosmosClient->createDatabaseIfNotExist(db);
     if (result is Database?) {
         io:println(result);
     } else {
@@ -141,8 +141,10 @@ function listAllDB(){
 function listOneDB(){
     io:println("--------------List one database------------------------\n\n");
 
-    Client AzureCosmosClient = new(config); 
-    var result = AzureCosmosClient->getDatabase("hikall");
+    Client AzureCosmosClient = new(config);
+    DatabaseProperties db = {};
+    db.id = "Heloo"; 
+    var result = AzureCosmosClient->getDatabase(db);
     if (result is Database) {
         io:println(result);
     } else {
@@ -152,14 +154,19 @@ function listOneDB(){
 }
 
 @test:Config{
-    enable: false
+    //enable: false
 }
 function deleteDB(){
     io:println("--------------Delete one databse------------------------\n\n");
 
     Client AzureCosmosClient = new(config);
-    var result = AzureCosmosClient->deleteDatabase("tempdb2");
-    io:println(result);
+    DatabaseProperties db = {};
+    var result = AzureCosmosClient->deleteDatabase(db);
+    if (result is DeleteResponse) {
+        io:println(result);
+    } else {
+        test:assertFail(msg = result.message());
+    }
     io:println("\n\n");
 }
 
