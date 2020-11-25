@@ -30,8 +30,8 @@ function createDB(){
     Client AzureCosmosClient = new(config);
 
     DatabaseProperties db = {};
-    db.id = "h";
-    var result = AzureCosmosClient->createDatabase(db);
+    db.id = "database1";
+    var result = AzureCosmosClient->createDatabase(<@untainted>db);
     if (result is Database) {
         io:println(result);
     } else {
@@ -69,7 +69,7 @@ function createDBWithManualThroughput(){
     tp.throughput = 600; 
     DatabaseProperties db = {};
     db.id = "Heloo";
-    var result = AzureCosmosClient->createDatabase(db, tp);
+    var result = AzureCosmosClient->createDatabase(<@untainted>db, tp);
     if (result is Database) {
         io:println(result);
     } else {
@@ -89,7 +89,7 @@ function createDBWithAutoscaling(){
     db.id = "Heloo";
     ThroughputProperties tp = {};
     tp.maxThroughput = {"maxThroughput": 4000};
-    var result = AzureCosmosClient->createDatabase(db, tp);
+    var result = AzureCosmosClient->createDatabase(<@untainted>db, tp);
     if (result is Database) {
         io:println(result);
     } else {
@@ -110,7 +110,7 @@ function createDBWithBothHeaders(){
     tp.throughput = 600; 
     DatabaseProperties db = {};
     db.id = "Heloo";
-    var result = AzureCosmosClient->createDatabase(db, tp);
+    var result = AzureCosmosClient->createDatabase(<@untainted>db, tp);
     if (result is Database) {
         io:println(result);
     } else {
@@ -143,7 +143,7 @@ function listOneDB(){
 
     Client AzureCosmosClient = new(config);
     DatabaseProperties db = {};
-    db.id = "Heloo"; 
+    db.id = "database1"; 
     var result = AzureCosmosClient->getDatabase(db);
     if (result is Database) {
         io:println(result);
@@ -161,6 +161,7 @@ function deleteDB(){
 
     Client AzureCosmosClient = new(config);
     DatabaseProperties db = {};
+    db.id = "";
     var result = AzureCosmosClient->deleteDatabase(db);
     if (result is DeleteResponse) {
         io:println(result);
@@ -184,8 +185,8 @@ function createContainer(){
     pk.'version = 2;
     ContainerProperties con = {};
     con.partitionKey = pk;
-    con.databaseId = "hikall";
-    con.containerId = "heeyl";
+    con.databaseId = "database1";
+    con.containerId = "collection1";
     var result = AzureCosmosClient->createContainer(con);
     if (result is Container) {
         io:println(result);
@@ -290,8 +291,8 @@ function getOneCollection(){
 
     Client AzureCosmosClient = new(config);
     ContainerProperties con = {};
-    con.databaseId = "hikall";
-    con.containerId = "mycollection1";
+    con.databaseId = "database1";
+    con.containerId = "collection1";
     var result = AzureCosmosClient->getContainer(con);
     if (result is Container) {
         io:println(result);
@@ -677,6 +678,59 @@ function executeOneSproc(){
     io:println("\n\n"); 
 }
 
+@test:Config{
+   enable: false
+}
+function createUDF(){
+    io:println("-----------------Create user defined function-----------------------\n\n");
+
+    Client AzureCosmosClient = new(config);
+    var uuid = createRandomUUID();
+    string udfId = string `udf-${uuid.toString()}`;
+    UserDefinedFunctionProperties properties = {};
+    properties.databaseId = "database1";
+    properties.containerId = "collection1";
+    properties.userDefinedFunctionId = udfId;
+    string udfbody = "function tax(income) {\r\n    if(income == undefined) \r\n        throw 'no input';\r\n    if (income < 1000) \r\n        return income * 0.1;\r\n    else if (income < 10000) \r\n        return income * 0.2;\r\n    else\r\n        return income * 0.4;\r\n}"; 
+    UserDefinedFunction udf = {
+        id:udfId,
+        body:udfbody
+    };
+    var result = AzureCosmosClient->createUserDefinedFunction(properties,udf);  
+    if result is StoredProcedure {
+        io:println(result);
+    } else {
+        test:assertFail(msg = result.message());
+    }   
+    io:println("\n\n");  
+}
+
+@test:Config{
+   //enable: false
+}
+function replaceUDF(){
+    io:println("-----------------Replace user defined function-----------------------\n\n");
+
+    Client AzureCosmosClient = new(config);
+    var uuid = createRandomUUID();
+    string udfId = "udf-7b6f4b7f-7782-47a6-8dad-1fcbf04e9ac7";
+    UserDefinedFunctionProperties properties = {};
+    properties.databaseId = "database1";
+    properties.containerId = "collection1";
+    properties.userDefinedFunctionId = udfId;
+    string udfbody = "function taxIncome(income) {\r\n    if(income == undefined) \r\n        throw 'no input';\r\n    if (income < 1000) \r\n        return income * 0.1;\r\n    else if (income < 10000) \r\n        return income * 0.2;\r\n    else\r\n        return income * 0.4;\r\n}"; 
+    UserDefinedFunction udf = {
+        id:udfId,
+        body:udfbody
+    };
+    var result = AzureCosmosClient->replaceUserDefinedFunction(properties,udf);  
+    if result is StoredProcedure {
+        io:println(result);
+    } else {
+        test:assertFail(msg = result.message());
+    }   
+    io:println("\n\n");  
+}
 
 
 

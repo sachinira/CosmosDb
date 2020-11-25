@@ -311,8 +311,7 @@ string tokenVersion, string date) returns string?|error{
         +""+"\n";
     var decoded = encoding:decodeBase64Url(keys);
 
-    if decoded is byte[]
-    {
+    if decoded is byte[]{
         byte[] k = crypto:hmacSha256(payload.toBytes(),decoded);
         string  t = k.toBase16();
         string signature = encoding:encodeBase64Url(k);

@@ -26,7 +26,7 @@ public  client class Client {
     # + properties -  id/name for the database
     # + throughputProperties - Optional throughput parameter which will set 'x-ms-offer-throughput' header 
     # + return - If successful, returns Database. Else returns error.  
-    public remote function createDatabase(DatabaseProperties properties, ThroughputProperties? throughputProperties = ()) returns 
+    public remote function createDatabase(@tainted DatabaseProperties properties, ThroughputProperties? throughputProperties = ()) returns 
     @tainted Database|error{
         json jsonPayload;
         http:Request req = new;
@@ -50,11 +50,11 @@ public  client class Client {
     # + properties -  id/name for the database
     # + throughputProperties - Optional throughput parameter which will set 'x-ms-offer-throughput' header 
     # + return - If successful, returns Database. Else returns error.  
-    public remote function createDatabaseIfNotExist(DatabaseProperties properties, ThroughputProperties? throughputProperties = ()) 
+    public remote function createDatabaseIfNotExist(@tainted DatabaseProperties properties, ThroughputProperties? throughputProperties = ()) 
     returns @tainted Database?|error{
         var result = self->getDatabase(properties);
         if result is error{
-            return self->createDatabase(properties,throughputProperties);
+            return self->createDatabase(<@untainted>properties,throughputProperties);
         }
         return ();  
     }
@@ -62,7 +62,7 @@ public  client class Client {
     # To retrive a given database inside a resource
     # + properties -  id/name of the database to retrieve
     # + return - If successful, returns Database. Else returns error.  
-    public remote function getDatabase(DatabaseProperties properties) returns @tainted Database|error{
+    public remote function getDatabase(@tainted DatabaseProperties properties) returns @tainted Database|error{
         http:Request req = new;
         string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.id]);
         HeaderParamaters header = mapParametersToHeaderType(GET,requestPath);
@@ -91,7 +91,7 @@ public  client class Client {
     # To retrive a given database inside a resource
     # + properties -  id/name of the database to retrieve
     # + return - If successful, returns DeleteResponse specifying delete is sucessfull. Else returns error.  
-    public remote function deleteDatabase(DatabaseProperties properties) returns @tainted DeleteResponse|error{
+    public remote function deleteDatabase(@tainted DatabaseProperties properties) returns @tainted DeleteResponse|error{
         http:Request req = new;
         string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.id]);
         HeaderParamaters header = mapParametersToHeaderType(DELETE,requestPath);
@@ -431,5 +431,47 @@ public  client class Client {
         return jsonreponse;   
     }
 
+    public remote function createUserDefinedFunction(@tainted UserDefinedFunctionProperties properties, 
+    UserDefinedFunction userDefinedFunction) returns @tainted UserDefinedFunction|error{
+        http:Request req = new;
+        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_COLLECTIONS,
+        properties.containerId,RESOURCE_PATH_UDF]);//check error        
+        HeaderParamaters header = mapParametersToHeaderType(POST,requestPath);
+
+        req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
+        req.setJsonPayload(<json>userDefinedFunction.cloneWithType(json));//error
+        var response = self.azureCosmosClient->post(requestPath,req);
+        [json,Headers] jsonResponse = check parseResponseToTuple(response);
+        return mapJsonToUserDefinedFunction(jsonResponse);      
+    }
+    //only the path is different those two functions
+
+    public remote function replaceUserDefinedFunction(@tainted UserDefinedFunctionProperties properties, 
+    UserDefinedFunction userDefinedFunction) returns @tainted UserDefinedFunction|error{
+        http:Request req = new;
+        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_COLLECTIONS,
+        properties.containerId,RESOURCE_PATH_UDF,<string>properties.userDefinedFunctionId]);//check error        
+        HeaderParamaters header = mapParametersToHeaderType(PUT,requestPath);
+
+        req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
+        req.setJsonPayload(<json>userDefinedFunction.cloneWithType(json));//error
+        var response = self.azureCosmosClient->put(requestPath,req);
+        [json,Headers] jsonResponse = check parseResponseToTuple(response);
+        return mapJsonToUserDefinedFunction(jsonResponse);      
+    }
+
+    public remote function listUserDefinedFunction(@tainted UserDefinedFunctionProperties properties, 
+    UserDefinedFunction userDefinedFunction) returns @tainted UserDefinedFunction|error{
+        http:Request req = new;
+        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_COLLECTIONS,
+        properties.containerId,RESOURCE_PATH_UDF,<string>properties.userDefinedFunctionId]);//check error        
+        HeaderParamaters header = mapParametersToHeaderType(PUT,requestPath);
+
+        req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
+        req.setJsonPayload(<json>userDefinedFunction.cloneWithType(json));//error
+        var response = self.azureCosmosClient->put(requestPath,req);
+        [json,Headers] jsonResponse = check parseResponseToTuple(response);
+        return mapJsonToUserDefinedFunction(jsonResponse);      
+    }
 }
 

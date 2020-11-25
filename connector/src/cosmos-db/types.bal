@@ -132,6 +132,18 @@ public type StoredProcedureList record {
     int _count = 0;
 };
 
+public type UserDefinedFunctionProperties record {|
+    string databaseId = "";
+    string containerId = "";
+    string? userDefinedFunctionId = ();
+|};
+
+public type UserDefinedFunction record {|
+    string id = "";
+    string body = "";
+    Headers reponseHeaders?;
+|};
+
 public type ThroughputProperties record {
     int? throughput = ();
     json? maxThroughput = ();

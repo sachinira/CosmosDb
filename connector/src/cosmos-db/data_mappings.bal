@@ -172,6 +172,18 @@ function mapJsonToStoredProcedureList([json, Headers] jsonPayload)returns @taint
     return sproclist;
 }
 
+function mapJsonToUserDefinedFunction([json, Headers] jsonPayload)returns @tainted UserDefinedFunction|error {
+    UserDefinedFunction udf = {};
+    json payload;
+    Headers headers;
+    [payload,headers] = jsonPayload;
+
+    udf.id = payload._rid.toString();
+    udf.body = payload.body.toString();
+    udf.reponseHeaders = headers;
+    return udf;
+}
+
 function convertToDatabaseArray(json[] sourceDatabaseArrayJsonObject) returns @tainted Database[] {
     Database[] databases = [];
     int i = 0;
