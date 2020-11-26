@@ -1,4 +1,3 @@
-import ballerina/io;
 
 function mapParametersToHeaderType(string httpVerb, string url) returns HeaderParamaters {
     HeaderParamaters params = {};
@@ -13,7 +12,8 @@ function mapJsonToDatabaseType([json, Headers] jsonPayload) returns Database {
     Headers headers;
     [payload,headers] = jsonPayload;
     Database db = {};
-    db.id = payload.id.toString();
+    db._rid = payload._rid != ()? payload._rid.toString() : EMPTY_STRING;
+    db.id = payload.id != ()? payload.id.toString() : EMPTY_STRING;
     db.reponseHeaders = headers;
     return db;
 }
@@ -23,7 +23,7 @@ function mapJsonToDbList([json, Headers] jsonPayload) returns @tainted DatabaseL
     Headers headers;
     [payload,headers] = jsonPayload;
     DatabaseList dbl = {};
-    dbl._rid =payload._rid.toString();
+    dbl._rid = payload._rid != ()? payload._rid.toString() : EMPTY_STRING;
     dbl.Databases =  convertToDatabaseArray(<json[]>payload.Databases);
     dbl.reponseHeaders = headers;
     return dbl;
@@ -150,27 +150,30 @@ function mapJsonToDocumentList([json, Headers] jsonPayload) returns @tainted Doc
     return documentlist;
 } 
 
-function mapJsonToStoredProcedure([json, Headers] jsonPayload)returns @tainted StoredProcedure|error {
+function mapJsonToStoredProcedure([json, Headers?] jsonPayload)returns @tainted StoredProcedure {
     StoredProcedure sproc = {};
     json payload;
-    Headers headers;
+    Headers? headers;
     [payload,headers] = jsonPayload;
-    sproc.id = payload.id.toString();
-    sproc.body = payload.body.toString();
-    sproc.reponseHeaders = headers;
+    sproc._rid = payload._rid != ()? payload._rid.toString() : EMPTY_STRING;
+    sproc.id = payload.id != () ? payload.id.toString(): EMPTY_STRING;
+    sproc.body = payload.body !=() ? payload.body.toString(): EMPTY_STRING;
+    if headers is Headers {
+        sproc["reponseHeaders"] = headers;
+    }
     return sproc;
 }
 
-function mapJsonToStoredProcedureList([json, Headers] jsonPayload)returns @tainted StoredProcedureList|error {
+function mapJsonToStoredProcedureList([json, Headers] jsonPayload)returns @tainted StoredProcedureList {
     StoredProcedureList sproclist = {};
     json payload;
     Headers headers;
     [payload,headers] = jsonPayload;
 
-    sproclist._rid = payload._rid.toString();
+    sproclist._rid = payload._rid != () ? payload._rid.toString(): EMPTY_STRING;
     sproclist.storedProcedures = convertToStoredProcedureArray(<json[]>payload.StoredProcedures);
-    sproclist._count = convertToInt(payload._count);//headers
-    sproclist.reponseHeaders = headers;
+    sproclist._count = convertToInt(payload._count);
+    sproclist["reponseHeaders"] = headers;
     return sproclist;
 }
 
@@ -179,10 +182,11 @@ function mapJsonToUserDefinedFunction([json, Headers?] jsonPayload)returns @tain
     json payload;
     Headers? headers;
     [payload,headers] = jsonPayload;
-
-    udf.id = payload._rid.toString();
-    udf.body = payload.body.toString();
-    udf.reponseHeaders = headers;
+    udf._rid = payload._rid != () ? payload._rid.toString() : EMPTY_STRING;
+    udf.body = payload.body != () ? payload.body.toString() : EMPTY_STRING;
+    if headers is Headers {
+        udf["reponseHeaders"] = headers;
+    }
     return udf;
 }
 
@@ -192,10 +196,10 @@ function mapJsonToUserDefinedFunctionList([json, Headers] jsonPayload)returns @t
     Headers headers;
     [payload,headers] = jsonPayload;
 
-    udflist._rid = payload._rid.toString();
+    udflist._rid = payload._rid != () ? payload._rid.toString() : EMPTY_STRING;
     udflist.UserDefinedFunctions = userDefinedFunctionArray(<json[]>payload.UserDefinedFunctions);
     udflist._count = convertToInt(payload._count);//headers
-    udflist.reponseHeaders = headers;
+    udflist["reponseHeaders"] = headers;
     return udflist;
 }
 
@@ -204,13 +208,14 @@ function mapJsonToTrigger([json, Headers?] jsonPayload)returns @tainted Trigger 
     json payload;
     Headers? headers;
     [payload,headers] = jsonPayload;
-
-    trigger._rid = payload._rid.toString();
-    trigger.id = payload.id.toString();
-    trigger.body = payload.body.toString();
-    trigger.triggerOperation = payload.triggerOperation.toString();
-    trigger.triggerType = payload.triggerType.toString();
-    //trigger.reponseHeaders = headers;
+    trigger._rid = payload._rid != () ? payload._rid.toString() : EMPTY_STRING;
+    trigger.id = payload.id != () ? payload.id.toString() : EMPTY_STRING;
+    trigger.body = payload.body != () ? payload.body.toString() : EMPTY_STRING;
+    trigger.triggerOperation = payload.triggerOperation != () ? payload.triggerOperation.toString() : EMPTY_STRING;
+    trigger.triggerType = payload.triggerType != () ? payload.triggerType.toString() : EMPTY_STRING;
+    if headers is Headers {
+        trigger["reponseHeaders"] = headers;
+    }
     return trigger;
 }
 
@@ -219,11 +224,10 @@ function mapJsonToTriggerList([json, Headers] jsonPayload)returns @tainted Trigg
     json payload;
     Headers headers;
     [payload,headers] = jsonPayload;
-
-    triggerlist._rid = payload._rid.toString();
+    triggerlist._rid = payload._rid != () ? payload._rid.toString() : EMPTY_STRING;
     triggerlist.triggers = ConvertToTriggerArray(<json[]>payload.Triggers);
     triggerlist._count = convertToInt(payload._count);//headers
-    triggerlist.reponseHeaders = headers;
+    triggerlist["reponseHeaders"] = headers;
     return triggerlist;
 }
 
@@ -309,14 +313,13 @@ function convertToStoredProcedureArray(json[] sourceSprocArrayJsonObject) return
     StoredProcedure[] sprocs = [];
     int i = 0;
     foreach json storedProcedure in sourceSprocArrayJsonObject { 
-        sprocs[i].id = storedProcedure.id.toString();
-        sprocs[i].body = storedProcedure.body.toString();
+        sprocs[i] = mapJsonToStoredProcedure([storedProcedure,()]);
         i = i + 1;
 
     }
     return sprocs;
 }
-//************************
+
 function userDefinedFunctionArray(json[] sourceUdfArrayJsonObject) returns @tainted UserDefinedFunction[] { 
     UserDefinedFunction[] udfs = [];
     int i = 0;
@@ -334,31 +337,8 @@ function ConvertToTriggerArray(json[] sourceTriggerArrayJsonObject) returns @tai
     foreach json trigger in sourceTriggerArrayJsonObject { 
         triggers[i] = mapJsonToTrigger([trigger,()]);
         i = i + 1;
-
     }
     return triggers;
-}
-
-function convertToTypeArray(json[] jsonObject) returns @tainted any[] { 
-    any[] typeArray = [];
-    int i = 0;
-    foreach json trigger in jsonObject { 
-        typeArray[i] = mapJsonToType([trigger,()]);
-        i = i + 1;
-    }
-    return typeArray;
-}
-
-function mapJsonToType([json, Headers?] jsonPayload) returns @tainted any{
-    //anydata thing = {};
-    json payload;
-    Headers? headers;
-    [payload,headers] = jsonPayload;
-   // io:println(payload);
-
-    any retuenthing =  payload.clone();
-    io:println();
-    return retuenthing;
 }
 
 

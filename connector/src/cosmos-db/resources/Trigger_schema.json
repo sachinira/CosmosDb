@@ -1,1 +1,1 @@
-{"sachini/cosmos-db:0.1.0:Trigger":{"_rid":"string?","id":"string","body":"string","triggerOperation":"string","triggerType":"string"}}
+{"sachini/cosmos-db:0.1.0:Trigger":{"triggerOperation":"string","triggerType":"string"}}

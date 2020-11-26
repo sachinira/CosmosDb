@@ -47,11 +47,8 @@ public type Headers record {|
     string? dateHeader = ();
 |};
 
-public type DatabaseProperties record {|
-    string id = "";
-|};
-
 public type Database record {
+    string _rid?;
     string id = "";
     Headers reponseHeaders?;
 };
@@ -104,8 +101,8 @@ public type Document record {|
 public type DocumentList record {|
     string _rid = "";
     Document[] documents = [];
-    Headers reponseHeaders?;
     int _count = 0;
+    Headers reponseHeaders?;
 |};
 
 public type Query record {|
@@ -118,64 +115,47 @@ public type QueryParameter record {|
     string value = "";
 |};
 
-//stired procedure and UDF are same
-
-public type StoredProcedure record {
-    string id = "";
-    string body = "";
-    Headers reponseHeaders?;
-};
-
-public type StoredProcedureList record {
-    string _rid = "";
-    StoredProcedure[] storedProcedures = [];
-    Headers? reponseHeaders = ();
-    int _count = 0;
-};
-
-public type UserDefinedFunctionProperties record {|
-    string databaseId = "";
-    string containerId = "";
-    string? userDefinedFunctionId = ();
-|};
-
-public type UserDefinedFunction record {|
-    string id = "";
-    string body = "";
-    Headers? reponseHeaders = ();
-|};
-
-public type UserDefinedFunctionList record {
-    string _rid = "";
-    UserDefinedFunction[] UserDefinedFunctions = [];
-    Headers? reponseHeaders = ();
-    int _count = 0;
-};
-
-public type TriggerProperties record {|
-    string databaseId = "";
-    string containerId = "";
-    string? triggerId = ();
-|};
-
-public type Trigger record {|
+public type StoredProcedure record {|
     string? _rid = ();
     string id = "";
     string body = "";
-    string triggerOperation = "";
-    string triggerType = "";
-    //Headers? reponseHeaders = ();
+    Headers?...;
 |};
 
-public type TriggerList record {
+public type StoredProcedureList record {|
+    string _rid = "";
+    StoredProcedure[] storedProcedures = [];
+    int _count = 0;
+    Headers?...;
+|};
+
+public type UserDefinedFunction record {|
+    *StoredProcedure;
+    Headers?...;
+|};
+
+public type UserDefinedFunctionList record {|
+    string _rid = "";
+    UserDefinedFunction[] UserDefinedFunctions = [];
+    int _count = 0;
+    Headers?...;
+|};
+
+public type Trigger record {|
+    *StoredProcedure;
+    string triggerOperation = "";
+    string triggerType = "";
+    Headers?...;
+|};
+
+public type TriggerList record {|
     string _rid = "";
     Trigger[] triggers = [];
-    Headers reponseHeaders?;
     int _count = 0;
-};
+    Headers?...;
 
+|};
 
-//********************************************
 public type ThroughputProperties record {
     int? throughput = ();
     json? maxThroughput = ();

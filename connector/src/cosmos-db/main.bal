@@ -28,22 +28,19 @@ public  client class Client {
     };
 
     # To create a database inside a resource
-    # + properties -  id/name for the database
+    # + databaseId -  id/name for the database
     # + throughputProperties - Optional throughput parameter which will set 'x-ms-offer-throughput' header 
     # + return - If successful, returns Database. Else returns error.  
-    public remote function createDatabase(@tainted DatabaseProperties properties, ThroughputProperties? throughputProperties = ()) returns 
+    public remote function createDatabase(string databaseId, ThroughputProperties? throughputProperties = ()) returns 
     @tainted Database|error{
         json jsonPayload;
         http:Request req = new;
         string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES]);
         HeaderParamaters header = mapParametersToHeaderType(POST,requestPath);
-        if properties.id == "" {
-            return prepareError("Invalid database id: Cannot be empty");
-        }
-        json|error payload = properties.cloneWithType(json);
-        if payload is json {
-            req.setJsonPayload(payload);
-        }
+        json body = {
+            id:databaseId
+        };
+        req.setJsonPayload(body);
         req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
         req = check setThroughputOrAutopilotHeader(req,throughputProperties);
         var response = self.azureCosmosClient->post(requestPath,req);
@@ -52,28 +49,25 @@ public  client class Client {
     }
 
     # To create a database inside a resource
-    # + properties -  id/name for the database
+    # + databaseId -  id/name for the database
     # + throughputProperties - Optional throughput parameter which will set 'x-ms-offer-throughput' header 
     # + return - If successful, returns Database. Else returns error.  
-    public remote function createDatabaseIfNotExist(@tainted DatabaseProperties properties, ThroughputProperties? throughputProperties = ()) 
+    public remote function createDatabaseIfNotExist(string databaseId, ThroughputProperties? throughputProperties = ()) 
     returns @tainted Database?|error{
-        var result = self->getDatabase(properties);
+        var result = self->getDatabase(databaseId);
         if result is error{
-            return self->createDatabase(<@untainted>properties,throughputProperties);
+            return self->createDatabase(databaseId,throughputProperties);
         }
         return ();  
     }
 
     # To retrive a given database inside a resource
-    # + properties -  id/name of the database to retrieve
+    # + databaseId -  id/name of the database to retrieve
     # + return - If successful, returns Database. Else returns error.  
-    public remote function getDatabase(@tainted DatabaseProperties properties) returns @tainted Database|error{
+    public remote function getDatabase(string databaseId) returns @tainted Database|error{
         http:Request req = new;
-        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.id]);
+        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,databaseId]);
         HeaderParamaters header = mapParametersToHeaderType(GET,requestPath);
-        if properties.id == "" {
-            return prepareError("Invalid database id: Cannot be empty");
-        }
         req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
         var response = self.azureCosmosClient->get(requestPath,req);
         [json,Headers] jsonreponse = check parseResponseToTuple(response);
@@ -94,15 +88,12 @@ public  client class Client {
     }
 
     # To retrive a given database inside a resource
-    # + properties -  id/name of the database to retrieve
+    # + databaseId -  id/name of the database to retrieve
     # + return - If successful, returns DeleteResponse specifying delete is sucessfull. Else returns error.  
-    public remote function deleteDatabase(@tainted DatabaseProperties properties) returns @tainted DeleteResponse|error{
+    public remote function deleteDatabase(string databaseId) returns @tainted DeleteResponse|error{
         http:Request req = new;
-        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.id]);
+        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,databaseId]);
         HeaderParamaters header = mapParametersToHeaderType(DELETE,requestPath);
-        if properties.id == "" {
-            return prepareError("Invalid database id: Cannot be empty");
-        }
         req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
         var response = self.azureCosmosClient->delete(requestPath,req);
         [string,Headers] jsonresponse = check parseDeleteResponseToTuple(response);
@@ -361,7 +352,7 @@ public  client class Client {
         HeaderParamaters header = mapParametersToHeaderType(POST,requestPath);
 
         req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
-        req.setJsonPayload(<json>storedProcedure.cloneWithType(json));//error
+        req.setJsonPayload(<json>storedProcedure.cloneWithType(json));
         var response = self.azureCosmosClient->post(requestPath,req);
         [json,Headers] jsonResponse = check parseResponseToTuple(response);
         return mapJsonToStoredProcedure(jsonResponse);    
@@ -379,7 +370,7 @@ public  client class Client {
         HeaderParamaters header = mapParametersToHeaderType(PUT,requestPath);
 
         req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
-        req.setJsonPayload(<@untainted><json>storedProcedure.cloneWithType(json));//error
+        req.setJsonPayload(<@untainted><json>storedProcedure.cloneWithType(json));
         var response = self.azureCosmosClient->put(requestPath,req);
         [json,Headers] jsonResponse = check parseResponseToTuple(response);
         return mapJsonToStoredProcedure(jsonResponse);  
@@ -409,7 +400,7 @@ public  client class Client {
     @tainted DeleteResponse|error{
         http:Request req = new;
         string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_COLLECTIONS,
-        properties.containerId,RESOURCE_PATH_STORED_POCEDURES,storedProcedureId]);//check error        
+        properties.containerId,RESOURCE_PATH_STORED_POCEDURES,storedProcedureId]);        
         HeaderParamaters header = mapParametersToHeaderType(DELETE,requestPath);
 
         req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
@@ -428,7 +419,7 @@ public  client class Client {
     returns @tainted json|error{
         http:Request req = new;
         string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_COLLECTIONS,
-        properties.containerId,RESOURCE_PATH_STORED_POCEDURES,storedProcedureId]);//check error        
+        properties.containerId,RESOURCE_PATH_STORED_POCEDURES,storedProcedureId]);       
         HeaderParamaters header = mapParametersToHeaderType(POST,requestPath);
 
         req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
@@ -438,7 +429,7 @@ public  client class Client {
         return jsonreponse;   
     }
 
-    public remote function createUserDefinedFunction(@tainted UserDefinedFunctionProperties properties, 
+    public remote function createUserDefinedFunction(@tainted ResourceProperties properties, 
     UserDefinedFunction userDefinedFunction) returns @tainted UserDefinedFunction|error{
         http:Request req = new;
         string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_COLLECTIONS,
@@ -451,23 +442,22 @@ public  client class Client {
         [json,Headers] jsonResponse = check parseResponseToTuple(response);
         return mapJsonToUserDefinedFunction(jsonResponse);      
     }
-    //only the path is different those two functions
 
-    public remote function replaceUserDefinedFunction(@tainted UserDefinedFunctionProperties properties, 
-    UserDefinedFunction userDefinedFunction) returns @tainted UserDefinedFunction|error{
+    public remote function replaceUserDefinedFunction(@tainted ResourceProperties properties, 
+    @tainted UserDefinedFunction userDefinedFunction) returns @tainted UserDefinedFunction|error{
         http:Request req = new;
         string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_COLLECTIONS,
-        properties.containerId,RESOURCE_PATH_UDF,<string>properties.userDefinedFunctionId]);//check error        
+        properties.containerId,RESOURCE_PATH_UDF,userDefinedFunction.id]);      
         HeaderParamaters header = mapParametersToHeaderType(PUT,requestPath);
 
         req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
-        req.setJsonPayload(<json>userDefinedFunction.cloneWithType(json));//error
+        req.setJsonPayload(<@untainted><json>userDefinedFunction.cloneWithType(json));
         var response = self.azureCosmosClient->put(requestPath,req);
         [json,Headers] jsonResponse = check parseResponseToTuple(response);
         return mapJsonToUserDefinedFunction(jsonResponse);      
     }
 
-    public remote function listUserDefinedFunction(@tainted UserDefinedFunctionProperties properties) returns @tainted UserDefinedFunctionList|error{
+    public remote function listUserDefinedFunction(@tainted ResourceProperties properties) returns @tainted UserDefinedFunctionList|error{
         http:Request req = new;
         string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_COLLECTIONS,
         properties.containerId,RESOURCE_PATH_UDF]);
@@ -479,10 +469,10 @@ public  client class Client {
         return mapJsonToUserDefinedFunctionList(jsonResponse);      
     }
 
-    public remote function deleteUserDefinedFunction(@tainted UserDefinedFunctionProperties properties) returns @tainted DeleteResponse|error{
+    public remote function deleteUserDefinedFunction(@tainted ResourceProperties properties,string userDefinedFunctionid) returns @tainted DeleteResponse|error{
         http:Request req = new;
         string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_COLLECTIONS,
-        properties.containerId,RESOURCE_PATH_UDF,<string>properties.userDefinedFunctionId]);//check error        
+        properties.containerId,RESOURCE_PATH_UDF,userDefinedFunctionid]);        
         HeaderParamaters header = mapParametersToHeaderType(DELETE,requestPath);
 
         req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
@@ -491,7 +481,7 @@ public  client class Client {
         return  mapTupleToDeleteresponse(jsonresponse);     
     }
 
-    public remote function createTrigger(@tainted TriggerProperties properties, Trigger trigger) returns @tainted 
+    public remote function createTrigger(@tainted ResourceProperties properties, Trigger trigger) returns @tainted 
     Trigger|error{
         http:Request req = new;
         string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_COLLECTIONS,
@@ -505,23 +495,23 @@ public  client class Client {
         return mapJsonToTrigger(jsonResponse);      
     }
     
-    public remote function replaceTrigger(@tainted TriggerProperties properties, Trigger trigger) returns @tainted 
+    public remote function replaceTrigger(@tainted ResourceProperties properties, @tainted Trigger trigger) returns @tainted 
     Trigger|error{
         http:Request req = new;
         string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_COLLECTIONS,
-        properties.containerId,RESOURCE_PATH_TRIGGER,<string>properties.triggerId]);       
+        properties.containerId,RESOURCE_PATH_TRIGGER,trigger.id]);       
         HeaderParamaters header = mapParametersToHeaderType(PUT,requestPath);
 
         req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
-        req.setJsonPayload(<json>trigger.cloneWithType(json));//error
+        req.setJsonPayload(<@untainted><json>trigger.cloneWithType(json));//error
         var response = self.azureCosmosClient->put(requestPath,req);
         [json,Headers] jsonResponse = check parseResponseToTuple(response);
-        any output = mapJsonToType(jsonResponse); 
+        any output = mapJsonToTrigger(jsonResponse); 
         io:println(output);
         return  <Trigger>output;
     }
 
-    public remote function listTriggers(@tainted TriggerProperties properties) returns @tainted TriggerList|error{
+    public remote function listTriggers(@tainted ResourceProperties properties) returns @tainted TriggerList|error{
         http:Request req = new;
         string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_COLLECTIONS,
         properties.containerId,RESOURCE_PATH_TRIGGER]);
@@ -533,11 +523,11 @@ public  client class Client {
         return mapJsonToTriggerList(jsonResponse);      
     }
 
-    public remote function deleteTrigger(@tainted TriggerProperties properties) returns 
+    public remote function deleteTrigger(@tainted ResourceProperties properties,string triggerId) returns 
     @tainted DeleteResponse|error{
         http:Request req = new;
         string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_COLLECTIONS,
-        properties.containerId,RESOURCE_PATH_TRIGGER,<string>properties.triggerId]);//check error        
+        properties.containerId,RESOURCE_PATH_TRIGGER,triggerId]);       
         HeaderParamaters header = mapParametersToHeaderType(DELETE,requestPath);
 
         req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);

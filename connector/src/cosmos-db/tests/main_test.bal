@@ -25,24 +25,23 @@ function createRandomUUID() returns handle = @java:Method {
         databaseId: "database1",
         containerId: "collection1"
 };
-string createSprocBody = "function () {\r\n    var context = getContext();\r\n    var response = context.getResponse();\r\n\r\n    response.setBody(\"Hello, World\");\r\n}"; 
-string replaceSprocId = "sproc-263791e9-a06a-4a47-b232-c3f7496d5557";
-string replaceSprocBody = "function (personToGreet) {\r\n    var context = getContext();\r\n    var response = context.getResponse();\r\n\r\n    response.setBody(\"Hello, \" + personToGreet);\r\n}";
 
-string deleteSprocId = "sproc-ac986086-a7b0-4c9b-a6c7-440d9a275e5d";
-string executeSprocId = "sproc-263791e9-a06a-4a47-b232-c3f7496d5557";
+string createDatabaseId = "database2";
+string createIfNotExistDatabaseId = "database1";
+string createDatabaseManualId = "database4";
+string createDatabaseAutoId = "database5";
+string createDatabaseBothId = "database6";
+string listOndDbId = "database1"; 
+string deleteDbId = "h"; 
 
 @test:Config{
-    enable: false
+    groups: ["database"]
 }
 function createDB(){
     io:println("--------------Create database------------------------\n\n");
 
     Client AzureCosmosClient = new(config);
-
-    DatabaseProperties db = {};
-    db.id = "database1";
-    var result = AzureCosmosClient->createDatabase(<@untainted>db);
+    var result = AzureCosmosClient->createDatabase(createDatabaseId);
     if (result is Database) {
         io:println(result);
     } else {
@@ -52,15 +51,13 @@ function createDB(){
 }
 
 @test:Config{
-    enable: false
+    groups: ["database"]
 }
 function createIfNotExist(){
     io:println("--------------Create database if not exist------------------------\n\n");
 
     Client AzureCosmosClient = new(config);
-    DatabaseProperties db = {};
-    db.id = "Heloo";
-    var result = AzureCosmosClient->createDatabaseIfNotExist(db);
+    var result = AzureCosmosClient->createDatabaseIfNotExist(createIfNotExistDatabaseId);
     if (result is Database?) {
         io:println(result);
     } else {
@@ -70,7 +67,7 @@ function createIfNotExist(){
 }
 
 @test:Config{
-    enable: false
+    groups: ["database"]
 }
 function createDBWithManualThroughput(){
     io:println("--------------Create with manual throguput------------------------\n\n");
@@ -78,9 +75,7 @@ function createDBWithManualThroughput(){
     Client AzureCosmosClient = new(config);
     ThroughputProperties tp = {};
     tp.throughput = 600; 
-    DatabaseProperties db = {};
-    db.id = "Heloo";
-    var result = AzureCosmosClient->createDatabase(<@untainted>db, tp);
+    var result = AzureCosmosClient->createDatabase(createDatabaseManualId, tp);
     if (result is Database) {
         io:println(result);
     } else {
@@ -90,17 +85,15 @@ function createDBWithManualThroughput(){
 }
 
 @test:Config{
-    enable: false
+    groups: ["database"]
 }
 function createDBWithAutoscaling(){
     io:println("--------------Create with autoscaling throguput------------------------\n\n");
 
     Client AzureCosmosClient = new(config);
-    DatabaseProperties db = {};
-    db.id = "Heloo";
     ThroughputProperties tp = {};
     tp.maxThroughput = {"maxThroughput": 4000};
-    var result = AzureCosmosClient->createDatabase(<@untainted>db, tp);
+    var result = AzureCosmosClient->createDatabase(createDatabaseAutoId, tp);
     if (result is Database) {
         io:println(result);
     } else {
@@ -110,7 +103,7 @@ function createDBWithAutoscaling(){
 }
 
 @test:Config{
-    enable: false
+    groups: ["database"]
 }
 function createDBWithBothHeaders(){
     io:println("--------------Create with autoscaling and throguput headers------------------------\n\n");
@@ -119,9 +112,7 @@ function createDBWithBothHeaders(){
     ThroughputProperties tp = {};
     tp.maxThroughput = {"maxThroughput" : 4000};
     tp.throughput = 600; 
-    DatabaseProperties db = {};
-    db.id = "Heloo";
-    var result = AzureCosmosClient->createDatabase(<@untainted>db, tp);
+    var result = AzureCosmosClient->createDatabase(createDatabaseBothId, tp);
     if (result is Database) {
         io:println(result);
     } else {
@@ -131,7 +122,7 @@ function createDBWithBothHeaders(){
 }
 
 @test:Config{
-   enable: false
+    groups: ["database"]
 }
 function listAllDB(){
     io:println("--------------List All databases------------------------\n\n");
@@ -147,15 +138,13 @@ function listAllDB(){
 }
 
 @test:Config{
-    enable: false
+    groups: ["database"]
 }
 function listOneDB(){
     io:println("--------------List one database------------------------\n\n");
 
     Client AzureCosmosClient = new(config);
-    DatabaseProperties db = {};
-    db.id = "database1"; 
-    var result = AzureCosmosClient->getDatabase(db);
+    var result = AzureCosmosClient->getDatabase(listOndDbId);
     if (result is Database) {
         io:println(result);
     } else {
@@ -165,15 +154,13 @@ function listOneDB(){
 }
 
 @test:Config{
-    enable: false
+    groups: ["database"]
 }
 function deleteDB(){
     io:println("--------------Delete one databse------------------------\n\n");
 
     Client AzureCosmosClient = new(config);
-    DatabaseProperties db = {};
-    db.id = "";
-    var result = AzureCosmosClient->deleteDatabase(db);
+    var result = AzureCosmosClient->deleteDatabase(deleteDbId);
     if (result is DeleteResponse) {
         io:println(result);
     } else {
@@ -574,7 +561,11 @@ function queryDocument(){
     io:println("\n\n");  
 }
 
-
+string createSprocBody = "function () {\r\n    var context = getContext();\r\n    var response = context.getResponse();\r\n\r\n    response.setBody(\"Hello, World\");\r\n}"; 
+string replaceSprocId = "sproc-263791e9-a06a-4a47-b232-c3f7496d5557";
+string replaceSprocBody = "function (personToGreet) {\r\n    var context = getContext();\r\n    var response = context.getResponse();\r\n\r\n    response.setBody(\"Hello, \" + personToGreet);\r\n}";
+string deleteSprocId = "sproc-ac986086-a7b0-4c9b-a6c7-440d9a275e5d";
+string executeSprocId = "sproc-263791e9-a06a-4a47-b232-c3f7496d5557";
 
 @test:Config{
     groups: ["storedProcedure"]
@@ -668,8 +659,13 @@ function executeOneSproc(){
     io:println("\n\n"); 
 }
 
+string createUDFBody = "function tax(income) {\r\n    if(income == undefined) \r\n        throw 'no input';\r\n    if (income < 1000) \r\n        return income * 0.1;\r\n    else if (income < 10000) \r\n        return income * 0.2;\r\n    else\r\n        return income * 0.4;\r\n}"; 
+string replaceUDFId = "udf-2972a27c-a447-47f4-9a8d-0daa0fa3e37a";
+string replaceUDFBody = "function taxIncome(income) {\r\n    if(income == undefined) \r\n        throw 'no input';\r\n    if (income < 1000) \r\n        return income * 0.1;\r\n    else if (income < 10000) \r\n        return income * 0.2;\r\n    else\r\n        return income * 0.4;\r\n}"; 
+string deleteUDFId = "udf-7b6f4b7f-7782-47a6-8dad-1fcbf04e9ac7";
+
 @test:Config{
-   enable: false
+    groups: ["userDefineFunction"]
 }
 function createUDF(){
     io:println("-----------------Create user defined function-----------------------\n\n");
@@ -677,14 +673,9 @@ function createUDF(){
     Client AzureCosmosClient = new(config);
     var uuid = createRandomUUID();
     string udfId = string `udf-${uuid.toString()}`;
-    UserDefinedFunctionProperties properties = {};
-    properties.databaseId = "database1";
-    properties.containerId = "collection1";
-    properties.userDefinedFunctionId = udfId;
-    string udfbody = "function tax(income) {\r\n    if(income == undefined) \r\n        throw 'no input';\r\n    if (income < 1000) \r\n        return income * 0.1;\r\n    else if (income < 10000) \r\n        return income * 0.2;\r\n    else\r\n        return income * 0.4;\r\n}"; 
     UserDefinedFunction udf = {
         id:udfId,
-        body:udfbody
+        body:createUDFBody
     };
     var result = AzureCosmosClient->createUserDefinedFunction(properties,udf);  
     if result is UserDefinedFunction {
@@ -696,21 +687,15 @@ function createUDF(){
 }
 
 @test:Config{
-   enable: false
+    groups: ["userDefineFunction"]
 }
 function replaceUDF(){
     io:println("-----------------Replace user defined function-----------------------\n\n");
 
     Client AzureCosmosClient = new(config);
-    string udfId = "udf-7b6f4b7f-7782-47a6-8dad-1fcbf04e9ac7";
-    UserDefinedFunctionProperties properties = {};
-    properties.databaseId = "database1";
-    properties.containerId = "collection1";
-    properties.userDefinedFunctionId = udfId;
-    string udfbody = "function taxIncome(income) {\r\n    if(income == undefined) \r\n        throw 'no input';\r\n    if (income < 1000) \r\n        return income * 0.1;\r\n    else if (income < 10000) \r\n        return income * 0.2;\r\n    else\r\n        return income * 0.4;\r\n}"; 
     UserDefinedFunction udf = {
-        id:udfId,
-        body:udfbody
+        id:replaceUDFId,
+        body:replaceUDFBody
     };
     var result = AzureCosmosClient->replaceUserDefinedFunction(properties,udf);  
     if result is UserDefinedFunction {
@@ -722,16 +707,12 @@ function replaceUDF(){
 }
 
 @test:Config{
-   enable: false
+    groups: ["userDefineFunction"]
 }
 function listUDF(){
     io:println("-----------------List all user defined functions-----------------------\n\n");
 
     Client AzureCosmosClient = new(config);
-    UserDefinedFunctionProperties properties = {};
-    properties.databaseId = "database1";
-    properties.containerId = "collection1";
-   
     var result = AzureCosmosClient->listUserDefinedFunction(properties);  
     if result is UserDefinedFunctionList {
         io:println(result);
@@ -742,20 +723,14 @@ function listUDF(){
 }
 
 @test:Config{
-   enable: false
+    groups: ["userDefineFunction"]
 }
 function deleteUDF(){
     io:println("-----------------Delete user defined function-----------------------\n\n");
 
     Client AzureCosmosClient = new(config);
     var uuid = createRandomUUID();
-    string udfId = "udf-7b6f4b7f-7782-47a6-8dad-1fcbf04e9ac7";
-    UserDefinedFunctionProperties properties = {};
-    properties.databaseId = "database1";
-    properties.containerId = "collection1";
-    properties.userDefinedFunctionId = udfId;
-
-    var result = AzureCosmosClient->deleteUserDefinedFunction(properties);  
+    var result = AzureCosmosClient->deleteUserDefinedFunction(properties,deleteUDFId);  
     if result is DeleteResponse {
         io:println(result);
     } else {
@@ -764,8 +739,17 @@ function deleteUDF(){
     io:println("\n\n");  
 }
 
+string createTriggerBody = "function tax(income) {\r\n    if(income == undefined) \r\n        throw 'no input';\r\n    if (income < 1000) \r\n        return income * 0.1;\r\n    else if (income < 10000) \r\n        return income * 0.2;\r\n    else\r\n        return income * 0.4;\r\n}";
+string createTriggerOperation = "All"; // All, Create, Replace, and Delete.
+string createTriggerType = "Post"; // he acceptable values are: Pre and Post. 
+string replaceTriggerId = "udf-1cf9a7bf-5d8e-47d8-b3e6-5804695cde5f";
+string replaceTriggerBody = "function updateMetadata() {\r\n    var context = getContext();\r\n    var collection = context.getCollection();\r\n    var response = context.getResponse();\r\n    var createdDocument = response.getBody();\r\n\r\n    // query for metadata document\r\n    var filterQuery = 'SELECT * FROM root r WHERE r.id = \"_metadata\"';\r\n    var accept = collection.queryDocuments(collection.getSelfLink(), filterQuery,\r\n      updateMetadataCallback);\r\n    if(!accept) throw \"Unable to update metadata, abort\";\r\n\r\n    function updateMetadataCallback(err, documents, responseOptions) {\r\n      if(err) throw new Error(\"Error\" + err.message);\r\n           if(documents.length != 1) throw 'Unable to find metadata document';\r\n           var metadataDocument = documents[0];\r\n\r\n           // update metadata\r\n           metadataDocument.createdDocuments += 1;\r\n           metadataDocument.createdNames += \" \" + createdDocument.id;\r\n           var accept = collection.replaceDocument(metadataDocument._self,\r\n               metadataDocument, function(err, docReplaced) {\r\n                  if(err) throw \"Unable to update metadata, abort\";\r\n               });\r\n           if(!accept) throw \"Unable to update metadata, abort\";\r\n           return;          \r\n    }";
+string replaceTriggerOperation = "All"; // All, Create, Replace, and Delete.
+string replaceTriggerType = "Post"; // he acceptable values are: Pre and Post. 
+string deleteTriggerId = "udf-8d3f5efc-aa33-490c-8dc8-6e91d1de1c7a";
+
 @test:Config{
-   enable: false
+    groups: ["Trigger"]
 }
 function createTrigger(){
     io:println("-----------------Create trigger-----------------------\n\n");
@@ -773,19 +757,11 @@ function createTrigger(){
     Client AzureCosmosClient = new(config);
     var uuid = createRandomUUID();
     string triggerId = string `trigger-${uuid.toString()}`;
-    TriggerProperties properties = {};
-    
-    properties.databaseId = "database1";
-    properties.containerId = "collection1";
-    properties.triggerId = triggerId;
-    string triggerBody = "function tax(income) {\r\n    if(income == undefined) \r\n        throw 'no input';\r\n    if (income < 1000) \r\n        return income * 0.1;\r\n    else if (income < 10000) \r\n        return income * 0.2;\r\n    else\r\n        return income * 0.4;\r\n}";
-    string triggerOperation = "All"; // All, Create, Replace, and Delete.
-    string triggerType = "Post"; // he acceptable values are: Pre and Post. 
     Trigger trigger = {
         id:triggerId,
-        body:triggerBody,
-        triggerOperation:triggerOperation,
-        triggerType: triggerType
+        body:createTriggerBody,
+        triggerOperation:createTriggerOperation,
+        triggerType: createTriggerType
     };
     var result = AzureCosmosClient->createTrigger(properties,trigger);  
     if result is Trigger {
@@ -797,26 +773,17 @@ function createTrigger(){
 }
 
 @test:Config{
-   enable: false
+    groups: ["Trigger"]
 }
 function replaceTrigger(){
     io:println("-----------------Replace trigger-----------------------\n\n");
 
     Client AzureCosmosClient = new(config);
-    TriggerProperties properties = {};
-    string triggerId = "udf-1cf9a7bf-5d8e-47d8-b3e6-5804695cde5f";
-
-    properties.databaseId = "database1";
-    properties.containerId = "collection1";
-    properties.triggerId = triggerId;
-    string triggerBody = "function updateMetadata() {\r\n    var context = getContext();\r\n    var collection = context.getCollection();\r\n    var response = context.getResponse();\r\n    var createdDocument = response.getBody();\r\n\r\n    // query for metadata document\r\n    var filterQuery = 'SELECT * FROM root r WHERE r.id = \"_metadata\"';\r\n    var accept = collection.queryDocuments(collection.getSelfLink(), filterQuery,\r\n      updateMetadataCallback);\r\n    if(!accept) throw \"Unable to update metadata, abort\";\r\n\r\n    function updateMetadataCallback(err, documents, responseOptions) {\r\n      if(err) throw new Error(\"Error\" + err.message);\r\n           if(documents.length != 1) throw 'Unable to find metadata document';\r\n           var metadataDocument = documents[0];\r\n\r\n           // update metadata\r\n           metadataDocument.createdDocuments += 1;\r\n           metadataDocument.createdNames += \" \" + createdDocument.id;\r\n           var accept = collection.replaceDocument(metadataDocument._self,\r\n               metadataDocument, function(err, docReplaced) {\r\n                  if(err) throw \"Unable to update metadata, abort\";\r\n               });\r\n           if(!accept) throw \"Unable to update metadata, abort\";\r\n           return;          \r\n    }";
-    string triggerOperation = "All"; // All, Create, Replace, and Delete.
-    string triggerType = "Post"; // he acceptable values are: Pre and Post. 
     Trigger trigger = {
-        id:triggerId,
-        body:triggerBody,
-        triggerOperation:triggerOperation,
-        triggerType: triggerType
+        id:replaceTriggerId,
+        body:replaceTriggerBody,
+        triggerOperation:replaceTriggerOperation,
+        triggerType: replaceTriggerType
     };
     var result = AzureCosmosClient->replaceTrigger(properties,trigger);  
     if result is Trigger {
@@ -828,16 +795,12 @@ function replaceTrigger(){
 }
 
 @test:Config{
-   enable: false
+    groups: ["Trigger"]
 }
 function listTriggers(){
     io:println("-----------------List triggers-----------------------\n\n");
 
     Client AzureCosmosClient = new(config);
-    TriggerProperties properties = {};
-    properties.databaseId = "database1";
-    properties.containerId = "collection1";
-   
     var result = AzureCosmosClient->listTriggers(properties);  
     if result is TriggerList {
         io:println(result);
@@ -848,20 +811,14 @@ function listTriggers(){
 }
 
 @test:Config{
-   enable: false
+    groups: ["Trigger"]
 }
 function deleteTrigger(){
     io:println("-----------------Delete user defined function-----------------------\n\n");
 
     Client AzureCosmosClient = new(config);
     var uuid = createRandomUUID();
-    string triggerId = "udf-8d3f5efc-aa33-490c-8dc8-6e91d1de1c7a";
-    TriggerProperties properties = {};
-    properties.databaseId = "database1";
-    properties.containerId = "collection1";
-    properties.triggerId = triggerId;
-
-    var result = AzureCosmosClient->deleteTrigger(properties);  
+    var result = AzureCosmosClient->deleteTrigger(properties,deleteTriggerId);  
     if result is DeleteResponse {
         io:println(result);
     } else {
