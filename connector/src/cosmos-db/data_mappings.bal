@@ -1,3 +1,5 @@
+import ballerina/io;
+
 function mapParametersToHeaderType(string httpVerb, string url) returns HeaderParamaters {
     HeaderParamaters params = {};
     params.verb = httpVerb;
@@ -208,7 +210,7 @@ function mapJsonToTrigger([json, Headers?] jsonPayload)returns @tainted Trigger 
     trigger.body = payload.body.toString();
     trigger.triggerOperation = payload.triggerOperation.toString();
     trigger.triggerType = payload.triggerType.toString();
-    trigger.reponseHeaders = headers;
+    //trigger.reponseHeaders = headers;
     return trigger;
 }
 
@@ -326,15 +328,39 @@ function userDefinedFunctionArray(json[] sourceUdfArrayJsonObject) returns @tain
     return udfs;
 }
 
-function ConvertToTriggerArray(json[] sourceUdfArrayJsonObject) returns @tainted Trigger[] { 
+function ConvertToTriggerArray(json[] sourceTriggerArrayJsonObject) returns @tainted Trigger[] { 
     Trigger[] triggers = [];
     int i = 0;
-    foreach json userDefinedFunction in sourceUdfArrayJsonObject { 
-        triggers[i] = mapJsonToTrigger([userDefinedFunction,()]);
+    foreach json trigger in sourceTriggerArrayJsonObject { 
+        triggers[i] = mapJsonToTrigger([trigger,()]);
         i = i + 1;
 
     }
     return triggers;
 }
+
+function convertToTypeArray(json[] jsonObject) returns @tainted any[] { 
+    any[] typeArray = [];
+    int i = 0;
+    foreach json trigger in jsonObject { 
+        typeArray[i] = mapJsonToType([trigger,()]);
+        i = i + 1;
+    }
+    return typeArray;
+}
+
+function mapJsonToType([json, Headers?] jsonPayload) returns @tainted any{
+    //anydata thing = {};
+    json payload;
+    Headers? headers;
+    [payload,headers] = jsonPayload;
+   // io:println(payload);
+
+    any retuenthing =  payload.clone();
+    io:println();
+    return retuenthing;
+}
+
+
 
 

@@ -120,7 +120,7 @@ function createDBWithBothHeaders(){
 }
 
 @test:Config{
-   //enable: false
+   enable: false
 }
 function listAllDB(){
     io:println("--------------List All databases------------------------\n\n");
@@ -136,7 +136,7 @@ function listAllDB(){
 }
 
 @test:Config{
-    //enable: false
+    enable: false
 }
 function listOneDB(){
     io:println("--------------List one database------------------------\n\n");
@@ -383,7 +383,7 @@ function createDocument(){
     dc.databaseId="hikall";
     dc.containerId="mycollection1";
     dc.partitionKey=<json>custombody.AccountNumber;
-    RequestOptions reqOptions = {
+    RequestHeaderOptions reqOptions = {
         isUpsertRequest:true
     };
     if finalj is json{
@@ -427,7 +427,7 @@ function getNextPageOfDocumentList(){
     DocumentProperties dc = {};
     dc.databaseId = "hikall";
     dc.containerId = "mycollection1";
-    RequestOptions options = {};
+    RequestHeaderOptions options = {};
     options.maxItemCount = 4;
     options.continuationToken = "{token:'nXh6ANTE4QoIAAAAAAAAAA==',range:{min:'',max:'FF'}}";//convert this to string
     var result = AzureCosmosClient->getDocumentList(dc,options);
@@ -732,7 +732,7 @@ function replaceUDF(){
 }
 
 @test:Config{
-   //enable: false
+   enable: false
 }
 function listUDF(){
     io:println("-----------------List all user defined functions-----------------------\n\n");
@@ -807,14 +807,14 @@ function createTrigger(){
 }
 
 @test:Config{
-   enable: false
+   //enable: false
 }
 function replaceTrigger(){
     io:println("-----------------Replace trigger-----------------------\n\n");
 
     Client AzureCosmosClient = new(config);
     TriggerProperties properties = {};
-    string triggerId = "udf-8d3f5efc-aa33-490c-8dc8-6e91d1de1c7a";
+    string triggerId = "udf-1cf9a7bf-5d8e-47d8-b3e6-5804695cde5f";
 
     properties.databaseId = "database1";
     properties.containerId = "collection1";
@@ -838,7 +838,7 @@ function replaceTrigger(){
 }
 
 @test:Config{
-   //enable: false
+   enable: false
 }
 function listTriggers(){
     io:println("-----------------List triggers-----------------------\n\n");
@@ -858,7 +858,7 @@ function listTriggers(){
 }
 
 @test:Config{
-   //enable: false
+   enable: false
 }
 function deleteTrigger(){
     io:println("-----------------Delete user defined function-----------------------\n\n");

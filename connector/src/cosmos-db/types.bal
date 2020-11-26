@@ -16,7 +16,7 @@ public type HeaderParamaters record {|
     string resourceId = "";
 |};
 
-public type RequestOptions record {|
+public type RequestHeaderOptions record {|
     boolean? isUpsertRequest = ();
     string? indexingDirective = ();
     int? maxItemCount = ();
@@ -30,6 +30,11 @@ public type RequestOptions record {|
     //changes made since that logical timestamp.only for GET
     string? PartitionKeyRangeId = ();
     string? ifMatch = ();//Only for PUT and DELETE 
+|};
+
+public type ResourceProperties record {|
+    string databaseId = "";
+    string containerId = "";
 |};
 
 public type Headers record {|
@@ -164,7 +169,7 @@ public type Trigger record {|
     string body = "";
     string triggerOperation = "";
     string triggerType = "";
-    Headers? reponseHeaders = ();
+    //Headers? reponseHeaders = ();
 |};
 
 public type TriggerList record {

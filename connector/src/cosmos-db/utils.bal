@@ -172,7 +172,7 @@ public function setHeadersForQuery(http:Request req) returns http:Request|error{
     return req;
 }
 
-public function setRequestOptions(http:Request req, RequestOptions requestOptions) returns http:Request|error{
+public function setRequestOptions(http:Request req, RequestHeaderOptions requestOptions) returns http:Request|error{
     if requestOptions.indexingDirective is string {
         req.setHeader("x-ms-indexing-directive",requestOptions.indexingDirective.toString());
     }
