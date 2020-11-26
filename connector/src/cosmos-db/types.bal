@@ -113,6 +113,7 @@ public type QueryParameter record {|
     string value = "";
 |};
 
+//stired procedure and UDF are same
 public type StoredProcedureProperties record {
     string databaseId = "";
     string containerId = "";
@@ -127,7 +128,7 @@ public type StoredProcedure record {
 
 public type StoredProcedureList record {
     string _rid = "";
-    StoredProcedure[] storedprocedures = [];
+    StoredProcedure[] storedProcedures = [];
     Headers reponseHeaders?;
     int _count = 0;
 };
@@ -142,6 +143,20 @@ public type UserDefinedFunction record {|
     string id = "";
     string body = "";
     Headers reponseHeaders?;
+|};
+
+public type UserDefinedFunctionList record {
+    string _rid = "";
+    UserDefinedFunction[] UserDefinedFunctions = [];
+    Headers reponseHeaders?;
+    int _count = 0;
+};
+
+public type Trigger record {|
+    string id = "";
+    string body = "";
+    string triggerOperation = "";
+    string triggerType = "";
 |};
 
 public type ThroughputProperties record {

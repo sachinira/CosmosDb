@@ -22,7 +22,7 @@ function createRandomUUID() returns handle = @java:Method {
 } external;
 
 @test:Config{
-    //enable: false
+    enable: false
 }
 function createDB(){
     io:println("--------------Create database------------------------\n\n");
@@ -154,7 +154,7 @@ function listOneDB(){
 }
 
 @test:Config{
-    //enable: false
+    enable: false
 }
 function deleteDB(){
     io:println("--------------Delete one databse------------------------\n\n");
@@ -172,7 +172,7 @@ function deleteDB(){
 }
 
 @test:Config{
-    //enable: false
+    enable: false
 }
 function createContainer(){
     io:println("--------------Create Collection-----------------------\n\n");
@@ -284,7 +284,7 @@ function getAllCollections(){
 }
 
 @test:Config{
-    //enable: false
+    enable: false
 }
 function getOneCollection(){
     io:println("--------------Get One collection-----------------------\n\n");
@@ -706,7 +706,7 @@ function createUDF(){
 }
 
 @test:Config{
-   //enable: false
+   enable: false
 }
 function replaceUDF(){
     io:println("-----------------Replace user defined function-----------------------\n\n");
@@ -724,7 +724,7 @@ function replaceUDF(){
         body:udfbody
     };
     var result = AzureCosmosClient->replaceUserDefinedFunction(properties,udf);  
-    if result is StoredProcedure {
+    if result is UserDefinedFunction {
         io:println(result);
     } else {
         test:assertFail(msg = result.message());
@@ -732,7 +732,47 @@ function replaceUDF(){
     io:println("\n\n");  
 }
 
+@test:Config{
+   enable: false
+}
+function listUDF(){
+    io:println("-----------------List all user defined functions-----------------------\n\n");
 
+    Client AzureCosmosClient = new(config);
+    UserDefinedFunctionProperties properties = {};
+    properties.databaseId = "database1";
+    properties.containerId = "collection1";
+   
+    var result = AzureCosmosClient->listUserDefinedFunction(properties);  
+    if result is UserDefinedFunctionList {
+        io:println(result);
+    } else {
+        test:assertFail(msg = result.message());
+    }   
+    io:println("\n\n");  
+}
 
+@test:Config{
+   //enable: false
+}
+function deleteUDF(){
+    io:println("-----------------Delete user defined function-----------------------\n\n");
+
+    Client AzureCosmosClient = new(config);
+    var uuid = createRandomUUID();
+    string udfId = "udf-7b6f4b7f-7782-47a6-8dad-1fcbf04e9ac7";
+    UserDefinedFunctionProperties properties = {};
+    properties.databaseId = "database1";
+    properties.containerId = "collection1";
+    properties.userDefinedFunctionId = udfId;
+
+    var result = AzureCosmosClient->deleteUserDefinedFunction(properties);  
+    if result is DeleteResponse {
+        io:println(result);
+    } else {
+        test:assertFail(msg = result.message());
+    }   
+    io:println("\n\n");  
+}
 
 

@@ -166,7 +166,7 @@ function mapJsonToStoredProcedureList([json, Headers] jsonPayload)returns @taint
     [payload,headers] = jsonPayload;
 
     sproclist._rid = payload._rid.toString();
-    sproclist.storedprocedures = convertToStoredProcedureArray(<json[]>payload.StoredProcedures);
+    sproclist.storedProcedures = convertToStoredProcedureArray(<json[]>payload.StoredProcedures);
     sproclist._count = convertToInt(payload._count);//headers
     sproclist.reponseHeaders = headers;
     return sproclist;
@@ -182,6 +182,19 @@ function mapJsonToUserDefinedFunction([json, Headers] jsonPayload)returns @taint
     udf.body = payload.body.toString();
     udf.reponseHeaders = headers;
     return udf;
+}
+
+function mapJsonToUserDefinedFunctionList([json, Headers] jsonPayload)returns @tainted UserDefinedFunctionList|error {
+    UserDefinedFunctionList udflist = {};
+    json payload;
+    Headers headers;
+    [payload,headers] = jsonPayload;
+
+    udflist._rid = payload._rid.toString();
+    udflist.UserDefinedFunctions = userDefinedFunctionArray(<json[]>payload.UserDefinedFunctions);
+    udflist._count = convertToInt(payload._count);//headers
+    udflist.reponseHeaders = headers;
+    return udflist;
 }
 
 function convertToDatabaseArray(json[] sourceDatabaseArrayJsonObject) returns @tainted Database[] {
@@ -272,6 +285,18 @@ function convertToStoredProcedureArray(json[] sourceSprocArrayJsonObject) return
 
     }
     return sprocs;
+}
+
+function userDefinedFunctionArray(json[] sourceUdfArrayJsonObject) returns @tainted UserDefinedFunction[] { 
+    UserDefinedFunction[] udfs = [];
+    int i = 0;
+    foreach json userDefinedFunction in sourceUdfArrayJsonObject { 
+        udfs[i].id = userDefinedFunction.id.toString();
+        udfs[i].body = userDefinedFunction.body.toString();
+        i = i + 1;
+
+    }
+    return udfs;
 }
 
 

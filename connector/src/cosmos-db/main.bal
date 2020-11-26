@@ -435,7 +435,7 @@ public  client class Client {
     UserDefinedFunction userDefinedFunction) returns @tainted UserDefinedFunction|error{
         http:Request req = new;
         string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_COLLECTIONS,
-        properties.containerId,RESOURCE_PATH_UDF]);//check error        
+        properties.containerId,RESOURCE_PATH_UDF]);       
         HeaderParamaters header = mapParametersToHeaderType(POST,requestPath);
 
         req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
@@ -460,18 +460,28 @@ public  client class Client {
         return mapJsonToUserDefinedFunction(jsonResponse);      
     }
 
-    public remote function listUserDefinedFunction(@tainted UserDefinedFunctionProperties properties, 
-    UserDefinedFunction userDefinedFunction) returns @tainted UserDefinedFunction|error{
+    public remote function listUserDefinedFunction(@tainted UserDefinedFunctionProperties properties) returns @tainted UserDefinedFunctionList|error{
+        http:Request req = new;
+        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_COLLECTIONS,
+        properties.containerId,RESOURCE_PATH_UDF]);
+        HeaderParamaters header = mapParametersToHeaderType(GET,requestPath);
+
+        req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
+        var response = self.azureCosmosClient->get(requestPath,req);
+        [json,Headers] jsonResponse = check parseResponseToTuple(response);
+        return mapJsonToUserDefinedFunctionList(jsonResponse);      
+    }
+
+    public remote function deleteUserDefinedFunction(@tainted UserDefinedFunctionProperties properties) returns @tainted DeleteResponse|error{
         http:Request req = new;
         string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_COLLECTIONS,
         properties.containerId,RESOURCE_PATH_UDF,<string>properties.userDefinedFunctionId]);//check error        
-        HeaderParamaters header = mapParametersToHeaderType(PUT,requestPath);
+        HeaderParamaters header = mapParametersToHeaderType(DELETE,requestPath);
 
         req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
-        req.setJsonPayload(<json>userDefinedFunction.cloneWithType(json));//error
-        var response = self.azureCosmosClient->put(requestPath,req);
-        [json,Headers] jsonResponse = check parseResponseToTuple(response);
-        return mapJsonToUserDefinedFunction(jsonResponse);      
+        var response = self.azureCosmosClient->delete(requestPath,req);
+        [string,Headers] jsonresponse = check parseDeleteResponseToTuple(response);
+        return  mapTupleToDeleteresponse(jsonresponse);     
     }
 }
 
