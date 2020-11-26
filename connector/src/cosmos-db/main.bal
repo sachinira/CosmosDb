@@ -22,6 +22,11 @@ public  client class Client {
         self.azureCosmosClient = new (self.baseUrl,httpClientConfig);
     }
 
+    ResourceProperties properties = {
+        databaseId: "database1",
+        containerId: "collection1"
+    };
+
     # To create a database inside a resource
     # + properties -  id/name for the database
     # + throughputProperties - Optional throughput parameter which will set 'x-ms-offer-throughput' header 
@@ -397,7 +402,8 @@ public  client class Client {
     }
 
     #To delete a stored procedure inside a collection
-    # + properties - object of type StoredProcedureProperties
+    # + properties - object of type ResourceProperties
+    # + storedProcedureId - id of the stored procedure to delete
     # + return - If successful, returns DeleteResponse specifying delete is sucessfull. Else returns error. 
     public remote function deleteStoredProcedure(@tainted ResourceProperties properties,string storedProcedureId) returns 
     @tainted DeleteResponse|error{
@@ -414,7 +420,8 @@ public  client class Client {
 
     #To execute a stored procedure inside a collection
     # ***********function only works correctly for string parameters************
-    # + properties - object of type StoredProcedureProperties
+    # + properties - object of type ResourceProperties
+    # + storedProcedureId - id of the stored procedure to delete
     # + parameters - The list of paramaters to pass to javascript function as an array.
     # + return - If successful, returns json with the output from the executed funxtion. Else returns error. 
     public remote function executeStoredProcedure(@tainted ResourceProperties properties, string storedProcedureId, any[]? parameters) 
