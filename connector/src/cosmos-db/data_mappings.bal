@@ -172,10 +172,10 @@ function mapJsonToStoredProcedureList([json, Headers] jsonPayload)returns @taint
     return sproclist;
 }
 
-function mapJsonToUserDefinedFunction([json, Headers] jsonPayload)returns @tainted UserDefinedFunction|error {
+function mapJsonToUserDefinedFunction([json, Headers?] jsonPayload)returns @tainted UserDefinedFunction {
     UserDefinedFunction udf = {};
     json payload;
-    Headers headers;
+    Headers? headers;
     [payload,headers] = jsonPayload;
 
     udf.id = payload._rid.toString();
@@ -195,6 +195,34 @@ function mapJsonToUserDefinedFunctionList([json, Headers] jsonPayload)returns @t
     udflist._count = convertToInt(payload._count);//headers
     udflist.reponseHeaders = headers;
     return udflist;
+}
+
+function mapJsonToTrigger([json, Headers?] jsonPayload)returns @tainted Trigger {
+    Trigger trigger = {};
+    json payload;
+    Headers? headers;
+    [payload,headers] = jsonPayload;
+
+    trigger._rid = payload._rid.toString();
+    trigger.id = payload.id.toString();
+    trigger.body = payload.body.toString();
+    trigger.triggerOperation = payload.triggerOperation.toString();
+    trigger.triggerType = payload.triggerType.toString();
+    trigger.reponseHeaders = headers;
+    return trigger;
+}
+
+function mapJsonToTriggerList([json, Headers] jsonPayload)returns @tainted TriggerList|error {
+    TriggerList triggerlist = {};
+    json payload;
+    Headers headers;
+    [payload,headers] = jsonPayload;
+
+    triggerlist._rid = payload._rid.toString();
+    triggerlist.triggers = ConvertToTriggerArray(<json[]>payload.Triggers);
+    triggerlist._count = convertToInt(payload._count);//headers
+    triggerlist.reponseHeaders = headers;
+    return triggerlist;
 }
 
 function convertToDatabaseArray(json[] sourceDatabaseArrayJsonObject) returns @tainted Database[] {
@@ -286,17 +314,27 @@ function convertToStoredProcedureArray(json[] sourceSprocArrayJsonObject) return
     }
     return sprocs;
 }
-
+//************************
 function userDefinedFunctionArray(json[] sourceUdfArrayJsonObject) returns @tainted UserDefinedFunction[] { 
     UserDefinedFunction[] udfs = [];
     int i = 0;
     foreach json userDefinedFunction in sourceUdfArrayJsonObject { 
-        udfs[i].id = userDefinedFunction.id.toString();
-        udfs[i].body = userDefinedFunction.body.toString();
+        udfs[i] = mapJsonToUserDefinedFunction([userDefinedFunction,()]);
         i = i + 1;
 
     }
     return udfs;
+}
+
+function ConvertToTriggerArray(json[] sourceUdfArrayJsonObject) returns @tainted Trigger[] { 
+    Trigger[] triggers = [];
+    int i = 0;
+    foreach json userDefinedFunction in sourceUdfArrayJsonObject { 
+        triggers[i] = mapJsonToTrigger([userDefinedFunction,()]);
+        i = i + 1;
+
+    }
+    return triggers;
 }
 
 

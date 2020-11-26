@@ -129,7 +129,7 @@ public type StoredProcedure record {
 public type StoredProcedureList record {
     string _rid = "";
     StoredProcedure[] storedProcedures = [];
-    Headers reponseHeaders?;
+    Headers? reponseHeaders = ();
     int _count = 0;
 };
 
@@ -142,23 +142,40 @@ public type UserDefinedFunctionProperties record {|
 public type UserDefinedFunction record {|
     string id = "";
     string body = "";
-    Headers reponseHeaders?;
+    Headers? reponseHeaders = ();
 |};
 
 public type UserDefinedFunctionList record {
     string _rid = "";
     UserDefinedFunction[] UserDefinedFunctions = [];
-    Headers reponseHeaders?;
+    Headers? reponseHeaders = ();
     int _count = 0;
 };
 
+public type TriggerProperties record {|
+    string databaseId = "";
+    string containerId = "";
+    string? triggerId = ();
+|};
+
 public type Trigger record {|
+    string? _rid = ();
     string id = "";
     string body = "";
     string triggerOperation = "";
     string triggerType = "";
+    Headers? reponseHeaders = ();
 |};
 
+public type TriggerList record {
+    string _rid = "";
+    Trigger[] triggers = [];
+    Headers reponseHeaders?;
+    int _count = 0;
+};
+
+
+//********************************************
 public type ThroughputProperties record {
     int? throughput = ();
     json? maxThroughput = ();

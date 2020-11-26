@@ -483,5 +483,58 @@ public  client class Client {
         [string,Headers] jsonresponse = check parseDeleteResponseToTuple(response);
         return  mapTupleToDeleteresponse(jsonresponse);     
     }
-}
 
+    public remote function createTrigger(@tainted TriggerProperties properties, Trigger trigger) returns @tainted 
+    Trigger|error{
+        http:Request req = new;
+        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_COLLECTIONS,
+        properties.containerId,RESOURCE_PATH_TRIGGER]);       
+        HeaderParamaters header = mapParametersToHeaderType(POST,requestPath);
+
+        req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
+        req.setJsonPayload(<json>trigger.cloneWithType(json));//error
+        var response = self.azureCosmosClient->post(requestPath,req);
+        [json,Headers] jsonResponse = check parseResponseToTuple(response);
+        return mapJsonToTrigger(jsonResponse);      
+    }
+    
+    public remote function replaceTrigger(@tainted TriggerProperties properties, Trigger trigger) returns @tainted 
+    Trigger|error{
+        http:Request req = new;
+        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_COLLECTIONS,
+        properties.containerId,RESOURCE_PATH_TRIGGER,<string>properties.triggerId]);       
+        HeaderParamaters header = mapParametersToHeaderType(PUT,requestPath);
+
+        req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
+        req.setJsonPayload(<json>trigger.cloneWithType(json));//error
+        var response = self.azureCosmosClient->put(requestPath,req);
+        [json,Headers] jsonResponse = check parseResponseToTuple(response);
+        return mapJsonToTrigger(jsonResponse);      
+    }
+
+    public remote function listTriggers(@tainted TriggerProperties properties) returns @tainted TriggerList|error{
+        http:Request req = new;
+        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_COLLECTIONS,
+        properties.containerId,RESOURCE_PATH_TRIGGER]);
+        HeaderParamaters header = mapParametersToHeaderType(GET,requestPath);
+
+        req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
+        var response = self.azureCosmosClient->get(requestPath,req);
+        [json,Headers] jsonResponse = check parseResponseToTuple(response);
+        return mapJsonToTriggerList(jsonResponse);      
+    }
+
+    public remote function deleteTrigger(@tainted TriggerProperties properties) returns 
+    @tainted DeleteResponse|error{
+        http:Request req = new;
+        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_COLLECTIONS,
+        properties.containerId,RESOURCE_PATH_TRIGGER,<string>properties.triggerId]);//check error        
+        HeaderParamaters header = mapParametersToHeaderType(DELETE,requestPath);
+
+        req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
+        var response = self.azureCosmosClient->delete(requestPath,req);
+        [string,Headers] jsonresponse = check parseDeleteResponseToTuple(response);
+        return  mapTupleToDeleteresponse(jsonresponse);
+    }
+
+}

@@ -697,7 +697,7 @@ function createUDF(){
         body:udfbody
     };
     var result = AzureCosmosClient->createUserDefinedFunction(properties,udf);  
-    if result is StoredProcedure {
+    if result is UserDefinedFunction {
         io:println(result);
     } else {
         test:assertFail(msg = result.message());
@@ -712,7 +712,6 @@ function replaceUDF(){
     io:println("-----------------Replace user defined function-----------------------\n\n");
 
     Client AzureCosmosClient = new(config);
-    var uuid = createRandomUUID();
     string udfId = "udf-7b6f4b7f-7782-47a6-8dad-1fcbf04e9ac7";
     UserDefinedFunctionProperties properties = {};
     properties.databaseId = "database1";
@@ -733,7 +732,7 @@ function replaceUDF(){
 }
 
 @test:Config{
-   enable: false
+   //enable: false
 }
 function listUDF(){
     io:println("-----------------List all user defined functions-----------------------\n\n");
@@ -753,7 +752,7 @@ function listUDF(){
 }
 
 @test:Config{
-   //enable: false
+   enable: false
 }
 function deleteUDF(){
     io:println("-----------------Delete user defined function-----------------------\n\n");
@@ -775,4 +774,108 @@ function deleteUDF(){
     io:println("\n\n");  
 }
 
+@test:Config{
+   enable: false
+}
+function createTrigger(){
+    io:println("-----------------Create trigger-----------------------\n\n");
 
+    Client AzureCosmosClient = new(config);
+    var uuid = createRandomUUID();
+    string triggerId = string `trigger-${uuid.toString()}`;
+    TriggerProperties properties = {};
+    
+    properties.databaseId = "database1";
+    properties.containerId = "collection1";
+    properties.triggerId = triggerId;
+    string triggerBody = "function tax(income) {\r\n    if(income == undefined) \r\n        throw 'no input';\r\n    if (income < 1000) \r\n        return income * 0.1;\r\n    else if (income < 10000) \r\n        return income * 0.2;\r\n    else\r\n        return income * 0.4;\r\n}";
+    string triggerOperation = "All"; // All, Create, Replace, and Delete.
+    string triggerType = "Post"; // he acceptable values are: Pre and Post. 
+    Trigger trigger = {
+        id:triggerId,
+        body:triggerBody,
+        triggerOperation:triggerOperation,
+        triggerType: triggerType
+    };
+    var result = AzureCosmosClient->createTrigger(properties,trigger);  
+    if result is Trigger {
+        io:println(result);
+    } else {
+        test:assertFail(msg = result.message());
+    }   
+    io:println("\n\n");  
+}
+
+@test:Config{
+   enable: false
+}
+function replaceTrigger(){
+    io:println("-----------------Replace trigger-----------------------\n\n");
+
+    Client AzureCosmosClient = new(config);
+    TriggerProperties properties = {};
+    string triggerId = "udf-8d3f5efc-aa33-490c-8dc8-6e91d1de1c7a";
+
+    properties.databaseId = "database1";
+    properties.containerId = "collection1";
+    properties.triggerId = triggerId;
+    string triggerBody = "function updateMetadata() {\r\n    var context = getContext();\r\n    var collection = context.getCollection();\r\n    var response = context.getResponse();\r\n    var createdDocument = response.getBody();\r\n\r\n    // query for metadata document\r\n    var filterQuery = 'SELECT * FROM root r WHERE r.id = \"_metadata\"';\r\n    var accept = collection.queryDocuments(collection.getSelfLink(), filterQuery,\r\n      updateMetadataCallback);\r\n    if(!accept) throw \"Unable to update metadata, abort\";\r\n\r\n    function updateMetadataCallback(err, documents, responseOptions) {\r\n      if(err) throw new Error(\"Error\" + err.message);\r\n           if(documents.length != 1) throw 'Unable to find metadata document';\r\n           var metadataDocument = documents[0];\r\n\r\n           // update metadata\r\n           metadataDocument.createdDocuments += 1;\r\n           metadataDocument.createdNames += \" \" + createdDocument.id;\r\n           var accept = collection.replaceDocument(metadataDocument._self,\r\n               metadataDocument, function(err, docReplaced) {\r\n                  if(err) throw \"Unable to update metadata, abort\";\r\n               });\r\n           if(!accept) throw \"Unable to update metadata, abort\";\r\n           return;          \r\n    }";
+    string triggerOperation = "All"; // All, Create, Replace, and Delete.
+    string triggerType = "Post"; // he acceptable values are: Pre and Post. 
+    Trigger trigger = {
+        id:triggerId,
+        body:triggerBody,
+        triggerOperation:triggerOperation,
+        triggerType: triggerType
+    };
+    var result = AzureCosmosClient->replaceTrigger(properties,trigger);  
+    if result is Trigger {
+        io:println(result);
+    } else {
+        test:assertFail(msg = result.message());
+    }   
+    io:println("\n\n");  
+}
+
+@test:Config{
+   //enable: false
+}
+function listTriggers(){
+    io:println("-----------------List triggers-----------------------\n\n");
+
+    Client AzureCosmosClient = new(config);
+    TriggerProperties properties = {};
+    properties.databaseId = "database1";
+    properties.containerId = "collection1";
+   
+    var result = AzureCosmosClient->listTriggers(properties);  
+    if result is TriggerList {
+        io:println(result);
+    } else {
+        test:assertFail(msg = result.message());
+    }   
+    io:println("\n\n");  
+}
+
+@test:Config{
+   //enable: false
+}
+function deleteTrigger(){
+    io:println("-----------------Delete user defined function-----------------------\n\n");
+
+    Client AzureCosmosClient = new(config);
+    var uuid = createRandomUUID();
+    string triggerId = "udf-8d3f5efc-aa33-490c-8dc8-6e91d1de1c7a";
+    TriggerProperties properties = {};
+    properties.databaseId = "database1";
+    properties.containerId = "collection1";
+    properties.triggerId = triggerId;
+
+    var result = AzureCosmosClient->deleteTrigger(properties);  
+    if result is DeleteResponse {
+        io:println(result);
+    } else {
+        test:assertFail(msg = result.message());
+    }   
+    io:println("\n\n");  
+}
