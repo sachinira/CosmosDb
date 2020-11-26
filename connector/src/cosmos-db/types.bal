@@ -119,11 +119,6 @@ public type QueryParameter record {|
 |};
 
 //stired procedure and UDF are same
-public type StoredProcedureProperties record {
-    string databaseId = "";
-    string containerId = "";
-    string? storedProcedureId = ();
-};
 
 public type StoredProcedure record {
     string id = "";

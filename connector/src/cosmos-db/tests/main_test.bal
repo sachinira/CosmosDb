@@ -572,10 +572,9 @@ function createSproc(){
     Client AzureCosmosClient = new(config);
     var uuid = createRandomUUID();
     string sprocId = string `sproc-${uuid.toString()}`;
-    StoredProcedureProperties properties = {};
+    ResourceProperties properties = {};
     properties.databaseId = "hikall";
     properties.containerId = "mycollection1";
-    properties.storedProcedureId = sprocId;
     string sproc = "function () {\r\n    var context = getContext();\r\n    var response = context.getResponse();\r\n\r\n    response.setBody(\"Hello, World\");\r\n}"; 
     StoredProcedure sp = {
         id:sprocId,
@@ -598,10 +597,9 @@ function replaceSproc(){
 
     Client AzureCosmosClient = new(config);
     string sprocId = "sproc-50c4f0df-b25d-48ef-b936-d31a55798193";
-    StoredProcedureProperties properties = {};
+    ResourceProperties properties = {};
     properties.databaseId = "hikall";
     properties.containerId = "mycollection1";
-    properties.storedProcedureId = sprocId;
     string sproc = "function (personToGreet) {\r\n    var context = getContext();\r\n    var response = context.getResponse();\r\n\r\n    response.setBody(\"Hello, \" + personToGreet);\r\n}";
     StoredProcedure sp = {
         id:sprocId,
@@ -623,7 +621,7 @@ function getAllSprocs(){
     io:println("-----------------Get All Stored Procedures-----------------------\n\n");
 
     Client AzureCosmosClient = new(config);
-    StoredProcedureProperties properties = {};
+    ResourceProperties properties = {};
     properties.databaseId = "hikall";
     properties.containerId = "mycollection1";
     var result = AzureCosmosClient->listStoredProcedures(properties);   
@@ -643,11 +641,10 @@ function deleteOneSproc(){
 
     Client AzureCosmosClient = new(config);
     string sprocId = "sproc-50c4f0df-b25d-48ef-b936-d31a55798193";
-    StoredProcedureProperties properties = {};
+    ResourceProperties properties = {};
     properties.databaseId = "hikall";
     properties.containerId = "mycollection1";
-    properties.storedProcedureId = sprocId; 
-    var result = AzureCosmosClient->deleteStoredProcedure(properties);   
+    var result = AzureCosmosClient->deleteStoredProcedure(properties,sprocId);   
     if result is DeleteResponse {
         io:println(result);
     } else {
@@ -664,12 +661,11 @@ function executeOneSproc(){
 
     Client AzureCosmosClient = new(config);
     string sprocId = "sproc-6ddd056a-0846-430d-9dff-a35425b346ad";
-    StoredProcedureProperties properties = {};
+    ResourceProperties properties = {};
     properties.databaseId = "hikall";
     properties.containerId = "mycollection1";
-    properties.storedProcedureId = sprocId; 
     string[] arrayofparameters = ["Sachi"];
-    var result = AzureCosmosClient->executeStoredProcedure(properties,arrayofparameters);   
+    var result = AzureCosmosClient->executeStoredProcedure(properties,sprocId,arrayofparameters);   
     if result is json {
         io:println(result);
     } else {

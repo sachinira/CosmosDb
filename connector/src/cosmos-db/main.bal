@@ -348,7 +348,7 @@ public  client class Client {
     # + properties - object of type StoredProcedureProperties
     # + storedProcedure - object of Type storedProcedure
     # + return - If successful, returns a StoredProcedure. Else returns error. 
-    public remote function createStoredProcedure(@tainted StoredProcedureProperties properties, 
+    public remote function createStoredProcedure(@tainted ResourceProperties properties, 
     StoredProcedure storedProcedure) returns @tainted StoredProcedure|error{
         http:Request req = new;
         string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_COLLECTIONS,
@@ -366,15 +366,15 @@ public  client class Client {
     # + properties - object of type StoredProcedureProperties
     # + storedProcedure - object of Type storedProcedure
     # + return - If successful, returns a StoredProcedure. Else returns error. 
-    public remote function replaceStoredProcedure(@tainted StoredProcedureProperties properties, 
-    StoredProcedure storedProcedure) returns @tainted StoredProcedure|error{
+    public remote function replaceStoredProcedure(@tainted ResourceProperties properties, 
+    @tainted StoredProcedure storedProcedure) returns @tainted StoredProcedure|error{
         http:Request req = new;
         string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_COLLECTIONS,
-        properties.containerId,RESOURCE_PATH_STORED_POCEDURES,<string>properties.storedProcedureId]);//check error
+        properties.containerId,RESOURCE_PATH_STORED_POCEDURES,storedProcedure.id]);
         HeaderParamaters header = mapParametersToHeaderType(PUT,requestPath);
 
         req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
-        req.setJsonPayload(<json>storedProcedure.cloneWithType(json));//error
+        req.setJsonPayload(<@untainted><json>storedProcedure.cloneWithType(json));//error
         var response = self.azureCosmosClient->put(requestPath,req);
         [json,Headers] jsonResponse = check parseResponseToTuple(response);
         return mapJsonToStoredProcedure(jsonResponse);  
@@ -383,7 +383,7 @@ public  client class Client {
     #To list all stored procedures inside a collection
     # + properties - object of type StoredProcedureProperties
     # + return - If successful, returns a StoredProcedureList. Else returns error. 
-    public remote function listStoredProcedures(@tainted StoredProcedureProperties properties) returns 
+    public remote function listStoredProcedures(@tainted ResourceProperties properties) returns 
     @tainted StoredProcedureList|error{
         http:Request req = new;
         string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_COLLECTIONS,
@@ -399,11 +399,11 @@ public  client class Client {
     #To delete a stored procedure inside a collection
     # + properties - object of type StoredProcedureProperties
     # + return - If successful, returns DeleteResponse specifying delete is sucessfull. Else returns error. 
-    public remote function deleteStoredProcedure(@tainted StoredProcedureProperties properties) returns 
+    public remote function deleteStoredProcedure(@tainted ResourceProperties properties,string storedProcedureId) returns 
     @tainted DeleteResponse|error{
         http:Request req = new;
         string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_COLLECTIONS,
-        properties.containerId,RESOURCE_PATH_STORED_POCEDURES,<string>properties.storedProcedureId]);//check error        
+        properties.containerId,RESOURCE_PATH_STORED_POCEDURES,storedProcedureId]);//check error        
         HeaderParamaters header = mapParametersToHeaderType(DELETE,requestPath);
 
         req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
@@ -417,11 +417,11 @@ public  client class Client {
     # + properties - object of type StoredProcedureProperties
     # + parameters - The list of paramaters to pass to javascript function as an array.
     # + return - If successful, returns json with the output from the executed funxtion. Else returns error. 
-    public remote function executeStoredProcedure(@tainted StoredProcedureProperties properties, any[]? parameters) 
+    public remote function executeStoredProcedure(@tainted ResourceProperties properties, string storedProcedureId, any[]? parameters) 
     returns @tainted json|error{
         http:Request req = new;
         string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_COLLECTIONS,
-        properties.containerId,RESOURCE_PATH_STORED_POCEDURES,<string>properties.storedProcedureId]);//check error        
+        properties.containerId,RESOURCE_PATH_STORED_POCEDURES,storedProcedureId]);//check error        
         HeaderParamaters header = mapParametersToHeaderType(POST,requestPath);
 
         req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
