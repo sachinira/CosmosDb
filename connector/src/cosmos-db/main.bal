@@ -22,11 +22,6 @@ public  client class Client {
         self.azureCosmosClient = new (self.baseUrl,httpClientConfig);
     }
 
-    ResourceProperties properties = {
-        databaseId: "database1",
-        containerId: "collection1"
-    };
-
     # To create a database inside a resource
     # + databaseId -  id/name for the database
     # + throughputProperties - Optional throughput parameter which will set 'x-ms-offer-throughput' header 
@@ -528,6 +523,70 @@ public  client class Client {
         http:Request req = new;
         string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_COLLECTIONS,
         properties.containerId,RESOURCE_PATH_TRIGGER,triggerId]);       
+        HeaderParamaters header = mapParametersToHeaderType(DELETE,requestPath);
+
+        req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
+        var response = self.azureCosmosClient->delete(requestPath,req);
+        [string,Headers] jsonresponse = check parseDeleteResponseToTuple(response);
+        return  mapTupleToDeleteresponse(jsonresponse);
+    }
+
+    public remote function createUser(@tainted ResourceProperties properties, string userId) returns @tainted 
+    User|error{
+        http:Request req = new;
+        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_USER]);       
+        HeaderParamaters header = mapParametersToHeaderType(POST,requestPath);
+
+        req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
+        json reqBody = {
+            id:userId
+        };
+        req.setJsonPayload(reqBody);//error
+        var response = self.azureCosmosClient->post(requestPath,req);
+        [json,Headers] jsonResponse = check parseResponseToTuple(response);
+        return mapJsonToUser(jsonResponse);//      
+    }
+    
+    public remote function replaceUser(@tainted ResourceProperties properties, string userId) returns @tainted 
+    User|error{
+        http:Request req = new;
+        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_USER,userId]);       
+        HeaderParamaters header = mapParametersToHeaderType(PUT,requestPath);
+        json reqBody = {
+            id:userId
+        };
+        req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
+        var response = self.azureCosmosClient->put(requestPath,req);
+        [json,Headers] jsonResponse = check parseResponseToTuple(response);
+        return mapJsonToUser(jsonResponse); //
+    }
+
+    public remote function getUser(@tainted ResourceProperties properties, string userId) returns @tainted User|error{
+        http:Request req = new;
+        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_USER,userId]);
+        HeaderParamaters header = mapParametersToHeaderType(GET,requestPath);
+
+        req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
+        var response = self.azureCosmosClient->get(requestPath,req);
+        [json,Headers] jsonResponse = check parseResponseToTuple(response);
+        return mapJsonToUser(jsonResponse);      
+    }
+
+    public remote function listUsers(@tainted ResourceProperties properties) returns @tainted UserList|error{
+        http:Request req = new;
+        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_USER]);
+        HeaderParamaters header = mapParametersToHeaderType(GET,requestPath);
+
+        req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
+        var response = self.azureCosmosClient->get(requestPath,req);
+        [json,Headers] jsonResponse = check parseResponseToTuple(response);
+        return mapJsonToUserList(jsonResponse); //     
+    }
+
+    public remote function deleteUser(@tainted ResourceProperties properties,string userId) returns 
+    @tainted DeleteResponse|error{
+        http:Request req = new;
+        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_USER,userId]);       
         HeaderParamaters header = mapParametersToHeaderType(DELETE,requestPath);
 
         req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);

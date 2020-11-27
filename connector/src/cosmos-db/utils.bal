@@ -25,6 +25,9 @@ function parseDeleteResponseToTuple(http:Response|http:ClientError httpResponse)
 # + return - If successful, returns json. Else returns error.  
 function parseResponseToJson(http:Response|http:ClientError httpResponse) returns @tainted json|error { 
     if (httpResponse is http:Response) {
+        if(httpResponse.statusCode == http:STATUS_NO_CONTENT){
+            return true;
+        }
         var jsonResponse = httpResponse.getJsonPayload();
         if (jsonResponse is json) {
             if (httpResponse.statusCode != http:STATUS_OK && httpResponse.statusCode != http:STATUS_CREATED) {
@@ -224,7 +227,7 @@ HeaderParamaters params) returns http:Request|error{
     string?|error date = getTime();
     if date is string
     {
-        string? s = generateTokenNew(params.verb,params.resourceType,params.resourceId,keyToken,tokenType,tokenVersion);
+        string?|error s = generateTokenNew(params.verb,params.resourceType,params.resourceId,keyToken,tokenType,tokenVersion);
         req.setHeader(DATE_HEADER,date);
         if s is string {
             req.setHeader(AUTHORIZATION_HEADER,s);
@@ -310,18 +313,28 @@ string tokenVersion, string date) returns string?|error{
         +date.toLowerAscii()+"\n"
         +""+"\n";
     var decoded = encoding:decodeBase64Url(keys);
-
     if decoded is byte[]{
-        byte[] k = crypto:hmacSha256(payload.toBytes(),decoded);
-        string  t = k.toBase16();
-        string signature = encoding:encodeBase64Url(k);
-        authorization = 
-        check encoding:encodeUriComponent(string `type=${keyType}&ver=${tokenVersion}&sig=${signature}=`, "UTF-8");   
-        return authorization;
-    } else {     
-        io:println("Decoding error");
+        var encoded = check encoding:encodeUriComponent(payload,"UTF-8");
+        var digest = crypto:hmacSha256(encoded.toBytes(),decoded);
+        var signature = encoding:encodeBase64Url(digest);
+        var finale = check encoding:decodeUriComponent(signature, "UTF-8");
+        string token = string `type=${keyType}&ver=${tokenVersion}&sig=${signature.substring(0,signature.length()-1)}`;
+        var auth = check encoding:encodeUriComponent(token, "UTF-8");   
+        io:println(auth);
+        return auth;
     }
-}
+//     var decoded = encoding:decodeBase64Url(keys);
+//     if decoded is byte[]{
+//         byte[] k = crypto:hmacSha256(payload.toBytes(),decoded);
+//         string  t = k.toBase16();
+//         string signature = encoding:encodeBase64Url(k);
+//         authorization = 
+//         check encoding:encodeUriComponent(string `type=${keyType}&ver=${tokenVersion}&sig=${signature}=`, "UTF-8");   
+//         return authorization;
+//     } else {     
+//         io:println("Decoding error");
+//     }
+ }
 
 function generateTokenJ(handle verb, handle resourceType, handle resourceId, handle keyToken, handle tokenType, 
 handle tokenVersion) returns handle = @java:Method {

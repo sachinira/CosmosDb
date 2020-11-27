@@ -25,6 +25,7 @@ function createRandomUUID() returns handle = @java:Method {
         databaseId: "database1",
         containerId: "collection1"
 };
+var uuid = createRandomUUID();
 
 string createDatabaseId = "database2";
 string createIfNotExistDatabaseId = "database1";
@@ -561,6 +562,7 @@ function queryDocument(){
     io:println("\n\n");  
 }
 
+string sprocId = string `sproc-${uuid.toString()}`;
 string createSprocBody = "function () {\r\n    var context = getContext();\r\n    var response = context.getResponse();\r\n\r\n    response.setBody(\"Hello, World\");\r\n}"; 
 string replaceSprocId = "sproc-263791e9-a06a-4a47-b232-c3f7496d5557";
 string replaceSprocBody = "function (personToGreet) {\r\n    var context = getContext();\r\n    var response = context.getResponse();\r\n\r\n    response.setBody(\"Hello, \" + personToGreet);\r\n}";
@@ -574,8 +576,6 @@ function createSproc(){
     io:println("-----------------Create stored procedure-----------------------\n\n");
 
     Client AzureCosmosClient = new(config);
-    var uuid = createRandomUUID();
-    string sprocId = string `sproc-${uuid.toString()}`;
     StoredProcedure sp = {
         id:sprocId,
         body:createSprocBody
@@ -659,6 +659,7 @@ function executeOneSproc(){
     io:println("\n\n"); 
 }
 
+string udfId = string `udf-${uuid.toString()}`;
 string createUDFBody = "function tax(income) {\r\n    if(income == undefined) \r\n        throw 'no input';\r\n    if (income < 1000) \r\n        return income * 0.1;\r\n    else if (income < 10000) \r\n        return income * 0.2;\r\n    else\r\n        return income * 0.4;\r\n}"; 
 string replaceUDFId = "udf-2972a27c-a447-47f4-9a8d-0daa0fa3e37a";
 string replaceUDFBody = "function taxIncome(income) {\r\n    if(income == undefined) \r\n        throw 'no input';\r\n    if (income < 1000) \r\n        return income * 0.1;\r\n    else if (income < 10000) \r\n        return income * 0.2;\r\n    else\r\n        return income * 0.4;\r\n}"; 
@@ -671,8 +672,6 @@ function createUDF(){
     io:println("-----------------Create user defined function-----------------------\n\n");
 
     Client AzureCosmosClient = new(config);
-    var uuid = createRandomUUID();
-    string udfId = string `udf-${uuid.toString()}`;
     UserDefinedFunction udf = {
         id:udfId,
         body:createUDFBody
@@ -739,6 +738,7 @@ function deleteUDF(){
     io:println("\n\n");  
 }
 
+string triggerId = string `trigger-${uuid.toString()}`;
 string createTriggerBody = "function tax(income) {\r\n    if(income == undefined) \r\n        throw 'no input';\r\n    if (income < 1000) \r\n        return income * 0.1;\r\n    else if (income < 10000) \r\n        return income * 0.2;\r\n    else\r\n        return income * 0.4;\r\n}";
 string createTriggerOperation = "All"; // All, Create, Replace, and Delete.
 string createTriggerType = "Post"; // he acceptable values are: Pre and Post. 
@@ -756,7 +756,6 @@ function createTrigger(){
 
     Client AzureCosmosClient = new(config);
     var uuid = createRandomUUID();
-    string triggerId = string `trigger-${uuid.toString()}`;
     Trigger trigger = {
         id:triggerId,
         body:createTriggerBody,
@@ -814,11 +813,97 @@ function listTriggers(){
     groups: ["Trigger"]
 }
 function deleteTrigger(){
-    io:println("-----------------Delete user defined function-----------------------\n\n");
+    io:println("-----------------Delete trigger-----------------------\n\n");
 
     Client AzureCosmosClient = new(config);
     var uuid = createRandomUUID();
     var result = AzureCosmosClient->deleteTrigger(properties,deleteTriggerId);  
+    if result is DeleteResponse {
+        io:println(result);
+    } else {
+        test:assertFail(msg = result.message());
+    }   
+    io:println("\n\n");  
+}
+
+string userId = string `user-${uuid.toString()}`;
+string replaceUserId = "";
+string deleteUserId = "";
+string getUserId = "";
+
+@test:Config{
+    groups: ["user"]
+}
+function createUser(){
+    io:println("-----------------Create user-----------------------\n\n");
+
+    Client AzureCosmosClient = new(config);
+    var result = AzureCosmosClient->createUser(properties,userId);  
+    if result is User {
+        io:println(result);
+    } else {
+        test:assertFail(msg = result.message());
+    }   
+    io:println("\n\n");  
+}
+
+@test:Config{
+    groups: ["user"]
+}
+function replaceUser(){
+    io:println("-----------------Replace user-----------------------\n\n");
+
+    Client AzureCosmosClient = new(config);
+    var result = AzureCosmosClient->replaceUser(properties,replaceUserId);  
+    if result is User {
+        io:println(result);
+    } else {
+        test:assertFail(msg = result.message());
+    }   
+    io:println("\n\n");  
+}
+
+@test:Config{
+    groups: ["user"]
+}
+function getUser(){
+    io:println("-----------------Get user-----------------------\n\n");
+
+    Client AzureCosmosClient = new(config);
+    var result = AzureCosmosClient->getUser(properties,getUserId);  
+    if result is User {
+        io:println(result);
+    } else {
+        test:assertFail(msg = result.message());
+    }   
+    io:println("\n\n");  
+}
+
+@test:Config{
+    groups: ["user"]
+}
+function listUsers(){
+    io:println("-----------------List users-----------------------\n\n");
+
+    Client AzureCosmosClient = new(config);
+    var result = AzureCosmosClient->listUsers(properties);  
+    if result is UserList {
+        io:println(result);
+    } else {
+        test:assertFail(msg = result.message());
+    }   
+    io:println("\n\n");  
+}
+
+@test:Config{
+    groups: ["user"]
+}
+function deleteUser(){
+    io:println("-----------------Delete user defined function-----------------------\n\n");
+
+    Client AzureCosmosClient = new(config);
+    var uuid = createRandomUUID();
+    var result = AzureCosmosClient->deleteUser(properties,deleteUserId);  
     if result is DeleteResponse {
         io:println(result);
     } else {
