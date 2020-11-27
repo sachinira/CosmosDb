@@ -250,8 +250,8 @@ function mapJsonToUserList([json, Headers?] jsonPayload)returns @tainted UserLis
     Headers? headers;
     [payload,headers] = jsonPayload;
     userlist._rid = payload._rid != () ? payload._rid.toString() : EMPTY_STRING;
-    userlist.users = ConvertToUserArray(<json[]>payload.Triggers);
-    userlist._count = convertToInt(payload._count);//headers
+    userlist.users = ConvertToUserArray(<json[]>payload.Users);
+    userlist._count = convertToInt(payload._count);
     userlist["reponseHeaders"] = headers;
     return userlist;
 }

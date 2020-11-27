@@ -827,9 +827,9 @@ function deleteTrigger(){
 }
 
 string userId = string `user-${uuid.toString()}`;
-string replaceUserId = "";
-string deleteUserId = "";
-string getUserId = "";
+string replaceUserId = "userr-c04de06a-df65-4c94-b7ae-8e9c5cf5611a";
+string deleteUserId = "user-0b5df167-dc9f-4395-9ba3-f561fc166e97";
+string getUserId = "user-af93f765-fad1-418d-98ef-9cad66886e36";
 
 @test:Config{
     groups: ["user"]
@@ -852,9 +852,10 @@ function createUser(){
 }
 function replaceUser(){
     io:println("-----------------Replace user-----------------------\n\n");
+    string newReplaceId = string `user-${uuid.toString()}`;
 
     Client AzureCosmosClient = new(config);
-    var result = AzureCosmosClient->replaceUser(properties,replaceUserId);  
+    var result = AzureCosmosClient->replaceUser(properties,replaceUserId,newReplaceId);  
     if result is User {
         io:println(result);
     } else {
@@ -899,7 +900,7 @@ function listUsers(){
     groups: ["user"]
 }
 function deleteUser(){
-    io:println("-----------------Delete user defined function-----------------------\n\n");
+    io:println("-----------------Delete user-----------------------\n\n");
 
     Client AzureCosmosClient = new(config);
     var uuid = createRandomUUID();
