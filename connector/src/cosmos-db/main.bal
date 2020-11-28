@@ -579,7 +579,8 @@ public  client class Client {
         return  mapTupleToDeleteresponse(jsonresponse);
     }
 
-    public remote function createPermissionForUser(@tainted ResourceProperties properties,string userId, Permission permission)
+//handle the ttl
+    public remote function createPermission(@tainted ResourceProperties properties,string userId, Permission permission)
     returns @tainted Permission|error {
         http:Request req = new;
         string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_USER,userId,RESOURCE_PATH_PERMISSION]);       
@@ -589,5 +590,50 @@ public  client class Client {
         var response = self.azureCosmosClient->post(requestPath,req);
         [json,Headers] jsonResponse = check parseResponseToTuple(response);
         return mapJsonToPermission(jsonResponse);
+    }
+
+    public remote function replacePermission(@tainted ResourceProperties properties,string userId,@tainted Permission permission)
+    returns @tainted Permission|error {
+        http:Request req = new;
+        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_USER,userId,RESOURCE_PATH_PERMISSION,permission.id]);       
+        HeaderParamaters header = mapParametersToHeaderType(PUT,requestPath);
+        req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
+        req.setJsonPayload(<@untainted><json>permission.cloneWithType(json));
+        var response = self.azureCosmosClient->put(requestPath,req);
+        [json,Headers] jsonResponse = check parseResponseToTuple(response);
+        return mapJsonToPermission(jsonResponse);
+    }
+
+    public remote function listPermissions(@tainted ResourceProperties properties,string userId)
+    returns @tainted PermissionList|error {
+        http:Request req = new;
+        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_USER,userId,RESOURCE_PATH_PERMISSION]);       
+        HeaderParamaters header = mapParametersToHeaderType(GET,requestPath);
+        req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
+        var response = self.azureCosmosClient->get(requestPath,req);
+        [json,Headers] jsonResponse = check parseResponseToTuple(response);
+        return mapJsonToPermissionList(jsonResponse);
+    }
+
+    public remote function getPermission(@tainted ResourceProperties properties,string userId,string permissionId)
+    returns @tainted Permission|error {
+        http:Request req = new;
+        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_USER,userId,RESOURCE_PATH_PERMISSION,permissionId]);       
+        HeaderParamaters header = mapParametersToHeaderType(GET,requestPath);
+        req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
+        var response = self.azureCosmosClient->get(requestPath,req);
+        [json,Headers] jsonResponse = check parseResponseToTuple(response);
+        return mapJsonToPermission(jsonResponse);
+    }
+
+    public remote function deletePermission(@tainted ResourceProperties properties,string userId, string permissionId) returns 
+    @tainted DeleteResponse|error{
+        http:Request req = new;
+        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_USER,userId,RESOURCE_PATH_PERMISSION,permissionId]);       
+        HeaderParamaters header = mapParametersToHeaderType(DELETE,requestPath);
+        req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
+        var response = self.azureCosmosClient->delete(requestPath,req);
+        [string,Headers] jsonresponse = check parseDeleteResponseToTuple(response);
+        return  mapTupleToDeleteresponse(jsonresponse);
     }
 }

@@ -173,7 +173,15 @@ public type Permission record {|
     string id = "";
     string permissionMode = "";
     string 'resource = "";
+    int ttl = 3600;
     Headers?...;
+|};
+
+public type PermissionList  record {|
+    string _rid = "";
+    Permission[] permissions = [];
+    int _count = 0;
+    Headers? reponseHeaders = ();
 |};
 
 public type ThroughputProperties record {

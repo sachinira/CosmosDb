@@ -263,10 +263,25 @@ function mapJsonToPermission([json, Headers?] jsonPayload)returns @tainted Permi
     [payload,headers] = jsonPayload;
     permission._rid = payload._rid != () ? payload._rid.toString() : EMPTY_STRING;
     permission.id = payload.id != () ? payload.id.toString() : EMPTY_STRING;
+    permission.permissionMode = payload.permissionMode != () ? payload.permissionMode.toString() : EMPTY_STRING;
+    permission.'resource = payload.'resource != () ? payload.'resource.toString() : EMPTY_STRING;
+
     if headers is Headers {
         permission["reponseHeaders"] = headers;
     }
     return permission;
+}
+
+function mapJsonToPermissionList([json, Headers?] jsonPayload)returns @tainted PermissionList {
+    PermissionList permissionList = {};
+    json payload;
+    Headers? headers;
+    [payload,headers] = jsonPayload;
+    permissionList._rid = payload._rid != () ? payload._rid.toString() : EMPTY_STRING;
+    permissionList.permissions = ConvertToPermissionArray(<json[]>payload.Permissions);
+    permissionList._count = convertToInt(payload._count);
+    permissionList["reponseHeaders"] = headers;
+    return permissionList;
 }
 
 function convertToDatabaseArray(json[] sourceDatabaseArrayJsonObject) returns @tainted Database[] {
@@ -382,13 +397,22 @@ function ConvertToTriggerArray(json[] sourceTriggerArrayJsonObject) returns @tai
 function ConvertToUserArray(json[] sourceTriggerArrayJsonObject) returns @tainted User[] { 
     User[] users = [];
     int i = 0;
-    foreach json trigger in sourceTriggerArrayJsonObject { 
-        users[i] = mapJsonToUser([trigger,()]);
+    foreach json user in sourceTriggerArrayJsonObject { 
+        users[i] = mapJsonToUser([user,()]);
         i = i + 1;
     }
     return users;
 }
 
+function ConvertToPermissionArray(json[] sourcePermissionArrayJsonObject) returns @tainted Permission[] { 
+    Permission[] permissions = [];
+    int i = 0;
+    foreach json permission in sourcePermissionArrayJsonObject { 
+        permissions[i] = mapJsonToPermission([permission,()]);
+        i = i + 1;
+    }
+    return permissions;
+}
 
 
 
