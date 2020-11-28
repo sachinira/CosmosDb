@@ -912,3 +912,29 @@ function deleteUser(){
     }   
     io:println("\n\n");  
 }
+
+string permissionId = string `permission-${uuid.toString()}`;
+string permissionModeCreate = "All";
+string createResource = "dbs/database1/colls/collection1";
+string permissionUserId = "user-010c59a5-065d-43df-862e-cb72966e0b19";
+
+@test:Config{
+    groups: ["permission"]
+}
+function createPermission(){
+    io:println("-----------------Create permission-----------------------\n\n");
+
+    Client AzureCosmosClient = new(config);
+    Permission permission = {
+        id:permissionId,
+        permissionMode:permissionModeCreate,
+        'resource:createResource
+    };
+    var result = AzureCosmosClient->createPermissionForUser(properties,permissionUserId,permission);  
+    if result is Permission {
+        io:println(result);
+    } else {
+        test:assertFail(msg = result.message());
+    }   
+    io:println("\n\n");  
+}

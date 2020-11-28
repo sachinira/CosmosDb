@@ -14,6 +14,7 @@ const string RESOURCE_PATH_PK_RANGES = "pkranges";
 const string RESOURCE_PATH_UDF = "udfs";
 const string RESOURCE_PATH_TRIGGER = "triggers";
 const string RESOURCE_PATH_USER = "users";
+const string RESOURCE_PATH_PERMISSION = "permissions";
 
  #   Azure Cosmos DB Document API (REST) version
 final  string API_VERSION = "2018-12-31";

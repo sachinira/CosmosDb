@@ -168,6 +168,14 @@ public type UserList  record {|
     Headers? reponseHeaders = ();
 |};
 
+public type Permission record {|
+    string? _rid?;
+    string id = "";
+    string permissionMode = "";
+    string 'resource = "";
+    Headers?...;
+|};
+
 public type ThroughputProperties record {
     int? throughput = ();
     json? maxThroughput = ();

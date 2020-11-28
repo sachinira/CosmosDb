@@ -256,6 +256,19 @@ function mapJsonToUserList([json, Headers?] jsonPayload)returns @tainted UserLis
     return userlist;
 }
 
+function mapJsonToPermission([json, Headers?] jsonPayload)returns @tainted Permission {
+    Permission permission = {};
+    json payload;
+    Headers? headers;
+    [payload,headers] = jsonPayload;
+    permission._rid = payload._rid != () ? payload._rid.toString() : EMPTY_STRING;
+    permission.id = payload.id != () ? payload.id.toString() : EMPTY_STRING;
+    if headers is Headers {
+        permission["reponseHeaders"] = headers;
+    }
+    return permission;
+}
+
 function convertToDatabaseArray(json[] sourceDatabaseArrayJsonObject) returns @tainted Database[] {
     Database[] databases = [];
     int i = 0;

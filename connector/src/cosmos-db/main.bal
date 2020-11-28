@@ -578,4 +578,16 @@ public  client class Client {
         [string,Headers] jsonresponse = check parseDeleteResponseToTuple(response);
         return  mapTupleToDeleteresponse(jsonresponse);
     }
+
+    public remote function createPermissionForUser(@tainted ResourceProperties properties,string userId, Permission permission)
+    returns @tainted Permission|error {
+        http:Request req = new;
+        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_USER,userId,RESOURCE_PATH_PERMISSION]);       
+        HeaderParamaters header = mapParametersToHeaderType(POST,requestPath);
+        req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
+        req.setJsonPayload(<@untainted><json>permission.cloneWithType(json));
+        var response = self.azureCosmosClient->post(requestPath,req);
+        [json,Headers] jsonResponse = check parseResponseToTuple(response);
+        return mapJsonToPermission(jsonResponse);
+    }
 }
