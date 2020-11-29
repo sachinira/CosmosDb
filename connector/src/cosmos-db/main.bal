@@ -1,5 +1,5 @@
 import ballerina/http;
-//import ballerina/io;
+import ballerina/io;
 # Azure Cosmos DB Client object.
 # + azureCosmosClient - The HTTP Client
 public  client class Client {
@@ -23,22 +23,19 @@ public  client class Client {
     }
 
     # To create a database inside a resource
-    # + properties -  id/name for the database
+    # + databaseId -  id/name for the database
     # + throughputProperties - Optional throughput parameter which will set 'x-ms-offer-throughput' header 
     # + return - If successful, returns Database. Else returns error.  
-    public remote function createDatabase(DatabaseProperties properties, ThroughputProperties? throughputProperties = ()) returns 
+    public remote function createDatabase(string databaseId, ThroughputProperties? throughputProperties = ()) returns 
     @tainted Database|error{
         json jsonPayload;
         http:Request req = new;
         string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES]);
         HeaderParamaters header = mapParametersToHeaderType(POST,requestPath);
-        if properties.id == "" {
-            return prepareError("Invalid database id: Cannot be empty");
-        }
-        json|error payload = properties.cloneWithType(json);
-        if payload is json {
-            req.setJsonPayload(payload);
-        }
+        json body = {
+            id:databaseId
+        };
+        req.setJsonPayload(body);
         req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
         req = check setThroughputOrAutopilotHeader(req,throughputProperties);
         var response = self.azureCosmosClient->post(requestPath,req);
@@ -47,28 +44,25 @@ public  client class Client {
     }
 
     # To create a database inside a resource
-    # + properties -  id/name for the database
+    # + databaseId -  id/name for the database
     # + throughputProperties - Optional throughput parameter which will set 'x-ms-offer-throughput' header 
     # + return - If successful, returns Database. Else returns error.  
-    public remote function createDatabaseIfNotExist(DatabaseProperties properties, ThroughputProperties? throughputProperties = ()) 
+    public remote function createDatabaseIfNotExist(string databaseId, ThroughputProperties? throughputProperties = ()) 
     returns @tainted Database?|error{
-        var result = self->getDatabase(properties);
+        var result = self->getDatabase(databaseId);
         if result is error{
-            return self->createDatabase(properties,throughputProperties);
+            return self->createDatabase(databaseId,throughputProperties);
         }
         return ();  
     }
 
     # To retrive a given database inside a resource
-    # + properties -  id/name of the database to retrieve
+    # + databaseId -  id/name of the database to retrieve
     # + return - If successful, returns Database. Else returns error.  
-    public remote function getDatabase(DatabaseProperties properties) returns @tainted Database|error{
+    public remote function getDatabase(string databaseId) returns @tainted Database|error{
         http:Request req = new;
-        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.id]);
+        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,databaseId]);
         HeaderParamaters header = mapParametersToHeaderType(GET,requestPath);
-        if properties.id == "" {
-            return prepareError("Invalid database id: Cannot be empty");
-        }
         req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
         var response = self.azureCosmosClient->get(requestPath,req);
         [json,Headers] jsonreponse = check parseResponseToTuple(response);
@@ -89,19 +83,15 @@ public  client class Client {
     }
 
     # To retrive a given database inside a resource
-    # + properties -  id/name of the database to retrieve
+    # + databaseId -  id/name of the database to retrieve
     # + return - If successful, returns DeleteResponse specifying delete is sucessfull. Else returns error.  
-    public remote function deleteDatabase(DatabaseProperties properties) returns @tainted DeleteResponse|error{
+    public remote function deleteDatabase(string databaseId) returns @tainted boolean|error{
         http:Request req = new;
-        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.id]);
+        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,databaseId]);
         HeaderParamaters header = mapParametersToHeaderType(DELETE,requestPath);
-        if properties.id == "" {
-            return prepareError("Invalid database id: Cannot be empty");
-        }
         req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
         var response = self.azureCosmosClient->delete(requestPath,req);
-        [string,Headers] jsonresponse = check parseDeleteResponseToTuple(response);
-        return  mapTupleToDeleteresponse(jsonresponse);
+        return check getDeleteResponse(response);
     }
 
     # To create a collection inside a database
@@ -182,7 +172,7 @@ public  client class Client {
     # To delete one collection inside a database
     # + properties - object of type ContainerProperties
     # + return - If successful, returns DeleteResponse specifying delete is sucessfull. Else returns error.   
-    public remote function deleteContainer(@tainted ContainerProperties properties) returns @tainted DeleteResponse|error{
+    public remote function deleteContainer(@tainted ContainerProperties properties) returns @tainted json|error{
         http:Request req = new;
         string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_COLLECTIONS,
         properties.containerId]);
@@ -190,8 +180,7 @@ public  client class Client {
 
         req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
         var response = self.azureCosmosClient->delete(requestPath,req);
-        [string,Headers] jsonresponse = check parseDeleteResponseToTuple(response);
-        return  mapTupleToDeleteresponse(jsonresponse);
+        return check getDeleteResponse(response);
     }
 
     # To retrieve a list of partition key ranges for the collection
@@ -216,21 +205,25 @@ public  client class Client {
     # To create a Document inside a collection
     # + properties - object of type DocumentProperties
     # + document - Any json content that will include as the document.
-    # + requestOptions - object of type RequestOptions
+    # + requestOptions - object of type RequestHeaderOptions
     # + return - If successful, returns Document. Else returns error.  
-    public remote function createDocument(@tainted DocumentProperties properties,json document,
-    RequestOptions? requestOptions) returns @tainted Document|error{
+    public remote function createDocument(@tainted ResourceProperties properties,Document document,
+    RequestHeaderOptions? requestOptions) returns @tainted Document|error{
         http:Request req = new;
         string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_COLLECTIONS,
         properties.containerId,RESOURCE_PATH_DOCUMENTS]);
         HeaderParamaters header = mapParametersToHeaderType(POST,requestPath);
 
         req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
-        req = check setPartitionKeyHeader(req,properties.partitionKey);
-        if requestOptions is RequestOptions{
+        req = check setPartitionKeyHeader(req,document.partitionKey);
+        if requestOptions is RequestHeaderOptions{
             req = check setRequestOptions(req,requestOptions);
-        }        
-        req.setJsonPayload(document);
+        }
+        json requestBodyId = {
+            id: document.id
+        };  
+        json Final = check requestBodyId.mergeJson(document.documentBody);     
+        req.setJsonPayload(Final);
         var response = self.azureCosmosClient->post(requestPath,req);
         [json,Headers] jsonreponse = check parseResponseToTuple(response);
         return mapJsonToDocument(jsonreponse);
@@ -239,18 +232,19 @@ public  client class Client {
     #To list one document inside a collection
     # x-ms-consistency-level, x-ms-session-token and If-None-Match headers are supported
     # + properties - object of type DocumentProperties
-    # + requestOptions - object of type RequestOptions
+    # + document -
+    # + requestOptions - object of type RequestHeaderOptions
     # + return - If successful, returns a Document. Else returns error. 
-    public remote function getDocument(@tainted DocumentProperties properties,RequestOptions? requestOptions = ()) 
+    public remote function getDocument(@tainted ResourceProperties properties, @tainted Document document,RequestHeaderOptions? requestOptions = ()) 
     returns @tainted Document|error{
         http:Request req = new;
         string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_COLLECTIONS,
-        properties.containerId,RESOURCE_PATH_DOCUMENTS,properties.documentId.toString()]);
+        properties.containerId,RESOURCE_PATH_DOCUMENTS,document.id]);
         HeaderParamaters header = mapParametersToHeaderType(GET,requestPath);
 
         req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
-        req = check setPartitionKeyHeader(req,properties.partitionKey);
-        if requestOptions is RequestOptions{
+        req = check setPartitionKeyHeader(req,document.partitionKey);
+        if requestOptions is RequestHeaderOptions{
             req = check setRequestOptions(req,requestOptions);
         }
         var response = self.azureCosmosClient->get(requestPath,req);
@@ -262,7 +256,7 @@ public  client class Client {
     # + properties - object of type DocumentProperties
     # + requestOptions - The continuation token returned from previous document request******
     # + return - If successful, returns DocumentList. Else returns error. 
-    public remote function getDocumentList(@tainted DocumentProperties properties,RequestOptions? requestOptions = ()) 
+    public remote function getDocumentList(@tainted ResourceProperties properties,RequestHeaderOptions? requestOptions = ()) 
     returns @tainted DocumentList|error{ 
         http:Request req = new;
         string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_COLLECTIONS,
@@ -270,7 +264,7 @@ public  client class Client {
         HeaderParamaters header = mapParametersToHeaderType(GET,requestPath);
 
         req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
-        if requestOptions is RequestOptions{
+        if requestOptions is RequestHeaderOptions{
             req = check setRequestOptions(req,requestOptions);
         }
         var response = self.azureCosmosClient->get(requestPath,req);
@@ -281,23 +275,27 @@ public  client class Client {
 
     #To replace a document inside a collection
     # + properties - object of type DocumentProperties
-    # + newDocument - json object for replacing the existing document
-    # + requestOptions - object of type RequestOptions
+    # + document - json object for replacing the existing document
+    # + requestOptions - object of type RequestHeaderOptions
     # set x-ms-documentdb-partitionkey header
     # + return - If successful, returns a Document. Else returns error. 
-    public remote function replaceDocument(@tainted DocumentProperties properties, json newDocument,
-    RequestOptions? requestOptions = ()) returns @tainted Document|error{         
+    public remote function replaceDocument(@tainted ResourceProperties properties,@tainted Document document,
+    RequestHeaderOptions? requestOptions = ()) returns @tainted Document|error{         
         http:Request req = new;
         string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_COLLECTIONS,
-        properties.containerId,RESOURCE_PATH_DOCUMENTS,<string>properties.documentId]);//error
+        properties.containerId,RESOURCE_PATH_DOCUMENTS,document.id]);//error
         HeaderParamaters header = mapParametersToHeaderType(PUT,requestPath);
 
         req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
-        req = check setPartitionKeyHeader(req,properties.partitionKey);
-        if requestOptions is RequestOptions{
+        req = check setPartitionKeyHeader(req,document.partitionKey);
+        if requestOptions is RequestHeaderOptions{
             req = check setRequestOptions(req,requestOptions);
         }
-        req.setJsonPayload(newDocument);
+        json requestBodyId = {
+            id: document.id
+        };  
+        json Final = check requestBodyId.mergeJson(document.documentBody); 
+        req.setJsonPayload(<@untainted>Final);
         var response = self.azureCosmosClient->put(requestPath,req);
         [json,Headers] jsonreponse = check parseResponseToTuple(response);
         return mapJsonToDocument(jsonreponse);
@@ -305,19 +303,19 @@ public  client class Client {
 
     #To delete a document inside a collection
     # + properties - object of type DocumentProperties
+    # + document -
     # + return - If successful, returns a DeleteResponse giving sucessfully deleted. Else returns error. 
-    public remote function deleteDocument(@tainted DocumentProperties properties) returns 
-    @tainted DeleteResponse|error{  
+    public remote function deleteDocument(@tainted ResourceProperties properties, @tainted Document document) returns 
+    @tainted boolean|error{  
         http:Request req = new;
         string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_COLLECTIONS,
-        properties.containerId,RESOURCE_PATH_DOCUMENTS,<string>properties.documentId]);//error
+        properties.containerId,RESOURCE_PATH_DOCUMENTS,document.id]);//error
         HeaderParamaters header = mapParametersToHeaderType(DELETE,requestPath);
 
         req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
-        req = check setPartitionKeyHeader(req,properties.partitionKey);
+        req = check setPartitionKeyHeader(req,document.partitionKey);
         var response = self.azureCosmosClient->delete(requestPath,req);
-        [string,Headers] jsonresponse = check parseDeleteResponseToTuple(response);
-        return  mapTupleToDeleteresponse(jsonresponse);
+        return check getDeleteResponse(response);
     }
 
     #To query documents inside a collection
@@ -325,18 +323,19 @@ public  client class Client {
     # + properties - object of type DocumentProperties
     # + sqlQuery - json object containing the sql query
     # + requestOptions - object of type RequestOptions
+    # + partitionKey - 
     # + return - If successful, returns a json. Else returns error. 
-    public remote function queryDocument(@tainted DocumentProperties properties, Query sqlQuery, 
-    RequestOptions? requestOptions = ()) returns @tainted json|error{
+    public remote function queryDocument(@tainted ResourceProperties properties, any partitionKey, Query sqlQuery, 
+    RequestHeaderOptions? requestOptions = ()) returns @tainted json|error{
         http:Request req = new;
         string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_COLLECTIONS,
         properties.containerId,RESOURCE_PATH_DOCUMENTS]);
         HeaderParamaters header = mapParametersToHeaderType(POST,requestPath);
-
         req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
         req = check setHeadersForQuery(req);
-        req = check setPartitionKeyHeader(req,properties.partitionKey);
-        req.setPayload(sqlQuery);
+        req = check setPartitionKeyHeader(req,partitionKey);
+        io:println(sqlQuery);
+        req.setPayload(<json>sqlQuery.cloneWithType(json));
         var response = self.azureCosmosClient->post(requestPath,req);
         json jsonresponse = check parseResponseToJson(response);
         return (jsonresponse);
@@ -348,15 +347,14 @@ public  client class Client {
     # + properties - object of type StoredProcedureProperties
     # + storedProcedure - object of Type storedProcedure
     # + return - If successful, returns a StoredProcedure. Else returns error. 
-    public remote function createStoredProcedure(@tainted StoredProcedureProperties properties, 
+    public remote function createStoredProcedure(@tainted ResourceProperties properties, 
     StoredProcedure storedProcedure) returns @tainted StoredProcedure|error{
         http:Request req = new;
         string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_COLLECTIONS,
         properties.containerId,RESOURCE_PATH_STORED_POCEDURES]);
         HeaderParamaters header = mapParametersToHeaderType(POST,requestPath);
-
         req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
-        req.setJsonPayload(<json>storedProcedure.cloneWithType(json));//error
+        req.setJsonPayload(<json>storedProcedure.cloneWithType(json));
         var response = self.azureCosmosClient->post(requestPath,req);
         [json,Headers] jsonResponse = check parseResponseToTuple(response);
         return mapJsonToStoredProcedure(jsonResponse);    
@@ -366,15 +364,14 @@ public  client class Client {
     # + properties - object of type StoredProcedureProperties
     # + storedProcedure - object of Type storedProcedure
     # + return - If successful, returns a StoredProcedure. Else returns error. 
-    public remote function replaceStoredProcedure(@tainted StoredProcedureProperties properties, 
-    StoredProcedure storedProcedure) returns @tainted StoredProcedure|error{
+    public remote function replaceStoredProcedure(@tainted ResourceProperties properties, 
+    @tainted StoredProcedure storedProcedure) returns @tainted StoredProcedure|error{
         http:Request req = new;
         string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_COLLECTIONS,
-        properties.containerId,RESOURCE_PATH_STORED_POCEDURES,<string>properties.storedProcedureId]);//check error
+        properties.containerId,RESOURCE_PATH_STORED_POCEDURES,storedProcedure.id]);
         HeaderParamaters header = mapParametersToHeaderType(PUT,requestPath);
-
         req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
-        req.setJsonPayload(<json>storedProcedure.cloneWithType(json));//error
+        req.setJsonPayload(<@untainted><json>storedProcedure.cloneWithType(json));
         var response = self.azureCosmosClient->put(requestPath,req);
         [json,Headers] jsonResponse = check parseResponseToTuple(response);
         return mapJsonToStoredProcedure(jsonResponse);  
@@ -383,13 +380,12 @@ public  client class Client {
     #To list all stored procedures inside a collection
     # + properties - object of type StoredProcedureProperties
     # + return - If successful, returns a StoredProcedureList. Else returns error. 
-    public remote function listStoredProcedures(@tainted StoredProcedureProperties properties) returns 
+    public remote function listStoredProcedures(@tainted ResourceProperties properties) returns 
     @tainted StoredProcedureList|error{
         http:Request req = new;
         string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_COLLECTIONS,
         properties.containerId,RESOURCE_PATH_STORED_POCEDURES]);
         HeaderParamaters header = mapParametersToHeaderType(GET,requestPath);
-
         req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
         var response = self.azureCosmosClient->get(requestPath,req);
         [json,Headers] jsonResponse = check parseResponseToTuple(response);
@@ -397,31 +393,32 @@ public  client class Client {
     }
 
     #To delete a stored procedure inside a collection
-    # + properties - object of type StoredProcedureProperties
+    # + properties - object of type ResourceProperties
+    # + storedProcedureId - id of the stored procedure to delete
     # + return - If successful, returns DeleteResponse specifying delete is sucessfull. Else returns error. 
-    public remote function deleteStoredProcedure(@tainted StoredProcedureProperties properties) returns 
-    @tainted DeleteResponse|error{
+    public remote function deleteStoredProcedure(@tainted ResourceProperties properties,string storedProcedureId) returns 
+    @tainted boolean|error{
         http:Request req = new;
         string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_COLLECTIONS,
-        properties.containerId,RESOURCE_PATH_STORED_POCEDURES,<string>properties.storedProcedureId]);//check error        
+        properties.containerId,RESOURCE_PATH_STORED_POCEDURES,storedProcedureId]);        
         HeaderParamaters header = mapParametersToHeaderType(DELETE,requestPath);
 
         req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
         var response = self.azureCosmosClient->delete(requestPath,req);
-        [string,Headers] jsonresponse = check parseDeleteResponseToTuple(response);
-        return  mapTupleToDeleteresponse(jsonresponse);
+        return check getDeleteResponse(response);
     }
 
     #To execute a stored procedure inside a collection
     # ***********function only works correctly for string parameters************
-    # + properties - object of type StoredProcedureProperties
+    # + properties - object of type ResourceProperties
+    # + storedProcedureId - id of the stored procedure to delete
     # + parameters - The list of paramaters to pass to javascript function as an array.
     # + return - If successful, returns json with the output from the executed funxtion. Else returns error. 
-    public remote function executeStoredProcedure(@tainted StoredProcedureProperties properties, any[]? parameters) 
+    public remote function executeStoredProcedure(@tainted ResourceProperties properties, string storedProcedureId, any[]? parameters) 
     returns @tainted json|error{
         http:Request req = new;
         string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_COLLECTIONS,
-        properties.containerId,RESOURCE_PATH_STORED_POCEDURES,<string>properties.storedProcedureId]);//check error        
+        properties.containerId,RESOURCE_PATH_STORED_POCEDURES,storedProcedureId]);       
         HeaderParamaters header = mapParametersToHeaderType(POST,requestPath);
 
         req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
@@ -431,5 +428,217 @@ public  client class Client {
         return jsonreponse;   
     }
 
-}
+    public remote function createUserDefinedFunction(@tainted ResourceProperties properties, 
+    UserDefinedFunction userDefinedFunction) returns @tainted UserDefinedFunction|error{
+        http:Request req = new;
+        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_COLLECTIONS,
+        properties.containerId,RESOURCE_PATH_UDF]);       
+        HeaderParamaters header = mapParametersToHeaderType(POST,requestPath);
 
+        req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
+        req.setJsonPayload(<json>userDefinedFunction.cloneWithType(json));
+        var response = self.azureCosmosClient->post(requestPath,req);
+        [json,Headers] jsonResponse = check parseResponseToTuple(response);
+        return mapJsonToUserDefinedFunction(jsonResponse);      
+    }
+
+    public remote function replaceUserDefinedFunction(@tainted ResourceProperties properties, 
+    @tainted UserDefinedFunction userDefinedFunction) returns @tainted UserDefinedFunction|error{
+        http:Request req = new;
+        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_COLLECTIONS,
+        properties.containerId,RESOURCE_PATH_UDF,userDefinedFunction.id]);      
+        HeaderParamaters header = mapParametersToHeaderType(PUT,requestPath);
+
+        req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
+        req.setJsonPayload(<@untainted><json>userDefinedFunction.cloneWithType(json));
+        var response = self.azureCosmosClient->put(requestPath,req);
+        [json,Headers] jsonResponse = check parseResponseToTuple(response);
+        return mapJsonToUserDefinedFunction(jsonResponse);      
+    }
+
+    public remote function listUserDefinedFunction(@tainted ResourceProperties properties) returns @tainted UserDefinedFunctionList|error{
+        http:Request req = new;
+        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_COLLECTIONS,
+        properties.containerId,RESOURCE_PATH_UDF]);
+        HeaderParamaters header = mapParametersToHeaderType(GET,requestPath);
+        req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
+        var response = self.azureCosmosClient->get(requestPath,req);
+        [json,Headers] jsonResponse = check parseResponseToTuple(response);
+        return mapJsonToUserDefinedFunctionList(jsonResponse);      
+    }
+
+    public remote function deleteUserDefinedFunction(@tainted ResourceProperties properties,string userDefinedFunctionid) returns @tainted boolean|error{
+        http:Request req = new;
+        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_COLLECTIONS,
+        properties.containerId,RESOURCE_PATH_UDF,userDefinedFunctionid]);        
+        HeaderParamaters header = mapParametersToHeaderType(DELETE,requestPath);
+        req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
+        var response = self.azureCosmosClient->delete(requestPath,req);
+        return check getDeleteResponse(response);
+    }
+
+    public remote function createTrigger(@tainted ResourceProperties properties, Trigger trigger) returns @tainted 
+    Trigger|error{
+        http:Request req = new;
+        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_COLLECTIONS,
+        properties.containerId,RESOURCE_PATH_TRIGGER]);       
+        HeaderParamaters header = mapParametersToHeaderType(POST,requestPath);
+        req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
+        req.setJsonPayload(<json>trigger.cloneWithType(json));//error
+        var response = self.azureCosmosClient->post(requestPath,req);
+        [json,Headers] jsonResponse = check parseResponseToTuple(response);
+        return mapJsonToTrigger(jsonResponse);      
+    }
+    
+    public remote function replaceTrigger(@tainted ResourceProperties properties, @tainted Trigger trigger) returns @tainted 
+    Trigger|error{
+        http:Request req = new;
+        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_COLLECTIONS,
+        properties.containerId,RESOURCE_PATH_TRIGGER,trigger.id]);       
+        HeaderParamaters header = mapParametersToHeaderType(PUT,requestPath);
+        req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
+        req.setJsonPayload(<@untainted><json>trigger.cloneWithType(json));//error
+        var response = self.azureCosmosClient->put(requestPath,req);
+        [json,Headers] jsonResponse = check parseResponseToTuple(response);
+        return mapJsonToTrigger(jsonResponse); 
+      }
+
+    public remote function listTriggers(@tainted ResourceProperties properties) returns @tainted TriggerList|error{
+        http:Request req = new;
+        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_COLLECTIONS,
+        properties.containerId,RESOURCE_PATH_TRIGGER]);
+        HeaderParamaters header = mapParametersToHeaderType(GET,requestPath);
+        req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
+        var response = self.azureCosmosClient->get(requestPath,req);
+        [json,Headers] jsonResponse = check parseResponseToTuple(response);
+        return mapJsonToTriggerList(jsonResponse);      
+    }
+
+    public remote function deleteTrigger(@tainted ResourceProperties properties,string triggerId) returns 
+    @tainted boolean|error{
+        http:Request req = new;
+        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_COLLECTIONS,
+        properties.containerId,RESOURCE_PATH_TRIGGER,triggerId]);       
+        HeaderParamaters header = mapParametersToHeaderType(DELETE,requestPath);
+        req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
+        var response = self.azureCosmosClient->delete(requestPath,req);
+        return check getDeleteResponse(response);
+    }
+
+    public remote function createUser(@tainted ResourceProperties properties, string userId) returns @tainted 
+    User|error{
+        http:Request req = new;
+        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_USER]);       
+        HeaderParamaters header = mapParametersToHeaderType(POST,requestPath);
+        req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
+        json reqBody = {
+            id:userId
+        };
+        req.setJsonPayload(reqBody);
+        var response = self.azureCosmosClient->post(requestPath,req);
+        [json,Headers] jsonResponse = check parseResponseToTuple(response);
+        return mapJsonToUser(jsonResponse);     
+    }
+    
+    public remote function replaceUser(@tainted ResourceProperties properties, string userId, string newUserId) returns @tainted 
+    User|error{
+        http:Request req = new;
+        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_USER,userId]);       
+        HeaderParamaters header = mapParametersToHeaderType(PUT,requestPath);
+        req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
+        json reqBody = {
+            id:newUserId
+        };
+        req.setJsonPayload(reqBody);
+        var response = self.azureCosmosClient->put(requestPath,req);
+        [json,Headers] jsonResponse = check parseResponseToTuple(response);
+        return mapJsonToUser(jsonResponse); 
+    }
+
+    public remote function getUser(@tainted ResourceProperties properties, string userId) returns @tainted User|error{
+        http:Request req = new;
+        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_USER,userId]);
+        HeaderParamaters header = mapParametersToHeaderType(GET,requestPath);
+        req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
+        var response = self.azureCosmosClient->get(requestPath,req);
+        [json,Headers] jsonResponse = check parseResponseToTuple(response);
+        return mapJsonToUser(jsonResponse);      
+    }
+
+    public remote function listUsers(@tainted ResourceProperties properties) returns @tainted UserList|error{
+        http:Request req = new;
+        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_USER]);
+        HeaderParamaters header = mapParametersToHeaderType(GET,requestPath);
+        req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
+        var response = self.azureCosmosClient->get(requestPath,req);
+        [json,Headers] jsonResponse = check parseResponseToTuple(response);
+        return mapJsonToUserList(jsonResponse);     
+    }
+
+    public remote function deleteUser(@tainted ResourceProperties properties,string userId) returns 
+    @tainted boolean|error{
+        http:Request req = new;
+        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_USER,userId]);       
+        HeaderParamaters header = mapParametersToHeaderType(DELETE,requestPath);
+        req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
+        var response = self.azureCosmosClient->delete(requestPath,req);
+        return check getDeleteResponse(response);
+    }
+
+//handle the ttl
+    public remote function createPermission(@tainted ResourceProperties properties,string userId, Permission permission)
+    returns @tainted Permission|error {
+        http:Request req = new;
+        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_USER,userId,RESOURCE_PATH_PERMISSION]);       
+        HeaderParamaters header = mapParametersToHeaderType(POST,requestPath);
+        req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
+        req.setJsonPayload(<@untainted><json>permission.cloneWithType(json));
+        var response = self.azureCosmosClient->post(requestPath,req);
+        [json,Headers] jsonResponse = check parseResponseToTuple(response);
+        return mapJsonToPermission(jsonResponse);
+    }
+
+    public remote function replacePermission(@tainted ResourceProperties properties,string userId,@tainted Permission permission)
+    returns @tainted Permission|error {
+        http:Request req = new;
+        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_USER,userId,RESOURCE_PATH_PERMISSION,permission.id]);       
+        HeaderParamaters header = mapParametersToHeaderType(PUT,requestPath);
+        req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
+        req.setJsonPayload(<@untainted><json>permission.cloneWithType(json));
+        var response = self.azureCosmosClient->put(requestPath,req);
+        [json,Headers] jsonResponse = check parseResponseToTuple(response);
+        return mapJsonToPermission(jsonResponse);
+    }
+
+    public remote function listPermissions(@tainted ResourceProperties properties,string userId)
+    returns @tainted PermissionList|error {
+        http:Request req = new;
+        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_USER,userId,RESOURCE_PATH_PERMISSION]);       
+        HeaderParamaters header = mapParametersToHeaderType(GET,requestPath);
+        req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
+        var response = self.azureCosmosClient->get(requestPath,req);
+        [json,Headers] jsonResponse = check parseResponseToTuple(response);
+        return mapJsonToPermissionList(jsonResponse);
+    }
+
+    public remote function getPermission(@tainted ResourceProperties properties,string userId,string permissionId)
+    returns @tainted Permission|error {
+        http:Request req = new;
+        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_USER,userId,RESOURCE_PATH_PERMISSION,permissionId]);       
+        HeaderParamaters header = mapParametersToHeaderType(GET,requestPath);
+        req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
+        var response = self.azureCosmosClient->get(requestPath,req);
+        [json,Headers] jsonResponse = check parseResponseToTuple(response);
+        return mapJsonToPermission(jsonResponse);
+    }
+
+    public remote function deletePermission(@tainted ResourceProperties properties,string userId, string permissionId) returns 
+    @tainted boolean|error{
+        http:Request req = new;
+        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_USER,userId,RESOURCE_PATH_PERMISSION,permissionId]);       
+        HeaderParamaters header = mapParametersToHeaderType(DELETE,requestPath);
+        req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
+        var response = self.azureCosmosClient->delete(requestPath,req);
+        return check getDeleteResponse(response);
+    }
+}

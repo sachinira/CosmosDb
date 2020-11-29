@@ -16,7 +16,7 @@ public type HeaderParamaters record {|
     string resourceId = "";
 |};
 
-public type RequestOptions record {|
+public type RequestHeaderOptions record {|
     boolean? isUpsertRequest = ();
     string? indexingDirective = ();
     int? maxItemCount = ();
@@ -32,6 +32,11 @@ public type RequestOptions record {|
     string? ifMatch = ();//Only for PUT and DELETE 
 |};
 
+public type ResourceProperties record {|
+    string databaseId = "";
+    string containerId = "";
+|};
+
 public type Headers record {|
     string? continuationHeader = ();
     string? sessionTokenHeader = ();
@@ -42,11 +47,8 @@ public type Headers record {|
     string? dateHeader = ();
 |};
 
-public type DatabaseProperties record {|
-    string id = "";
-|};
-
 public type Database record {
+    string _rid?;
     string id = "";
     Headers reponseHeaders?;
 };
@@ -83,24 +85,19 @@ public type ContainerList record {|
     int _count = 0;
 |};
 
-public type DocumentProperties record {|
-    string databaseId = "";
-    string containerId = "";
-    string? documentId = ();
-    any? partitionKey = ();
-|};
-
 public type Document record {|
     string id = "";
-    any document = "";
+    json documentBody = {};
+    string? documentId = ();
+    any? partitionKey = ();
     Headers reponseHeaders?;
 |};
 
 public type DocumentList record {|
     string _rid = "";
     Document[] documents = [];
-    Headers reponseHeaders?;
     int _count = 0;
+    Headers reponseHeaders?;
 |};
 
 public type Query record {|
@@ -113,24 +110,74 @@ public type QueryParameter record {|
     string value = "";
 |};
 
-public type StoredProcedureProperties record {
-    string databaseId = "";
-    string containerId = "";
-    string? storedProcedureId = ();
-};
-
-public type StoredProcedure record {
+public type StoredProcedure record {|
+    string? _rid = ();
     string id = "";
     string body = "";
-    Headers reponseHeaders?;
-};
+    Headers?...;
+|};
 
-public type StoredProcedureList record {
+public type StoredProcedureList record {|
     string _rid = "";
-    StoredProcedure[] storedprocedures = [];
-    Headers reponseHeaders?;
+    StoredProcedure[] storedProcedures = [];
     int _count = 0;
-};
+    Headers?...;
+|};
+
+public type UserDefinedFunction record {|
+    *StoredProcedure;
+    Headers?...;
+|};
+
+public type UserDefinedFunctionList record {|
+    string _rid = "";
+    UserDefinedFunction[] UserDefinedFunctions = [];
+    int _count = 0;
+    Headers?...;
+|};
+
+public type Trigger record {|
+    *StoredProcedure;
+    string triggerOperation = "";
+    string triggerType = "";
+    Headers?...;
+|};
+
+public type TriggerList record {|
+    string _rid = "";
+    Trigger[] triggers = [];
+    int _count = 0;
+    Headers?...;
+
+|};
+
+public type User  record {|
+    *Database;
+    Headers?...;
+|};
+
+public type UserList  record {|
+    string _rid = "";
+    User[] users = [];
+    int _count = 0;
+    Headers? reponseHeaders = ();
+|};
+
+public type Permission record {|
+    string? _rid?;
+    string id = "";
+    string permissionMode = "";
+    string 'resource = "";
+    int ttl = 3600;
+    Headers?...;
+|};
+
+public type PermissionList  record {|
+    string _rid = "";
+    Permission[] permissions = [];
+    int _count = 0;
+    Headers? reponseHeaders = ();
+|};
 
 public type ThroughputProperties record {
     int? throughput = ();

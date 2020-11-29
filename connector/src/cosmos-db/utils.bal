@@ -13,12 +13,12 @@ function parseResponseToTuple(http:Response|http:ClientError httpResponse) retur
     return [responseBody,responseHeaders];
 }
 
-function parseDeleteResponseToTuple(http:Response|http:ClientError httpResponse) returns  @tainted 
-[string,Headers]|error{
-    var responseBody = check getDeleteResponse(httpResponse);
-    var responseHeaders = check parseHeadersToObject(httpResponse);
-    return [responseBody,responseHeaders];
-}
+// function parseDeleteResponseToTuple(http:Response|http:ClientError httpResponse) returns  @tainted 
+// [string,Headers]|error{
+//     var responseBody = check getDeleteResponse(httpResponse);
+//     var responseHeaders = check parseHeadersToObject(httpResponse);
+//     return [responseBody,responseHeaders];
+// }
 
 # To handle sucess or error reponses to requests
 # + httpResponse - http:Response or http:ClientError returned from an http:Request
@@ -28,13 +28,7 @@ function parseResponseToJson(http:Response|http:ClientError httpResponse) return
         var jsonResponse = httpResponse.getJsonPayload();
         if (jsonResponse is json) {
             if (httpResponse.statusCode != http:STATUS_OK && httpResponse.statusCode != http:STATUS_CREATED) {
-                string message = jsonResponse.message.toString();
-                string errorMessage = httpResponse.statusCode.toString() + " " + httpResponse.reasonPhrase; 
-                var stoppingIndex = message.indexOf("ActivityId");
-                if stoppingIndex is int{
-                    errorMessage += " : " + message.substring(0,stoppingIndex);
-                }
-                return prepareError(errorMessage);
+                return createResponseFailMessage(httpResponse,jsonResponse);
             }
             return jsonResponse;
         } else {
@@ -48,18 +42,32 @@ function parseResponseToJson(http:Response|http:ClientError httpResponse) return
 # To handle the delete responses which return without a json payload
 # + httpResponse - http:Response or http:ClientError returned from an http:Request
 # + return - If successful, returns string. Else returns error.  
-function getDeleteResponse(http:Response|http:ClientError httpResponse) returns @tainted string|error{
+function getDeleteResponse(http:Response|http:ClientError httpResponse) returns @tainted boolean|error{
     if (httpResponse is http:Response) {
         if(httpResponse.statusCode == http:STATUS_NO_CONTENT){
-            return string `${httpResponse.statusCode} Deleted Sucessfully`;
-        } else if (httpResponse.statusCode == http:STATUS_NOT_FOUND) {
-            return string `${httpResponse.statusCode} The resource/item with specified id is not found.`;
-        } else{
-            return prepareError(string `${httpResponse.statusCode} Error occurred while invoking the REST API.`);
+            return true;
+        } else {
+            var jsonResponse = httpResponse.getJsonPayload();
+            if jsonResponse is json {
+                return createResponseFailMessage(httpResponse,jsonResponse);
+            }else {
+                return prepareError("Error occurred while accessing the JSON payload of the response");
+            }
         }
     } else {
         return prepareError("Error occurred while invoking the REST API");
     }
+}
+
+function createResponseFailMessage(http:Response httpResponse,json errorResponse) returns error {
+    string message = errorResponse.message.toString();
+    string errorMessage = httpResponse.statusCode.toString() + " " + httpResponse.reasonPhrase; 
+    var stoppingIndex = message.indexOf("ActivityId");
+    if stoppingIndex is int{
+        errorMessage += " : " + message.substring(0,stoppingIndex);
+    }
+    return prepareError(errorMessage);
+
 }
 
 function parseHeadersToObject(http:Response|http:ClientError httpResponse) returns @tainted Headers|error{
@@ -172,7 +180,7 @@ public function setHeadersForQuery(http:Request req) returns http:Request|error{
     return req;
 }
 
-public function setRequestOptions(http:Request req, RequestOptions requestOptions) returns http:Request|error{
+public function setRequestOptions(http:Request req, RequestHeaderOptions requestOptions) returns http:Request|error{
     if requestOptions.indexingDirective is string {
         req.setHeader("x-ms-indexing-directive",requestOptions.indexingDirective.toString());
     }
@@ -224,7 +232,7 @@ HeaderParamaters params) returns http:Request|error{
     string?|error date = getTime();
     if date is string
     {
-        string? s = generateTokenNew(params.verb,params.resourceType,params.resourceId,keyToken,tokenType,tokenVersion);
+        string?|error s = generateTokenNew(params.verb,params.resourceType,params.resourceId,keyToken,tokenType,tokenVersion);
         req.setHeader(DATE_HEADER,date);
         if s is string {
             req.setHeader(AUTHORIZATION_HEADER,s);
@@ -310,19 +318,28 @@ string tokenVersion, string date) returns string?|error{
         +date.toLowerAscii()+"\n"
         +""+"\n";
     var decoded = encoding:decodeBase64Url(keys);
-
-    if decoded is byte[]
-    {
-        byte[] k = crypto:hmacSha256(payload.toBytes(),decoded);
-        string  t = k.toBase16();
-        string signature = encoding:encodeBase64Url(k);
-        authorization = 
-        check encoding:encodeUriComponent(string `type=${keyType}&ver=${tokenVersion}&sig=${signature}=`, "UTF-8");   
-        return authorization;
-    } else {     
-        io:println("Decoding error");
+    if decoded is byte[]{
+        var encoded = check encoding:encodeUriComponent(payload,"UTF-8");
+        var digest = crypto:hmacSha256(encoded.toBytes(),decoded);
+        var signature = encoding:encodeBase64Url(digest);
+        var finale = check encoding:decodeUriComponent(signature, "UTF-8");
+        string token = string `type=${keyType}&ver=${tokenVersion}&sig=${signature.substring(0,signature.length()-1)}`;
+        var auth = check encoding:encodeUriComponent(token, "UTF-8");   
+        io:println(auth);
+        return auth;
     }
-}
+//     var decoded = encoding:decodeBase64Url(keys);
+//     if decoded is byte[]{
+//         byte[] k = crypto:hmacSha256(payload.toBytes(),decoded);
+//         string  t = k.toBase16();
+//         string signature = encoding:encodeBase64Url(k);
+//         authorization = 
+//         check encoding:encodeUriComponent(string `type=${keyType}&ver=${tokenVersion}&sig=${signature}=`, "UTF-8");   
+//         return authorization;
+//     } else {     
+//         io:println("Decoding error");
+//     }
+ }
 
 function generateTokenJ(handle verb, handle resourceType, handle resourceId, handle keyToken, handle tokenType, 
 handle tokenVersion) returns handle = @java:Method {
