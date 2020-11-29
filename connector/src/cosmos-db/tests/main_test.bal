@@ -162,7 +162,7 @@ function deleteDB(){
 
     Client AzureCosmosClient = new(config);
     var result = AzureCosmosClient->deleteDatabase(deleteDbId);
-    if (result is DeleteResponse) {
+    if (result is boolean) {
         io:println(result);
     } else {
         test:assertFail(msg = result.message());
@@ -530,7 +530,7 @@ function deleteDocument(){
     dc.partitionKey = 1234;
     dc.documentId = "69a2c93a-42e6-487e-b6f3-1a355f1afd19";
     var result = AzureCosmosClient->deleteDocument(dc);  
-    if result is DeleteResponse {
+    if result is boolean {
         io:println(result);
     } else {
         test:assertFail(msg = result.message());
@@ -634,7 +634,7 @@ function deleteOneSproc(){
 
     Client AzureCosmosClient = new(config);
     var result = AzureCosmosClient->deleteStoredProcedure(properties,deleteSprocId);   
-    if result is DeleteResponse {
+    if result is boolean {
         io:println(result);
     } else {
         test:assertFail(msg = result.message());
@@ -730,7 +730,7 @@ function deleteUDF(){
     Client AzureCosmosClient = new(config);
     var uuid = createRandomUUID();
     var result = AzureCosmosClient->deleteUserDefinedFunction(properties,deleteUDFId);  
-    if result is DeleteResponse {
+    if result is boolean {
         io:println(result);
     } else {
         test:assertFail(msg = result.message());
@@ -818,7 +818,7 @@ function deleteTrigger(){
     Client AzureCosmosClient = new(config);
     var uuid = createRandomUUID();
     var result = AzureCosmosClient->deleteTrigger(properties,deleteTriggerId);  
-    if result is DeleteResponse {
+    if result is boolean {
         io:println(result);
     } else {
         test:assertFail(msg = result.message());
@@ -905,7 +905,7 @@ function deleteUser(){
     Client AzureCosmosClient = new(config);
     var uuid = createRandomUUID();
     var result = AzureCosmosClient->deleteUser(properties,deleteUserId);  
-    if result is DeleteResponse {
+    if result is boolean {
         io:println(result);
     } else {
         test:assertFail(msg = result.message());
@@ -914,7 +914,7 @@ function deleteUser(){
 }
 
 string permissionId = string `permission-${uuid.toString()}`;
-string permissionModeCreate = "All";
+string permissionModeCreate = "Read";
 string createResource = "dbs/database1/colls/collection1";
 string permissionUserId = "user-010c59a5-065d-43df-862e-cb72966e0b19";
 string getPermissionId = "permission-2069981b-a529-438e-b8a6-a3d2546cdfdf";
@@ -974,12 +974,11 @@ function getPermission(){
     io:println("\n\n");  
 }
 
-//must check if it can be used with same id too or different ids
 @test:Config{
     groups: ["permission"]
 }
 function replacePermission(){
-    io:println("-----------------Create permission-----------------------\n\n");
+    io:println("-----------------Replace permission-----------------------\n\n");
 
     Client AzureCosmosClient = new(config);
     Permission permission = {
@@ -1005,7 +1004,7 @@ function deletePermission(){
     Client AzureCosmosClient = new(config);
     var uuid = createRandomUUID();
     var result = AzureCosmosClient->deletePermission(properties,deletePermissionUserId,deletePermissionId);  
-    if result is DeleteResponse {
+    if result is boolean {
         io:println(result);
     } else {
         test:assertFail(msg = result.message());

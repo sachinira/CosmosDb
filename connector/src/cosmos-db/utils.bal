@@ -13,12 +13,12 @@ function parseResponseToTuple(http:Response|http:ClientError httpResponse) retur
     return [responseBody,responseHeaders];
 }
 
-function parseDeleteResponseToTuple(http:Response|http:ClientError httpResponse) returns  @tainted 
-[string,Headers]|error{
-    var responseBody = check getDeleteResponse(httpResponse);
-    var responseHeaders = check parseHeadersToObject(httpResponse);
-    return [responseBody,responseHeaders];
-}
+// function parseDeleteResponseToTuple(http:Response|http:ClientError httpResponse) returns  @tainted 
+// [string,Headers]|error{
+//     var responseBody = check getDeleteResponse(httpResponse);
+//     var responseHeaders = check parseHeadersToObject(httpResponse);
+//     return [responseBody,responseHeaders];
+// }
 
 # To handle sucess or error reponses to requests
 # + httpResponse - http:Response or http:ClientError returned from an http:Request
@@ -51,12 +51,12 @@ function parseResponseToJson(http:Response|http:ClientError httpResponse) return
 # To handle the delete responses which return without a json payload
 # + httpResponse - http:Response or http:ClientError returned from an http:Request
 # + return - If successful, returns string. Else returns error.  
-function getDeleteResponse(http:Response|http:ClientError httpResponse) returns @tainted string|error{
+function getDeleteResponse(http:Response|http:ClientError httpResponse) returns @tainted boolean|error{
     if (httpResponse is http:Response) {
         if(httpResponse.statusCode == http:STATUS_NO_CONTENT){
-            return string `${httpResponse.statusCode} Deleted Sucessfully`;
+            return true;
         } else if (httpResponse.statusCode == http:STATUS_NOT_FOUND) {
-            return string `${httpResponse.statusCode} The resource/item with specified id is not found.`;
+            return prepareError(string`${httpResponse.statusCode} The resource/item with specified id is not found.`);
         } else{
             return prepareError(string `${httpResponse.statusCode} Error occurred while invoking the REST API.`);
         }
