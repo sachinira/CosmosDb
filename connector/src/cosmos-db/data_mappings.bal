@@ -133,7 +133,7 @@ function mapJsonToDocument([json, Headers] jsonPayload) returns @tainted Documen
     Headers headers;
     [payload,headers] = jsonPayload;
     doc.id = payload.id.toString();
-    doc.document = check payload.cloneWithType(anydata);
+   // doc.document = check payload.cloneWithType(anydata);//split the document 
     doc.reponseHeaders = headers;
     return doc;
 }
@@ -355,7 +355,7 @@ function convertToDocumentArray(json[] sourceDocumentArrayJsonObject) returns @t
     int i = 0;
     foreach json document in sourceDocumentArrayJsonObject { 
         documents[i].id = document.id.toString();
-        documents[i].document = check document.cloneWithType(anydata);
+        //documents[i].document = check document.cloneWithType(anydata);
         documents[i].id = document.id.toString();
         i = i + 1;
     }

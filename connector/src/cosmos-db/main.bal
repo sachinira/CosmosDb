@@ -1,4 +1,5 @@
 import ballerina/http;
+import ballerina/io;
 # Azure Cosmos DB Client object.
 # + azureCosmosClient - The HTTP Client
 public  client class Client {
@@ -206,7 +207,7 @@ public  client class Client {
     # + document - Any json content that will include as the document.
     # + requestOptions - object of type RequestHeaderOptions
     # + return - If successful, returns Document. Else returns error.  
-    public remote function createDocument(@tainted DocumentProperties properties,json document,
+    public remote function createDocument(@tainted ResourceProperties properties,Document document,
     RequestHeaderOptions? requestOptions) returns @tainted Document|error{
         http:Request req = new;
         string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_COLLECTIONS,
@@ -214,11 +215,15 @@ public  client class Client {
         HeaderParamaters header = mapParametersToHeaderType(POST,requestPath);
 
         req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
-        req = check setPartitionKeyHeader(req,properties.partitionKey);
+        req = check setPartitionKeyHeader(req,document.partitionKey);
         if requestOptions is RequestHeaderOptions{
             req = check setRequestOptions(req,requestOptions);
-        }        
-        req.setJsonPayload(document);
+        }
+        json requestBodyId = {
+            id: document.id
+        };  
+        json Final = check requestBodyId.mergeJson(document.documentBody);     
+        req.setJsonPayload(Final);
         var response = self.azureCosmosClient->post(requestPath,req);
         [json,Headers] jsonreponse = check parseResponseToTuple(response);
         return mapJsonToDocument(jsonreponse);
@@ -227,17 +232,18 @@ public  client class Client {
     #To list one document inside a collection
     # x-ms-consistency-level, x-ms-session-token and If-None-Match headers are supported
     # + properties - object of type DocumentProperties
+    # + document -
     # + requestOptions - object of type RequestHeaderOptions
     # + return - If successful, returns a Document. Else returns error. 
-    public remote function getDocument(@tainted DocumentProperties properties,RequestHeaderOptions? requestOptions = ()) 
+    public remote function getDocument(@tainted ResourceProperties properties, @tainted Document document,RequestHeaderOptions? requestOptions = ()) 
     returns @tainted Document|error{
         http:Request req = new;
         string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_COLLECTIONS,
-        properties.containerId,RESOURCE_PATH_DOCUMENTS,properties.documentId.toString()]);
+        properties.containerId,RESOURCE_PATH_DOCUMENTS,document.id]);
         HeaderParamaters header = mapParametersToHeaderType(GET,requestPath);
 
         req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
-        req = check setPartitionKeyHeader(req,properties.partitionKey);
+        req = check setPartitionKeyHeader(req,document.partitionKey);
         if requestOptions is RequestHeaderOptions{
             req = check setRequestOptions(req,requestOptions);
         }
@@ -250,7 +256,7 @@ public  client class Client {
     # + properties - object of type DocumentProperties
     # + requestOptions - The continuation token returned from previous document request******
     # + return - If successful, returns DocumentList. Else returns error. 
-    public remote function getDocumentList(@tainted DocumentProperties properties,RequestHeaderOptions? requestOptions = ()) 
+    public remote function getDocumentList(@tainted ResourceProperties properties,RequestHeaderOptions? requestOptions = ()) 
     returns @tainted DocumentList|error{ 
         http:Request req = new;
         string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_COLLECTIONS,
@@ -269,23 +275,27 @@ public  client class Client {
 
     #To replace a document inside a collection
     # + properties - object of type DocumentProperties
-    # + newDocument - json object for replacing the existing document
+    # + document - json object for replacing the existing document
     # + requestOptions - object of type RequestHeaderOptions
     # set x-ms-documentdb-partitionkey header
     # + return - If successful, returns a Document. Else returns error. 
-    public remote function replaceDocument(@tainted DocumentProperties properties, json newDocument,
+    public remote function replaceDocument(@tainted ResourceProperties properties,@tainted Document document,
     RequestHeaderOptions? requestOptions = ()) returns @tainted Document|error{         
         http:Request req = new;
         string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_COLLECTIONS,
-        properties.containerId,RESOURCE_PATH_DOCUMENTS,<string>properties.documentId]);//error
+        properties.containerId,RESOURCE_PATH_DOCUMENTS,document.id]);//error
         HeaderParamaters header = mapParametersToHeaderType(PUT,requestPath);
 
         req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
-        req = check setPartitionKeyHeader(req,properties.partitionKey);
+        req = check setPartitionKeyHeader(req,document.partitionKey);
         if requestOptions is RequestHeaderOptions{
             req = check setRequestOptions(req,requestOptions);
         }
-        req.setJsonPayload(newDocument);
+        json requestBodyId = {
+            id: document.id
+        };  
+        json Final = check requestBodyId.mergeJson(document.documentBody); 
+        req.setJsonPayload(<@untainted>Final);
         var response = self.azureCosmosClient->put(requestPath,req);
         [json,Headers] jsonreponse = check parseResponseToTuple(response);
         return mapJsonToDocument(jsonreponse);
@@ -293,16 +303,17 @@ public  client class Client {
 
     #To delete a document inside a collection
     # + properties - object of type DocumentProperties
+    # + document -
     # + return - If successful, returns a DeleteResponse giving sucessfully deleted. Else returns error. 
-    public remote function deleteDocument(@tainted DocumentProperties properties) returns 
+    public remote function deleteDocument(@tainted ResourceProperties properties, @tainted Document document) returns 
     @tainted boolean|error{  
         http:Request req = new;
         string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_COLLECTIONS,
-        properties.containerId,RESOURCE_PATH_DOCUMENTS,<string>properties.documentId]);//error
+        properties.containerId,RESOURCE_PATH_DOCUMENTS,document.id]);//error
         HeaderParamaters header = mapParametersToHeaderType(DELETE,requestPath);
 
         req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
-        req = check setPartitionKeyHeader(req,properties.partitionKey);
+        req = check setPartitionKeyHeader(req,document.partitionKey);
         var response = self.azureCosmosClient->delete(requestPath,req);
         return check getDeleteResponse(response);
     }
@@ -312,8 +323,9 @@ public  client class Client {
     # + properties - object of type DocumentProperties
     # + sqlQuery - json object containing the sql query
     # + requestOptions - object of type RequestOptions
+    # + partitionKey - 
     # + return - If successful, returns a json. Else returns error. 
-    public remote function queryDocument(@tainted DocumentProperties properties, Query sqlQuery, 
+    public remote function queryDocument(@tainted ResourceProperties properties, any partitionKey, Query sqlQuery, 
     RequestHeaderOptions? requestOptions = ()) returns @tainted json|error{
         http:Request req = new;
         string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_COLLECTIONS,
@@ -321,8 +333,9 @@ public  client class Client {
         HeaderParamaters header = mapParametersToHeaderType(POST,requestPath);
         req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
         req = check setHeadersForQuery(req);
-        req = check setPartitionKeyHeader(req,properties.partitionKey);
-        req.setPayload(sqlQuery);
+        req = check setPartitionKeyHeader(req,partitionKey);
+        io:println(sqlQuery);
+        req.setPayload(<json>sqlQuery.cloneWithType(json));
         var response = self.azureCosmosClient->post(requestPath,req);
         json jsonresponse = check parseResponseToJson(response);
         return (jsonresponse);

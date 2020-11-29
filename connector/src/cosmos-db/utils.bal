@@ -25,19 +25,10 @@ function parseResponseToTuple(http:Response|http:ClientError httpResponse) retur
 # + return - If successful, returns json. Else returns error.  
 function parseResponseToJson(http:Response|http:ClientError httpResponse) returns @tainted json|error { 
     if (httpResponse is http:Response) {
-        if(httpResponse.statusCode == http:STATUS_NO_CONTENT){
-            return true;
-        }
         var jsonResponse = httpResponse.getJsonPayload();
         if (jsonResponse is json) {
             if (httpResponse.statusCode != http:STATUS_OK && httpResponse.statusCode != http:STATUS_CREATED) {
-                string message = jsonResponse.message.toString();
-                string errorMessage = httpResponse.statusCode.toString() + " " + httpResponse.reasonPhrase; 
-                var stoppingIndex = message.indexOf("ActivityId");
-                if stoppingIndex is int{
-                    errorMessage += " : " + message.substring(0,stoppingIndex);
-                }
-                return prepareError(errorMessage);
+                return createResponseFailMessage(httpResponse,jsonResponse);
             }
             return jsonResponse;
         } else {
@@ -55,14 +46,28 @@ function getDeleteResponse(http:Response|http:ClientError httpResponse) returns 
     if (httpResponse is http:Response) {
         if(httpResponse.statusCode == http:STATUS_NO_CONTENT){
             return true;
-        } else if (httpResponse.statusCode == http:STATUS_NOT_FOUND) {
-            return prepareError(string`${httpResponse.statusCode} The resource/item with specified id is not found.`);
-        } else{
-            return prepareError(string `${httpResponse.statusCode} Error occurred while invoking the REST API.`);
+        } else {
+            var jsonResponse = httpResponse.getJsonPayload();
+            if jsonResponse is json {
+                return createResponseFailMessage(httpResponse,jsonResponse);
+            }else {
+                return prepareError("Error occurred while accessing the JSON payload of the response");
+            }
         }
     } else {
         return prepareError("Error occurred while invoking the REST API");
     }
+}
+
+function createResponseFailMessage(http:Response httpResponse,json errorResponse) returns error {
+    string message = errorResponse.message.toString();
+    string errorMessage = httpResponse.statusCode.toString() + " " + httpResponse.reasonPhrase; 
+    var stoppingIndex = message.indexOf("ActivityId");
+    if stoppingIndex is int{
+        errorMessage += " : " + message.substring(0,stoppingIndex);
+    }
+    return prepareError(errorMessage);
+
 }
 
 function parseHeadersToObject(http:Response|http:ClientError httpResponse) returns @tainted Headers|error{

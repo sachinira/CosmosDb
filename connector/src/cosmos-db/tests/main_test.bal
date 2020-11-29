@@ -315,9 +315,8 @@ function deleteCollection(){
     io:println(result);
     io:println("\n\n");
 }
-
 @test:Config{
-   enable: false
+    groups: ["partitionKey"]
 }
 function GetPartitionKeyRanges(){
     io:println("--------------Get partition key ranges------------------------\n\n");
@@ -332,17 +331,11 @@ function GetPartitionKeyRanges(){
     io:println("\n\n");
 }
 
-@test:Config{
-  enable: false
-}
-function createDocument(){
-    io:println("--------------Create One document------------------------\n\n");
-
-    Client AzureCosmosClient = new(config);
-    var uuid = createRandomUUID();
-    string docid = uuid.toString();
-    json custombody = {
-        "LastName": "keeeeeee",  
+string createDocumentId = uuid.toString();
+Document createDoc = {
+        id:createDocumentId,
+        documentBody :{
+            "LastName": "keeeeeee",  
         "Parents": [  
             {  
             "FamilyName": null,  
@@ -372,42 +365,42 @@ function createDocument(){
             "City": "Seattle"  
         },  
         "IsRegistered": true,
-        "AccountNumber": 1234  
+        "AccountNumber": 1234
+        },
+        partitionKey : 1234  
     };
-    json body = {
-            id: docid    
-    };   
-    json|error finalj =  body.mergeJson(custombody);
-    DocumentProperties dc = {};
-    dc.databaseId="hikall";
-    dc.containerId="mycollection1";
-    dc.partitionKey=<json>custombody.AccountNumber;
-    RequestHeaderOptions reqOptions = {
+
+
+RequestHeaderOptions reqOptions = {
         isUpsertRequest:true
-    };
-    if finalj is json{
-        var result = AzureCosmosClient->createDocument(dc, finalj, reqOptions);
-        if result is Document {
-            io:println(result);
-        } else {
-            test:assertFail(msg = result.message());
-        }   
-    } 
+};
+
+@test:Config{
+    groups: ["document"]
+}
+function createDocument(){
+    io:println("--------------Create One document------------------------\n\n");
+
+    Client AzureCosmosClient = new(config);
+    var result = AzureCosmosClient->createDocument(properties, createDoc, reqOptions);
+    if result is Document {
+        io:println(result);
+    } else {
+        test:assertFail(msg = result.message());
+    }   
+    
     io:println("\n\n");
 }
 
 //with indexing or upsert headers test case comes here
 @test:Config{
-   enable: false
+    groups: ["document"]
 }
 function GetDocumentList(){
     io:println("--------------Get all documents in a collection------------------------\n\n");
 
     Client AzureCosmosClient = new(config);
-    DocumentProperties dc = {};
-    dc.databaseId = "hikall";
-    dc.containerId = "mycollection1";
-    var result = AzureCosmosClient->getDocumentList(dc);
+    var result = AzureCosmosClient->getDocumentList(properties);
     if (result is DocumentList) {
         io:println(result);
     } else {
@@ -416,41 +409,18 @@ function GetDocumentList(){
     io:println("\n\n");
 }
 
+@tainted Document getDoc =  {
+    id: "080b7d03-a0d4-48d8-9cfe-89760d2c04e5",
+    partitionKey : 1234  
+};
 @test:Config{
-   enable: false
-}
-function getNextPageOfDocumentList(){
-    io:println("--------------Get next page documents in a collection------------------------\n\n");
-
-    Client AzureCosmosClient = new(config);
-    DocumentProperties dc = {};
-    dc.databaseId = "hikall";
-    dc.containerId = "mycollection1";
-    RequestHeaderOptions options = {};
-    options.maxItemCount = 4;
-    options.continuationToken = "{token:'nXh6ANTE4QoIAAAAAAAAAA==',range:{min:'',max:'FF'}}";//convert this to string
-    var result = AzureCosmosClient->getDocumentList(dc,options);
-    if (result is DocumentList) {
-        io:println(result);
-    } else {
-        test:assertFail(msg = result.message());
-    }
-    io:println("\n\n");
-}
-
-@test:Config{
-    enable: false
+    groups: ["document"]
 }
 function GetOneDocument(){
     io:println("--------------Get one document------------------------\n\n");
 
     Client AzureCosmosClient = new(config);
-    DocumentProperties dc = {};
-    dc.databaseId = "hikall";
-    dc.containerId = "mycollection1";
-    dc.partitionKey = 1234;
-    dc.documentId = "10b40edd-d94e-4677-aa0b-eeeab1f7c470";
-    var result = AzureCosmosClient->getDocument(dc);
+    var result = AzureCosmosClient->getDocument(properties,getDoc);
     if (result is Document) {
         io:println(result);
     } else {
@@ -459,77 +429,20 @@ function GetOneDocument(){
     io:println("\n\n");
 }
 
+@tainted Document deleteDoc =  {
+    id: "5e10b6e4-68ec-4fe6-ac14-452cc5864669",
+    partitionKey : 1234  
+};
 @test:Config{
-    enable: false
-}
-function replaceDocument(){
-    io:println("--------------Replace document------------------------\n\n");
-
-    Client AzureCosmosClient = new(config);
-    DocumentProperties dc = {};
-    dc.databaseId = "hikall";
-    dc.containerId = "mycollection1";
-    dc.partitionKey = 1234;
-    dc.documentId = "8f014bef-691e-4732-99f0-9b7af94cb9c2";
-    json id = {
-        "id": dc.documentId
-    };
-    json custom = {
-        "LastName": "hi",  
-        "Parents": [  
-            {  
-            "FamilyName": null,  
-            "FirstName": "Thomas"  
-            },  
-            {  
-            "FamilyName": null,  
-            "FirstName": "Mary Kay"  
-            }  
-        ],  
-        "Children": [  
-            {  
-            "FamilyName": null,  
-            "FirstName": "Henriette Thaulow",  
-            "Gender": "female",  
-            "Grade": 5,  
-            "Pets": [  
-                {  
-                "GivenName": "Fluffy"  
-                }  
-            ]  
-            }  
-        ],  
-        "AccountNumber": <json>dc.partitionKey,
-        "Address": {  
-            "State": "WA",  
-            "County": "King",  
-            "City": "Seattle"  
-        },  
-        "IsRegistered": true
-    };
-    json|error finalj = custom.mergeJson(id);
-    var result = AzureCosmosClient->replaceDocument(dc,<json>custom);  
-    if result is Document {
-        io:println(result);
-    } else {
-        test:assertFail(msg = result.message());
-    }   
-    io:println("\n\n"); 
-}
-
-@test:Config{
-    enable: false
+    groups: ["document"]
 }
 function deleteDocument(){
     io:println("--------------Delete one document------------------------\n\n");
     
     Client AzureCosmosClient = new(config);
-    DocumentProperties dc = {};
-    dc.databaseId = "hikall";
-    dc.containerId = "mycollection1";
-    dc.partitionKey = 1234;
-    dc.documentId = "69a2c93a-42e6-487e-b6f3-1a355f1afd19";
-    var result = AzureCosmosClient->deleteDocument(dc);  
+    //dc.partitionKey = 1234;
+    //dc.documentId = "69a2c93a-42e6-487e-b6f3-1a355f1afd19";
+    var result = AzureCosmosClient->deleteDocument(properties,deleteDoc);  
     if result is boolean {
         io:println(result);
     } else {
@@ -538,22 +451,21 @@ function deleteDocument(){
     io:println("\n\n"); 
 }
 
+int partitionKey = 1234;
+//QueryParameter[] params = [{name: "@id", value: "46c25391-e11d-4327-b7c5-28f44bcf3f2f"}];
+Query sqlQuery = {
+    query: "SELECT id FROM collection1 f WHERE f.Address.City = 'Seattle'",
+    parameters: []
+};
+
 @test:Config{
-    enable: false
+    groups: ["document"]
 }
 function queryDocument(){
     io:println("--------------Query one document-----------------------\n\n");
 
     Client AzureCosmosClient = new(config);
-    DocumentProperties dc = {};
-    dc.databaseId = "hikall";
-    dc.containerId = "mycollection1";
-    dc.partitionKey = 1234;
-    Query sqlQuery = {};
-    QueryParameter[] params = [{name: "@familyId", value: "AndersenFamily"}];
-    sqlQuery.query = "SELECT * FROM mycollection1 f WHERE f.id = @familyId";
-    sqlQuery.parameters = params;
-    var result = AzureCosmosClient->queryDocument(dc,sqlQuery);   
+    var result = AzureCosmosClient->queryDocument(properties,partitionKey,sqlQuery);   
     if result is json {
         io:println(result);
     } else {
@@ -913,12 +825,17 @@ function deleteUser(){
     io:println("\n\n");  
 }
 
+//different permissions cannot be created for same resource, already existing permissions can be replaced"
 string permissionId = string `permission-${uuid.toString()}`;
 string permissionModeCreate = "Read";
 string createResource = "dbs/database1/colls/collection1";
-string permissionUserId = "user-010c59a5-065d-43df-862e-cb72966e0b19";
-string getPermissionId = "permission-2069981b-a529-438e-b8a6-a3d2546cdfdf";
-string deletePermissionUserId = "";
+string permissionUserId = "user-41a5c42e-2a54-45b0-90da-41da2abe8cd0";
+string getPermissionId = "permission-81f21af0-221d-407d-b7d3-b1cd69a9b2e5";
+string replacePermissionUser = "";
+string replacePermissionId = "";
+string permissionModeReplace = "All";
+string replaceResource = "dbs/database1/colls/collection1";
+string deletePermissionUserId = "user-010c59a5-065d-43df-862e-cb72966e0b19";
 string deletePermissionId = "permission-2069981b-a529-438e-b8a6-a3d2546cdfdf";
 
 @test:Config{
@@ -934,6 +851,27 @@ function createPermission(){
         'resource:createResource
     };
     var result = AzureCosmosClient->createPermission(properties,permissionUserId,permission);  
+    if result is Permission {
+        io:println(result);
+    } else {
+        test:assertFail(msg = result.message());
+    }   
+    io:println("\n\n");  
+}
+
+@test:Config{
+    groups: ["permission"]
+}
+function replacePermission(){
+    io:println("-----------------Replace permission-----------------------\n\n");
+
+    Client AzureCosmosClient = new(config);
+    Permission permission = {
+        id:replacePermissionId,
+        permissionMode:permissionModeReplace,
+        'resource:replaceResource
+    };
+    var result = AzureCosmosClient->replacePermission(properties,replacePermissionUser,permission);  
     if result is Permission {
         io:println(result);
     } else {
@@ -975,28 +913,8 @@ function getPermission(){
 }
 
 @test:Config{
-    groups: ["permission"]
-}
-function replacePermission(){
-    io:println("-----------------Replace permission-----------------------\n\n");
-
-    Client AzureCosmosClient = new(config);
-    Permission permission = {
-        id:permissionId,
-        permissionMode:permissionModeCreate,
-        'resource:createResource
-    };
-    var result = AzureCosmosClient->replacePermission(properties,permissionUserId,permission);  
-    if result is Permission {
-        io:println(result);
-    } else {
-        test:assertFail(msg = result.message());
-    }   
-    io:println("\n\n");  
-}
-
-@test:Config{
-    groups: ["user"]
+    groups: ["permission"],
+    dependsOn: ["listPermissions","getPermission"]
 }
 function deletePermission(){
     io:println("-----------------Delete permission-----------------------\n\n");

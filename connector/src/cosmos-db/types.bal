@@ -85,16 +85,11 @@ public type ContainerList record {|
     int _count = 0;
 |};
 
-public type DocumentProperties record {|
-    string databaseId = "";
-    string containerId = "";
-    string? documentId = ();
-    any? partitionKey = ();
-|};
-
 public type Document record {|
     string id = "";
-    any document = "";
+    json documentBody = {};
+    string? documentId = ();
+    any? partitionKey = ();
     Headers reponseHeaders?;
 |};
 
