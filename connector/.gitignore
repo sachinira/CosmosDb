@@ -3,4 +3,3 @@ src/cosmos-db/tests/constants.bal
 Ballerina.lock
 ../ballerina-internal.log
 ballerina-internal.log
-.gitignore
