@@ -38,20 +38,21 @@ public type ResourceProperties record {|
 |};
 
 public type Headers record {|
-    string? continuationHeader = ();
+    string? continuationHeader?;
     string? sessionTokenHeader = ();
     string? requestChargeHeader = ();
     string? resourceUsageHeader = ();
-    string? itemCountHeader = ();
+    string? itemCountHeader?;
     string? etagHeader = ();
     string? dateHeader = ();
 |};
 
-public type Database record {
-    string _rid?;
+public type Database record {|
     string id = "";
-    Headers reponseHeaders?;
-};
+    string _rid?;
+    string _self?;
+    Headers?...;
+|};
 
 public type DatabaseList record {
     string _rid = "";
