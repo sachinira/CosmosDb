@@ -995,7 +995,7 @@ function replaceOffer(){
 }
 
 Query offerQuery = {
-   // query: "SELECT * FROM root WHERE root.resource = \'dbs/EVQzAA==/colls/EVQzALIIEQw=/\'";
+   query: string `SELECT * FROM root WHERE (root[\"_self\"]) = \""dbs/InV1AA==/colls/InV1AItrS0w=/"\"`
 };
 
 @test:Config{

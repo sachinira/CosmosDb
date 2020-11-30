@@ -59,7 +59,6 @@ public type DatabaseList record {
     Headers? reponseHeaders = ();
 };
 
-
 //conflict resolution policy must be included
 public type ContainerProperties record {|
     string databaseId = "";
@@ -68,15 +67,16 @@ public type ContainerProperties record {|
     IndexingPolicy? indexingPolicy = ();
 |};
 
-
 //conflict resolution policy must be included
-public type Container record {
+public type Container record {|
     string id = "";
+    string _rid?;
+    string _self?;
     boolean allowMaterializedViews?;
     IndexingPolicy indexingPolicy?;
     PartitionKey partitionKey?;
-    Headers reponseHeaders?;
-};
+    Headers?...;
+|};
 
 public type ContainerList record {|
     string _rid = "";

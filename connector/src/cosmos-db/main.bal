@@ -683,10 +683,9 @@ public  client class Client {
         HeaderParamaters header = mapParametersToHeaderType(POST,requestPath);
         req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
         req = check setHeadersForQuery(req);
-        req.setPayload(<json>sqlQuery.cloneWithType(json));
+        req.setJsonPayload(<json>sqlQuery.cloneWithType(json));
         var response = self.azureCosmosClient->post(requestPath,req);
         json jsonresponse = check parseResponseToJson(response);
         return (jsonresponse);
     }
-
 }

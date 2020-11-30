@@ -45,17 +45,21 @@ function mapTupleToDeleteresponse([string, Headers] jsonPayload)returns @tainted
     return deleteResponse;
 }
 
-function mapJsonToCollectionType([json, Headers] jsonPayload)returns @tainted Container {
+function mapJsonToCollectionType([json, Headers?] jsonPayload)returns @tainted Container {
     json payload;
-    Headers headers;
+    Headers? headers;
     [payload,headers] = jsonPayload;
 
     Container coll = {};
     coll.id = payload.id.toString();
+    coll._rid = payload._rid != ()? payload._rid.toString() : EMPTY_STRING;
+    coll._self = payload._self != ()? payload._self.toString() : EMPTY_STRING;
     coll.allowMaterializedViews = convertToBoolean(payload.allowMaterializedViews);
     coll.indexingPolicy = mapJsonToIndexingPolicy(<json>payload.indexingPolicy);
     coll.partitionKey = convertJsonToPartitionKey(<json>payload.partitionKey);
-    coll.reponseHeaders = headers;
+    if headers is Headers {
+        coll["reponseHeaders"] = headers;
+    }
     return coll;
 }
 
@@ -138,8 +142,8 @@ function mapJsonToDocument([json, Headers] jsonPayload) returns @tainted Documen
     json payload;
     Headers headers;
     [payload,headers] = jsonPayload;
-    doc.id = payload.id.toString();
-   // doc.document = check payload.cloneWithType(anydata);//split the document 
+    doc.id = payload.id != () ? payload.id.toString(): EMPTY_STRING;
+    //doc.documentBody = check payload.cloneWithType(anydata);//split the document 
     doc.reponseHeaders = headers;
     return doc;
 }
@@ -364,10 +368,7 @@ function convertToCollectionArray(json[] sourceCollectionArrayJsonObject) return
     Container[] collections = [];
     int i = 0;
     foreach json jsonCollection in sourceCollectionArrayJsonObject {
-        collections[i].id = <string>jsonCollection.id;
-        collections[i].allowMaterializedViews = convertToBoolean(jsonCollection.allowMaterializedViews);
-        collections[i].indexingPolicy = mapJsonToIndexingPolicy(<json>jsonCollection.indexingPolicy);
-        collections[i].partitionKey = convertJsonToPartitionKey(<json>jsonCollection.partitionKey);
+        collections[i] = mapJsonToCollectionType([jsonCollection,()]);
         i = i + 1;
     }
     return collections;
@@ -459,5 +460,3 @@ function ConvertToOfferArray(json[] sourceOfferArrayJsonObject) returns @tainted
     }
     return offers;
 }
-
-
