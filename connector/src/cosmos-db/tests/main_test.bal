@@ -334,7 +334,7 @@ function GetPartitionKeyRanges(){
     io:println("\n\n");
 }
 
-string createDocumentId = uuid.toString();
+string createDocumentId = "";//uuid.toString();
 Document createDoc = {
         id:createDocumentId,
         documentBody :{

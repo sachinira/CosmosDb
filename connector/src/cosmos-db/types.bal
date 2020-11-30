@@ -87,10 +87,12 @@ public type ContainerList record {|
 
 public type Document record {|
     string id = "";
-    json documentBody = {};
-    string? documentId = ();
+    string? _rid?;
+    string? _self?;
+    json? documentBody = {};
+    string? documentId?;
     any? partitionKey = ();
-    Headers reponseHeaders?;
+    Headers?...;
 |};
 
 public type DocumentList record {|
@@ -259,3 +261,5 @@ public type ConflictResolutionPolicyType record {|
 |};
 
 public type AzureError  distinct  error;
+
+type JsonMap map<json>;

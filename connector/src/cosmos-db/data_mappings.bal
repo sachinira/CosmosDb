@@ -1,3 +1,4 @@
+import ballerina/io;
 function mapParametersToHeaderType(string httpVerb, string url) returns HeaderParamaters {
     HeaderParamaters params = {};
     params.verb = httpVerb;
@@ -137,14 +138,24 @@ function mapJsonToPartitionKeyRange([json, Headers] jsonPayload) returns @tainte
     return pkr;
 }
 
-function mapJsonToDocument([json, Headers] jsonPayload) returns @tainted Document|error {  
+function mapJsonToDocument([json, Headers?] jsonPayload) returns @tainted Document {  
     Document doc = {};
     json payload;
-    Headers headers;
+    Headers? headers;
     [payload,headers] = jsonPayload;
     doc.id = payload.id != () ? payload.id.toString(): EMPTY_STRING;
-    //doc.documentBody = check payload.cloneWithType(anydata);//split the document 
-    doc.reponseHeaders = headers;
+    doc._rid = payload._rid != () ? payload._rid.toString(): EMPTY_STRING;
+    doc._self = payload._self != () ? payload._self.toString(): EMPTY_STRING;
+    JsonMap|error document = payload.cloneWithType(JsonMap);
+    if document is JsonMap {
+        doc.documentBody = mapJsonToDocumentBody(document);
+    } else {
+        var newError =  prepareError("Cannot cast to map.json");
+        io:println(newError);
+    }
+    if headers is Headers {
+        doc["reponseHeaders"] = headers;
+    }
     return doc;
 }
 
@@ -391,9 +402,7 @@ function convertToDocumentArray(json[] sourceDocumentArrayJsonObject) returns @t
     Document[] documents = [];
     int i = 0;
     foreach json document in sourceDocumentArrayJsonObject { 
-        documents[i].id = document.id.toString();
-        //documents[i].document = check document.cloneWithType(anydata);
-        documents[i].id = document.id.toString();
+        documents[i] = mapJsonToDocument([document,()]);
         i = i + 1;
     }
     return documents;
@@ -459,4 +468,14 @@ function ConvertToOfferArray(json[] sourceOfferArrayJsonObject) returns @tainted
         i = i + 1;
     }
     return offers;
+}
+
+function mapJsonToDocumentBody(map<json> reponsePayload) returns json{
+    var deleteKeys = ["id","_rid","_self","_etag","_ts","_attachments"];
+    foreach var 'key in deleteKeys {
+        if reponsePayload.hasKey('key) {
+            var removedValue = reponsePayload.remove('key);
+        }
+    }
+    return reponsePayload;
 }
