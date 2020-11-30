@@ -637,7 +637,7 @@ public  client class Client {
     }
 
     public remote function deletePermission(@tainted ResourceProperties properties,string userId, string permissionId) returns 
-    @tainted boolean|error{
+    @tainted boolean|error {
         http:Request req = new;
         string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_USER,userId,RESOURCE_PATH_PERMISSION,permissionId]);       
         HeaderParamaters header = mapParametersToHeaderType(DELETE,requestPath);
@@ -645,4 +645,48 @@ public  client class Client {
         var response = self.azureCosmosClient->delete(requestPath,req);
         return check getDeleteResponse(response);
     }
+
+    public remote function listOffers() returns @tainted OfferList|error {
+        http:Request req = new;
+        string requestPath =  prepareUrl([RESOURCE_PATH_OFFER]);       
+        HeaderParamaters header = mapParametersToHeaderType(GET,requestPath);
+        req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
+        var response = self.azureCosmosClient->get(requestPath,req);
+        [json,Headers] jsonResponse = check parseResponseToTuple(response);
+        return mapJsonToOfferList(jsonResponse);
+    }
+
+    public remote function getOffer(string offerId) returns @tainted Offer|error {
+        http:Request req = new;
+        string requestPath =  prepareUrl([RESOURCE_PATH_OFFER,offerId]);       
+        HeaderParamaters header = mapOfferHeaderType(GET,requestPath);
+        req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
+        var response = self.azureCosmosClient->get(requestPath,req);
+        [json,Headers] jsonResponse = check parseResponseToTuple(response);
+        return mapJsonToOffer(jsonResponse);
+    }
+
+    public remote function replaceOffer(Offer offer) returns @tainted Offer|error {
+        http:Request req = new;
+        string requestPath =  prepareUrl([RESOURCE_PATH_OFFER,offer.id]);       
+        HeaderParamaters header = mapOfferHeaderType(PUT,requestPath);
+        req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
+        req.setJsonPayload(offer);
+        var response = self.azureCosmosClient->put(requestPath,req);
+        [json,Headers] jsonResponse = check parseResponseToTuple(response);
+        return mapJsonToOffer(jsonResponse);
+    }
+
+    public remote function queryOffer(Query sqlQuery) returns @tainted json|error{
+        http:Request req = new;
+        string requestPath =  prepareUrl([RESOURCE_PATH_OFFER]);
+        HeaderParamaters header = mapParametersToHeaderType(POST,requestPath);
+        req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
+        req = check setHeadersForQuery(req);
+        req.setPayload(<json>sqlQuery.cloneWithType(json));
+        var response = self.azureCosmosClient->post(requestPath,req);
+        json jsonresponse = check parseResponseToJson(response);
+        return (jsonresponse);
+    }
+
 }

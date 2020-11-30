@@ -932,3 +932,84 @@ function deletePermission(){
     }   
     io:println("\n\n");  
 }
+
+@test:Config{
+    groups: ["offer"]
+}
+function listOffers(){
+    io:println("-----------------list offers-----------------------\n\n");
+
+    Client AzureCosmosClient = new(config);
+    var result = AzureCosmosClient->listOffers();  
+    if result is OfferList {
+        io:println(result);
+    } else {
+        test:assertFail(msg = result.message());
+    }   
+    io:println("\n\n");  
+}
+
+string getOfferId = "vHIQ";
+
+@test:Config{
+    groups: ["offer"]
+}
+function listOffer(){
+    io:println("-----------------list one offer-----------------------\n\n");
+
+    Client AzureCosmosClient = new(config);
+    var result = AzureCosmosClient->getOffer(getOfferId);  
+    if result is Offer {
+        io:println(result);
+    } else {
+        test:assertFail(msg = result.message());
+    }   
+    io:println("\n\n");  
+}
+
+Offer replaceOfferBody = {
+    offerVersion: "V2",
+    offerType: "Invalid",    
+    content: {  
+        "offerThroughput": 600
+    }, 
+    'resource: "dbs/InV1AA==/colls/InV1AOOYBOo=/",  
+    offerResourceId: "InV1AJmRKts=",
+    id: "vHIQ",
+    _rid: "vHIQ" 
+};
+@test:Config{
+    groups: ["offer"]
+}
+function replaceOffer(){
+    io:println("-----------------Replace offer-----------------------\n\n");
+
+    Client AzureCosmosClient = new(config);
+    var result = AzureCosmosClient->replaceOffer(replaceOfferBody);  
+    if result is Offer {
+        io:println(result);
+    } else {
+        test:assertFail(msg = result.message());
+    }   
+    io:println("\n\n");  
+}
+
+Query offerQuery = {
+   // query: "SELECT * FROM root WHERE root.resource = \'dbs/EVQzAA==/colls/EVQzALIIEQw=/\'";
+};
+
+@test:Config{
+    groups: ["offer"]
+}
+function queryOffer(){
+    io:println("--------------Query offer-----------------------\n\n");
+
+    Client AzureCosmosClient = new(config);
+    var result = AzureCosmosClient->queryOffer(offerQuery);   
+    if result is json {
+        io:println(result);
+    } else {
+        test:assertFail(msg = result.message());
+    }    
+    io:println("\n\n");  
+}

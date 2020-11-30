@@ -1,9 +1,15 @@
-
 function mapParametersToHeaderType(string httpVerb, string url) returns HeaderParamaters {
     HeaderParamaters params = {};
     params.verb = httpVerb;
     params.resourceType = getResourceType(url);
     params.resourceId = getResourceId(url);
+    return params;
+}
+function mapOfferHeaderType(string httpVerb, string url) returns HeaderParamaters {
+    HeaderParamaters params = {};
+    params.verb = httpVerb;
+    params.resourceType = getResourceType(url);
+    params.resourceId = getResourceIdForOffer(url);
     return params;
 }
 
@@ -284,6 +290,36 @@ function mapJsonToPermissionList([json, Headers?] jsonPayload)returns @tainted P
     return permissionList;
 }
 
+function mapJsonToOffer([json, Headers?] jsonPayload)returns @tainted Offer {
+    Offer offer = {};
+    json payload;
+    Headers? headers;
+    [payload,headers] = jsonPayload;
+    offer._rid = payload._rid != () ? payload._rid.toString() : EMPTY_STRING;
+    offer.id = payload.id != () ? payload.id.toString() : EMPTY_STRING;
+    offer.offerVersion = payload.offerVersion != () ? payload.offerVersion.toString() : EMPTY_STRING;
+    offer.offerType = payload.offerType != () ? payload.offerType.toString() : EMPTY_STRING;
+    offer.content = payload.content != () ? payload.content.toString() : EMPTY_STRING;
+    offer.'resource = payload.'resource != () ? payload.'resource.toString() : EMPTY_STRING;
+    offer.offerResourceId = payload.offerResourceId != () ? payload.offerResourceId.toString() : EMPTY_STRING;
+    if headers is Headers {
+        offer["reponseHeaders"] = headers;
+    }
+    return offer;
+}
+
+function mapJsonToOfferList([json, Headers?] jsonPayload)returns @tainted OfferList {
+    OfferList offerList = {};
+    json payload;
+    Headers? headers;
+    [payload,headers] = jsonPayload;
+    offerList._rid = payload._rid != () ? payload._rid.toString() : EMPTY_STRING;
+    offerList.offers = ConvertToOfferArray(<json[]>payload.Offers);
+    offerList._count = convertToInt(payload._count);
+    offerList["reponseHeaders"] = headers;
+    return offerList;
+}
+
 function convertToDatabaseArray(json[] sourceDatabaseArrayJsonObject) returns @tainted Database[] {
     Database[] databases = [];
     int i = 0;
@@ -414,5 +450,14 @@ function ConvertToPermissionArray(json[] sourcePermissionArrayJsonObject) return
     return permissions;
 }
 
+function ConvertToOfferArray(json[] sourceOfferArrayJsonObject) returns @tainted Offer[] { 
+    Offer[] offers = [];
+    int i = 0;
+    foreach json offer in sourceOfferArrayJsonObject { 
+        offers[i] = mapJsonToOffer([offer,()]);
+        i = i + 1;
+    }
+    return offers;
+}
 
 
