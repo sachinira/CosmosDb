@@ -1,6 +1,5 @@
 import ballerina/java;
 import ballerina/time;
-import ballerina/io;
 import ballerina/crypto;
 import ballerina/encoding;
 import ballerina/http;
@@ -228,7 +227,6 @@ HeaderParamaters params) returns http:Request|error{
     req.setHeader(HOST_HEADER,host);
     req.setHeader(ACCEPT_HEADER,"*/*");
     req.setHeader(CONNECTION_HEADER,"keep-alive");
-
     string?|error date = getTime();
     if date is string
     {
@@ -309,6 +307,17 @@ public function getResourceId(string url) returns string{
     return resourceId;
 }
 
+public function getResourceIdForOffer(string url) returns string{
+    string resourceId = EMPTY_STRING;
+    string[] urlParts = stringutils:split(url,FORWARD_SLASH);
+    int count = urlParts.length()-1;
+    int? i = str:lastIndexOf(url,FORWARD_SLASH);
+    if i is int {
+        resourceId = str:substring(url,i+1);
+    }  
+    return resourceId.toLowerAscii();
+}
+
 public function generateToken(string verb, string resourceType, string resourceId, string keys, string keyType, 
 string tokenVersion, string date) returns string?|error{    
     string authorization;
@@ -325,7 +334,6 @@ string tokenVersion, string date) returns string?|error{
         var finale = check encoding:decodeUriComponent(signature, "UTF-8");
         string token = string `type=${keyType}&ver=${tokenVersion}&sig=${signature.substring(0,signature.length()-1)}`;
         var auth = check encoding:encodeUriComponent(token, "UTF-8");   
-        io:println(auth);
         return auth;
     }
 //     var decoded = encoding:decodeBase64Url(keys);

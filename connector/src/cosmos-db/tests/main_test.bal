@@ -170,23 +170,27 @@ function deleteDB(){
     io:println("\n\n");
 }
 
+@tainted ResourceProperties propertiesNewCollection = {
+        databaseId: "database1",
+        containerId: ""//uuid.toString()
+};
+
+PartitionKey pk = {
+    paths: ["/AccountNumber"],
+    kind :"Hash",
+    'version: 2
+};
+
+string throughput = "400";
+
 @test:Config{
-    enable: false
+    groups: ["collection"]
 }
 function createContainer(){
     io:println("--------------Create Collection-----------------------\n\n");
 
     Client AzureCosmosClient = new(config);
-    string throughput = "400";
-    PartitionKey pk = {};
-    pk.paths = ["/AccountNumber"];
-    pk.kind = "Hash";
-    pk.'version = 2;
-    ContainerProperties con = {};
-    con.partitionKey = pk;
-    con.databaseId = "database1";
-    con.containerId = "collection1";
-    var result = AzureCosmosClient->createContainer(con);
+    var result = AzureCosmosClient->createContainer(propertiesNewCollection,pk);
     if (result is Container) {
         io:println(result);
     } else {
@@ -195,85 +199,82 @@ function createContainer(){
     io:println("\n\n");
 }
 
+@tainted ResourceProperties propertiesNewCollectionIfNotExist = {
+        databaseId: "database1",
+        containerId: "39406756-6a94-406a-a0ff-fe9de8b87ac9"
+};
+
 @test:Config{
-    enable: false
+    groups: ["collection"]
 }
 function createContainerIfNotExist(){
-    io:println("--------------Create Collection-----------------------\n\n");
+    io:println("--------------Create Collection if not exist-----------------------\n\n");
 
     Client AzureCosmosClient = new(config);
     string throughput = "400";
-    PartitionKey pk = {};
-    pk.paths = ["/AccountNumber"];
-    pk.kind = "Hash";
-    pk.'version = 2;
-    ContainerProperties con = {};
-    con.partitionKey = pk;
-    con.databaseId = "hikall";
-    con.containerId = "new2";
-    var result = AzureCosmosClient->createContainerIfNotExist(con);
-    if (result is Container?) {
+    var result = AzureCosmosClient->createContainerIfNotExist(propertiesNewCollectionIfNotExist,pk);
+    if (result is Container|error) {
         io:println(result);
-    } else {
-        test:assertFail(msg = result.message());
-    } 
+    }
     io:println("\n\n");
 }
 
-@test:Config{
-    enable: false
-}
-function createCollectionWithManualThroughputAndIndexingPolicy(){
-    io:println("--------------Create Collection with manual throughput-----------------------\n\n");
+// @test:Config{
+//     enable: false
+// }
+// function createCollectionWithManualThroughputAndIndexingPolicy(){
+//     io:println("--------------Create Collection with manual throughput-----------------------\n\n");
 
-    Client AzureCosmosClient = new(config);
-    json indexingPolicy =   {  
-                                "automatic": true,  
-                                "indexingMode": "Consistent",  
-                                "includedPaths": [  
-                                    {  
-                                        "path": "/*",  
-                                        "indexes": [  
-                                        {  
-                                            "dataType": "String",  
-                                            "precision": -1,  
-                                            "kind": "Range"  
-                                        }  
-                                        ]  
-                                    }  
-                                ]  
-                            };
+//     Client AzureCosmosClient = new(config);
+//     json indexingPolicy =   {  
+//                                 "automatic": true,  
+//                                 "indexingMode": "Consistent",  
+//                                 "includedPaths": [  
+//                                     {  
+//                                         "path": "/*",  
+//                                         "indexes": [  
+//                                         {  
+//                                             "dataType": "String",  
+//                                             "precision": -1,  
+//                                             "kind": "Range"  
+//                                         }  
+//                                         ]  
+//                                     }  
+//                                 ]  
+//                             };
     
     
-    ThroughputProperties tp = {};
-    tp.throughput = 600; 
-    PartitionKey pk = {};
-    pk.paths = ["/AccountNumber"];
-    pk.kind = "Hash";
-    pk.'version = 2;
-    ContainerProperties con = {};
-    con.partitionKey = pk;
-    con.databaseId = "hikall";
-    con.containerId = "mycollect";
-    var result = AzureCosmosClient->createContainer(con, tp);
-    if (result is Container) {
-        io:println(result);
-    } else {
-        test:assertFail(msg = result.message());
-    } 
-    io:println("\n\n");
-}
+//     ThroughputProperties tp = {};
+//     tp.throughput = 600; 
+//     PartitionKey pk = {};
+//     pk.paths = ["/AccountNumber"];
+//     pk.kind = "Hash";
+//     pk.'version = 2;
+//     ContainerProperties con = {};
+//     con.partitionKey = pk;
+//     con.databaseId = "hikall";
+//     con.containerId = "mycollect";
+//     var result = AzureCosmosClient->createContainer(con, tp);
+//     if (result is Container) {
+//         io:println(result);
+//     } else {
+//         test:assertFail(msg = result.message());
+//     } 
+//     io:println("\n\n");
+// }
 
 //create collection with autoscale testcase comes here
 
+string databaseId = "database1";
+
 @test:Config{
-   enable: false
+    groups: ["collection"]
 }
 function getAllCollections(){
     io:println("--------------Get All collections-----------------------\n\n");
 
     Client AzureCosmosClient = new(config);
-    var result = AzureCosmosClient->getAllContainers("hikall");
+    var result = AzureCosmosClient->getAllContainers(databaseId);
     if (result is ContainerList) {
         io:println(result);
     } else {
@@ -282,17 +283,18 @@ function getAllCollections(){
     io:println("\n\n");
 }
 
+@tainted ResourceProperties getCollection = {
+        databaseId: "database1",
+        containerId: "39406756-6a94-406a-a0ff-fe9de8b87ac9"
+};
 @test:Config{
-    enable: false
+    groups: ["collection"]
 }
 function getOneCollection(){
     io:println("--------------Get One collection-----------------------\n\n");
 
     Client AzureCosmosClient = new(config);
-    ContainerProperties con = {};
-    con.databaseId = "database1";
-    con.containerId = "collection1";
-    var result = AzureCosmosClient->getContainer(con);
+    var result = AzureCosmosClient->getContainer(getCollection);
     if (result is Container) {
         io:println(result);
     } else {
@@ -301,17 +303,18 @@ function getOneCollection(){
     io:println("\n\n");
 }
 
+@tainted ResourceProperties deleteCollectionData = {
+        databaseId: "database1",
+        containerId: "6ad17595-81d9-4687-81f2-fb50a2526fef"
+};
 @test:Config{
-   enable: false
+    groups: ["collection"]
 }
 function deleteCollection(){
     io:println("--------------Delete one collection------------------------\n\n");
 
     Client AzureCosmosClient = new(config); 
-    ContainerProperties con = {};
-    con.databaseId = "hikall";
-    con.containerId = "mycollect";
-    var result = AzureCosmosClient->deleteContainer(con);
+    var result = AzureCosmosClient->deleteContainer(deleteCollectionData);
     io:println(result);
     io:println("\n\n");
 }
@@ -927,5 +930,86 @@ function deletePermission(){
     } else {
         test:assertFail(msg = result.message());
     }   
+    io:println("\n\n");  
+}
+
+@test:Config{
+    groups: ["offer"]
+}
+function listOffers(){
+    io:println("-----------------list offers-----------------------\n\n");
+
+    Client AzureCosmosClient = new(config);
+    var result = AzureCosmosClient->listOffers();  
+    if result is OfferList {
+        io:println(result);
+    } else {
+        test:assertFail(msg = result.message());
+    }   
+    io:println("\n\n");  
+}
+
+string getOfferId = "vHIQ";
+
+@test:Config{
+    groups: ["offer"]
+}
+function listOffer(){
+    io:println("-----------------list one offer-----------------------\n\n");
+
+    Client AzureCosmosClient = new(config);
+    var result = AzureCosmosClient->getOffer(getOfferId);  
+    if result is Offer {
+        io:println(result);
+    } else {
+        test:assertFail(msg = result.message());
+    }   
+    io:println("\n\n");  
+}
+
+Offer replaceOfferBody = {
+    offerVersion: "V2",
+    offerType: "Invalid",    
+    content: {  
+        "offerThroughput": 600
+    }, 
+    'resource: "dbs/InV1AA==/colls/InV1AOOYBOo=/",  
+    offerResourceId: "InV1AJmRKts=",
+    id: "vHIQ",
+    _rid: "vHIQ" 
+};
+@test:Config{
+    groups: ["offer"]
+}
+function replaceOffer(){
+    io:println("-----------------Replace offer-----------------------\n\n");
+
+    Client AzureCosmosClient = new(config);
+    var result = AzureCosmosClient->replaceOffer(replaceOfferBody);  
+    if result is Offer {
+        io:println(result);
+    } else {
+        test:assertFail(msg = result.message());
+    }   
+    io:println("\n\n");  
+}
+
+Query offerQuery = {
+   // query: "SELECT * FROM root WHERE root.resource = \'dbs/EVQzAA==/colls/EVQzALIIEQw=/\'";
+};
+
+@test:Config{
+    groups: ["offer"]
+}
+function queryOffer(){
+    io:println("--------------Query offer-----------------------\n\n");
+
+    Client AzureCosmosClient = new(config);
+    var result = AzureCosmosClient->queryOffer(offerQuery);   
+    if result is json {
+        io:println(result);
+    } else {
+        test:assertFail(msg = result.message());
+    }    
     io:println("\n\n");  
 }

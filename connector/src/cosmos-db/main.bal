@@ -96,23 +96,24 @@ public  client class Client {
 
     # To create a collection inside a database
     # + properties - object of type ContainerProperties
+    # + partitionKey - 
+    # + indexingPolicy -
     # + throughputProperties - Optional throughput parameter which will set 'x-ms-offer-throughput' header 
     # + return - If successful, returns Container. Else returns error.  
-    public remote function createContainer(@tainted ContainerProperties properties, 
-    ThroughputProperties? throughputProperties = ()) returns @tainted Container|error{
+    public remote function createContainer(@tainted ResourceProperties properties,PartitionKey partitionKey,
+    IndexingPolicy? indexingPolicy = (), ThroughputProperties? throughputProperties = ()) returns @tainted Container|error{
         http:Request req = new;
-        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,
-        RESOURCE_PATH_COLLECTIONS]);
+        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_COLLECTIONS]);
         HeaderParamaters header = mapParametersToHeaderType(POST,requestPath);
         
         json body = {
             "id": properties.containerId,
-            "partitionKey": <json>properties.partitionKey.cloneWithType(json)
+            "partitionKey": <json>partitionKey.cloneWithType(json)
         };
-        json finalc = check body.mergeJson(<json>properties.indexingPolicy.cloneWithType(json));
+        json finalc = check body.mergeJson(<json>indexingPolicy.cloneWithType(json));
         req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
         req = check setThroughputOrAutopilotHeader(req,throughputProperties);
-        req.setJsonPayload(<@untainted>finalc);//??
+        req.setJsonPayload(<@untainted>finalc);
         var response = self.azureCosmosClient->post(requestPath,req);
         [json,Headers] jsonreponse = check parseResponseToTuple(response);
         return mapJsonToCollectionType(jsonreponse);
@@ -120,25 +121,28 @@ public  client class Client {
 
     # To create a database inside a resource
     # + properties -  object of type ContainerProperties
+    # + partitionKey - 
+    # + indexingPolicy -
     # + throughputProperties - Optional throughput parameter which will set 'x-ms-offer-throughput' header 
     # + return - If successful, returns Database. Else returns error.  
-    public remote function createContainerIfNotExist(@tainted ContainerProperties properties, 
-    ThroughputProperties? throughputProperties = ()) returns @tainted Container?|error{
+    public remote function createContainerIfNotExist(@tainted ResourceProperties properties,PartitionKey partitionKey,
+    IndexingPolicy? indexingPolicy = (), ThroughputProperties? throughputProperties = ()) returns @tainted Container?|error{
         var result = self->getContainer(properties);
         if result is error{
-            return self->createContainer(properties,throughputProperties);
+            return self->createContainer(properties,partitionKey);
+        } else {
+            return prepareError("The collection with specific id alrady exist");
         }
-        return ();  
     }
 
-    # To create a collection inside a database
-    # + properties - object of type ContainerProperties
-    # + throughputProperties - Optional throughput parameter which will set 'x-ms-offer-throughput' header 
-    # + return - If successful, returns Container. Else returns error. 
-    public remote function replaceProvisionedThroughput(@tainted ContainerProperties properties, ThroughputProperties 
-    throughputProperties) returns @tainted Container|error {
-        return self->createContainer(properties,throughputProperties);
-    }
+    // # To create a collection inside a database
+    // # + properties - object of type ContainerProperties
+    // # + throughputProperties - Optional throughput parameter which will set 'x-ms-offer-throughput' header 
+    // # + return - If successful, returns Container. Else returns error. 
+    // public remote function replaceProvisionedThroughput(@tainted ContainerProperties properties, ThroughputProperties 
+    // throughputProperties) returns @tainted Container|error {
+    //     return self->createContainer(properties,throughputProperties);
+    // }
 
     # To retrive  all collections inside a database
     # + databaseId -  id/name of the database collections are in.
@@ -157,7 +161,7 @@ public  client class Client {
     # To retrive  one collection inside a database
     # + properties - object of type ContainerProperties
     # + return - If successful, returns Container. Else returns error.  
-    public remote function getContainer(@tainted ContainerProperties properties) returns @tainted Container|error{
+    public remote function getContainer(@tainted ResourceProperties properties) returns @tainted Container|error{
         http:Request req = new;
         string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_COLLECTIONS,
         properties.containerId]);
@@ -172,7 +176,7 @@ public  client class Client {
     # To delete one collection inside a database
     # + properties - object of type ContainerProperties
     # + return - If successful, returns DeleteResponse specifying delete is sucessfull. Else returns error.   
-    public remote function deleteContainer(@tainted ContainerProperties properties) returns @tainted json|error{
+    public remote function deleteContainer(@tainted ResourceProperties properties) returns @tainted json|error{
         http:Request req = new;
         string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_COLLECTIONS,
         properties.containerId]);
@@ -633,7 +637,7 @@ public  client class Client {
     }
 
     public remote function deletePermission(@tainted ResourceProperties properties,string userId, string permissionId) returns 
-    @tainted boolean|error{
+    @tainted boolean|error {
         http:Request req = new;
         string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,properties.databaseId,RESOURCE_PATH_USER,userId,RESOURCE_PATH_PERMISSION,permissionId]);       
         HeaderParamaters header = mapParametersToHeaderType(DELETE,requestPath);
@@ -641,4 +645,48 @@ public  client class Client {
         var response = self.azureCosmosClient->delete(requestPath,req);
         return check getDeleteResponse(response);
     }
+
+    public remote function listOffers() returns @tainted OfferList|error {
+        http:Request req = new;
+        string requestPath =  prepareUrl([RESOURCE_PATH_OFFER]);       
+        HeaderParamaters header = mapParametersToHeaderType(GET,requestPath);
+        req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
+        var response = self.azureCosmosClient->get(requestPath,req);
+        [json,Headers] jsonResponse = check parseResponseToTuple(response);
+        return mapJsonToOfferList(jsonResponse);
+    }
+
+    public remote function getOffer(string offerId) returns @tainted Offer|error {
+        http:Request req = new;
+        string requestPath =  prepareUrl([RESOURCE_PATH_OFFER,offerId]);       
+        HeaderParamaters header = mapOfferHeaderType(GET,requestPath);
+        req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
+        var response = self.azureCosmosClient->get(requestPath,req);
+        [json,Headers] jsonResponse = check parseResponseToTuple(response);
+        return mapJsonToOffer(jsonResponse);
+    }
+
+    public remote function replaceOffer(Offer offer) returns @tainted Offer|error {
+        http:Request req = new;
+        string requestPath =  prepareUrl([RESOURCE_PATH_OFFER,offer.id]);       
+        HeaderParamaters header = mapOfferHeaderType(PUT,requestPath);
+        req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
+        req.setJsonPayload(offer);
+        var response = self.azureCosmosClient->put(requestPath,req);
+        [json,Headers] jsonResponse = check parseResponseToTuple(response);
+        return mapJsonToOffer(jsonResponse);
+    }
+
+    public remote function queryOffer(Query sqlQuery) returns @tainted json|error{
+        http:Request req = new;
+        string requestPath =  prepareUrl([RESOURCE_PATH_OFFER]);
+        HeaderParamaters header = mapParametersToHeaderType(POST,requestPath);
+        req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
+        req = check setHeadersForQuery(req);
+        req.setPayload(<json>sqlQuery.cloneWithType(json));
+        var response = self.azureCosmosClient->post(requestPath,req);
+        json jsonresponse = check parseResponseToJson(response);
+        return (jsonresponse);
+    }
+
 }

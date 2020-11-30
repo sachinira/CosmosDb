@@ -15,6 +15,7 @@ const string RESOURCE_PATH_UDF = "udfs";
 const string RESOURCE_PATH_TRIGGER = "triggers";
 const string RESOURCE_PATH_USER = "users";
 const string RESOURCE_PATH_PERMISSION = "permissions";
+const string RESOURCE_PATH_OFFER = "offers";
 
  #   Azure Cosmos DB Document API (REST) version
 final  string API_VERSION = "2018-12-31";
