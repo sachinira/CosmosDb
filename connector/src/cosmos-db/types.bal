@@ -61,14 +61,6 @@ public type DatabaseList record {
 };
 
 //conflict resolution policy must be included
-public type ContainerProperties record {|
-    string databaseId = "";
-    string containerId = "";
-    PartitionKey? partitionKey = ();
-    IndexingPolicy? indexingPolicy = ();
-|};
-
-//conflict resolution policy must be included
 public type Container record {|
     string id = "";
     string _rid?;
@@ -151,7 +143,6 @@ public type TriggerList record {|
     Trigger[] triggers = [];
     int _count = 0;
     Headers?...;
-
 |};
 
 public type User  record {|
@@ -186,7 +177,8 @@ public type Offer record {|
     string id = "";
     string _rid = "";
     string offerVersion = "";//It can be V1 for the legacy S1, S2, and S3 levels and V2 for user-defined throughput levels (recommended).
-    string? offerType = ();  //This property is only applicable in the V1 offer version. Set it to S1, S2, or S3 for V1 offer types. It is invalid for user-defined performance levels or provisioned throughput based model.
+    string? offerType = ();  //This property is only applicable in the V1 offer version. Set it to S1, S2, or S3 for V1 offer types. 
+    //It is invalid for user-defined performance levels or provisioned throughput based model.
     json content = {};
     string 'resource = "";
     string offerResourceId = "";
@@ -214,7 +206,7 @@ public type IndexingPolicy record {|
     string indexingMode = "";
     boolean automatic = true;
     IncludedPath[] includedPaths?;
-    IncludedPath[] excludedPaths = [];
+    IncludedPath[] excludedPaths?;
 |};
 
 public type IncludedPath record {|
@@ -229,7 +221,7 @@ public type ExcludedPath record {|
 public type Index record {|
     string kind = "";
     string dataType = "";
-    int precision = -1;
+    int precision?;
 |};
 
 public type PartitionKey record {|

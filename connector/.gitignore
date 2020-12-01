@@ -1,5 +1,5 @@
 target
 src/cosmos-db/tests/constants.bal
 Ballerina.lock
-../ballerina-internal.log
-ballerina-internal.log
+src/cosmos-db/ballerina-internal.log
+/ballerina-internal.log
