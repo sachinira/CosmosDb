@@ -13,13 +13,6 @@ function parseResponseToTuple(http:Response|http:ClientError httpResponse) retur
     return [responseBody,responseHeaders];
 }
 
-// function parseDeleteResponseToTuple(http:Response|http:ClientError httpResponse) returns  @tainted 
-// [string,Headers]|error{
-//     var responseBody = check getDeleteResponse(httpResponse);
-//     var responseHeaders = check parseHeadersToObject(httpResponse);
-//     return [responseBody,responseHeaders];
-// }
-
 # To handle sucess or error reponses to requests
 # + httpResponse - http:Response or http:ClientError returned from an http:Request
 # + return - If successful, returns json. Else returns error.  
@@ -41,7 +34,7 @@ function parseResponseToJson(http:Response|http:ClientError httpResponse) return
 
 # To handle the delete responses which return without a json payload
 # + httpResponse - http:Response or http:ClientError returned from an http:Request
-# + return - If successful, returns string. Else returns error.  
+# + return - If successful, returns boolean. Else returns error.  
 function getDeleteResponse(http:Response|http:ClientError httpResponse) returns @tainted boolean|error {
     if (httpResponse is http:Response) {
         if(httpResponse.statusCode == http:STATUS_NO_CONTENT) {
@@ -59,6 +52,10 @@ function getDeleteResponse(http:Response|http:ClientError httpResponse) returns 
     }
 }
 
+# To handle the delete responses which return without a json payload
+# + httpResponse - http:Response or http:ClientError returned from an http:Request
+# + errorResponse - the error response returned from the Azure endpoint
+# + return -  returns error.
 function createResponseFailMessage(http:Response httpResponse, json errorResponse) returns error {
     string message = errorResponse.message.toString();
     string errorMessage = httpResponse.statusCode.toString() + " " + httpResponse.reasonPhrase; 
@@ -161,7 +158,7 @@ http:Request|error {
     return req;
 }
 
-public function setPartitionKeyHeader(http:Request req, any partitionKey) returns http:Request|error {
+public function setPartitionKeyHeader(http:Request req, any partitionKey) returns http:Request {
     req.setHeader("x-ms-documentdb-partitionkey",string `[${partitionKey.toString()}]`);
     return req;
 }
@@ -177,7 +174,7 @@ public function setHeadersForQuery(http:Request req) returns http:Request|error 
     return req;
 }
 
-public function setRequestOptions(http:Request req, RequestHeaderOptions requestOptions) returns http:Request|error {
+public function setRequestOptions(http:Request req, RequestHeaderOptions requestOptions) returns http:Request {
     if requestOptions.indexingDirective is string {
         req.setHeader("x-ms-indexing-directive",requestOptions.indexingDirective.toString());
     }
@@ -227,7 +224,7 @@ HeaderParamaters params) returns http:Request|error {
     req.setHeader(CONNECTION_HEADER,"keep-alive");
     string?|error date = getTime();
     if date is string {
-        string?|error s = generateTokenNew(params.verb,params.resourceType,params.resourceId,keyToken,tokenType,tokenVersion);
+        string? s = generateTokenNew(params.verb,params.resourceType,params.resourceId,keyToken,tokenType,tokenVersion);
         req.setHeader(DATE_HEADER,date);
         if s is string {
             req.setHeader(AUTHORIZATION_HEADER,s);
@@ -235,7 +232,7 @@ HeaderParamaters params) returns http:Request|error {
             return prepareError("Authorization token is null");
         }
     } else {
-        return prepareError("Date header is invalid/null");
+        return prepareError("Date is invalid/null");
     }
     return req;
 }
@@ -257,12 +254,16 @@ string tokenVersion) returns string? {
 
 # To construct the hashed token signature for a token 
 # + return - If successful, returns string representing UTC date and time 
-#               (in "HTTP-date" format as defined by RFC 7231 Date/Time Formats). Else returns error.  
+#   (in "HTTP-date" format as defined by RFC 7231 Date/Time Formats). Else returns error.  
 public function getTime() returns string?|error {
     time:Time time1 = time:currentTime();
-    var time2 = check time:toTimeZone(time1, GMT_ZONE);
-    string|error timeString = time:format(time2, "EEE, dd MMM yyyy HH:mm:ss z");
-    return timeString;
+    var timeWithZone = check time:toTimeZone(time1, GMT_ZONE);
+    string|error timeString = time:format(timeWithZone, "EEE, dd MMM yyyy HH:mm:ss z");
+    if timeString is string {
+        return timeString;
+    } else {
+        return prepareError("Time string is not correct");
+    }
 }
 
 # To construct resource type  which is used to create the hashed token signature 

@@ -629,7 +629,7 @@ function listUDF(){
     io:println("-----------------List all user defined functions-----------------------\n\n");
 
     Client AzureCosmosClient = new(config);
-    var result = AzureCosmosClient->listUserDefinedFunction(properties);  
+    var result = AzureCosmosClient->listUserDefinedFunctions(properties);  
     if result is UserDefinedFunctionList {
         io:println(result);
     } else {
@@ -768,11 +768,11 @@ function createUser(){
     groups: ["user"]
 }
 function replaceUser(){
-    io:println("-----------------Replace user-----------------------\n\n");
+    io:println("-----------------Replace user id-----------------------\n\n");
     string newReplaceId = string `user-${uuid.toString()}`;
 
     Client AzureCosmosClient = new(config);
-    var result = AzureCosmosClient->replaceUser(properties,replaceUserId,newReplaceId);  
+    var result = AzureCosmosClient->replaceUserId(properties,replaceUserId,newReplaceId);  
     if result is User {
         io:println(result);
     } else {

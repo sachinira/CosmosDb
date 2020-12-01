@@ -177,7 +177,8 @@ public type Offer record {|
     string id = "";
     string _rid = "";
     string offerVersion = "";//It can be V1 for the legacy S1, S2, and S3 levels and V2 for user-defined throughput levels (recommended).
-    string? offerType = ();  //This property is only applicable in the V1 offer version. Set it to S1, S2, or S3 for V1 offer types. It is invalid for user-defined performance levels or provisioned throughput based model.
+    string? offerType = ();  //This property is only applicable in the V1 offer version. Set it to S1, S2, or S3 for V1 offer types. 
+    //It is invalid for user-defined performance levels or provisioned throughput based model.
     json content = {};
     string 'resource = "";
     string offerResourceId = "";
