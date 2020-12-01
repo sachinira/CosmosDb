@@ -28,7 +28,7 @@ public  client class Client {
     # 'x-ms-cosmos-offer-autopilot-settings' headers 
     # + return - If successful, returns Database. Else returns error.  
     public remote function createDatabase(string databaseId, ThroughputProperties? throughputProperties = ()) returns 
-    @tainted Database|error{
+    @tainted Database|error {
         json jsonPayload;
         http:Request req = new;
         string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES]);
@@ -50,7 +50,7 @@ public  client class Client {
     # 'x-ms-cosmos-offer-autopilot-settings' headers
     # + return - If successful, returns Database. Else returns error.  
     public remote function createDatabaseIfNotExist(string databaseId, ThroughputProperties? throughputProperties = ()) 
-    returns @tainted Database?|error{
+    returns @tainted Database?|error {
         var result = self->getDatabase(databaseId);
         if result is error{
             return self->createDatabase(databaseId,throughputProperties);
@@ -61,7 +61,7 @@ public  client class Client {
     # To retrive a given database inside a resource
     # + databaseId -  id/name of the database to retrieve
     # + return - If successful, returns Database. Else returns error.  
-    public remote function getDatabase(string databaseId) returns @tainted Database|error{
+    public remote function getDatabase(string databaseId) returns @tainted Database|error {
         http:Request req = new;
         string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,databaseId]);
         HeaderParamaters header = mapParametersToHeaderType(GET,requestPath);
@@ -73,7 +73,7 @@ public  client class Client {
 
     # To list all databases inside a resource
     # + return - If successful, returns DatabaseList. else returns error.  
-    public remote function getAllDatabases() returns @tainted DatabaseList|error{
+    public remote function getAllDatabases() returns @tainted DatabaseList|error {
         http:Request req = new;
         string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES]);
         HeaderParamaters header = mapParametersToHeaderType(GET,requestPath);
@@ -87,7 +87,7 @@ public  client class Client {
     # To delete a given database inside a resource
     # + databaseId -  id/name of the database to retrieve
     # + return - If successful, returns DeleteResponse specifying delete is sucessfull. Else returns error.  
-    public remote function deleteDatabase(string databaseId) returns @tainted boolean|error{
+    public remote function deleteDatabase(string databaseId) returns @tainted boolean|error {
         http:Request req = new;
         string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES,databaseId]);
         HeaderParamaters header = mapParametersToHeaderType(DELETE,requestPath);
@@ -338,10 +338,10 @@ public  client class Client {
         properties.containerId,RESOURCE_PATH_DOCUMENTS]);
         HeaderParamaters header = mapParametersToHeaderType(POST,requestPath);
         req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
-        req = check setHeadersForQuery(req);
         req = check setPartitionKeyHeader(req,partitionKey);
         io:println(sqlQuery);
         req.setPayload(<json>sqlQuery.cloneWithType(json));
+        req = check setHeadersForQuery(req);
         var response = self.azureCosmosClient->post(requestPath,req);
         json jsonresponse = check parseResponseToJson(response);
         return (jsonresponse);
@@ -684,8 +684,8 @@ public  client class Client {
         string requestPath =  prepareUrl([RESOURCE_PATH_OFFER]);
         HeaderParamaters header = mapParametersToHeaderType(POST,requestPath);
         req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
-        req = check setHeadersForQuery(req);
         req.setJsonPayload(<json>sqlQuery.cloneWithType(json));
+        req = check setHeadersForQuery(req);
         var response = self.azureCosmosClient->post(requestPath,req);
         json jsonresponse = check parseResponseToJson(response);
         return (jsonresponse);

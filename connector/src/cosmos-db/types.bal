@@ -61,14 +61,6 @@ public type DatabaseList record {
 };
 
 //conflict resolution policy must be included
-public type ContainerProperties record {|
-    string databaseId = "";
-    string containerId = "";
-    PartitionKey? partitionKey = ();
-    IndexingPolicy? indexingPolicy = ();
-|};
-
-//conflict resolution policy must be included
 public type Container record {|
     string id = "";
     string _rid?;
@@ -151,7 +143,6 @@ public type TriggerList record {|
     Trigger[] triggers = [];
     int _count = 0;
     Headers?...;
-
 |};
 
 public type User  record {|
@@ -214,7 +205,7 @@ public type IndexingPolicy record {|
     string indexingMode = "";
     boolean automatic = true;
     IncludedPath[] includedPaths?;
-    IncludedPath[] excludedPaths = [];
+    IncludedPath[] excludedPaths?;
 |};
 
 public type IncludedPath record {|
@@ -229,7 +220,7 @@ public type ExcludedPath record {|
 public type Index record {|
     string kind = "";
     string dataType = "";
-    int precision = -1;
+    int precision?;
 |};
 
 public type PartitionKey record {|

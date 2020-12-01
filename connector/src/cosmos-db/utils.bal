@@ -5,6 +5,7 @@ import ballerina/encoding;
 import ballerina/http;
 import ballerina/stringutils;
 import ballerina/lang.'string as str;
+import ballerina/io;
 
 function parseResponseToTuple(http:Response|http:ClientError httpResponse) returns @tainted [json, Headers]|error {
     var responseBody = check parseResponseToJson(httpResponse);
@@ -171,9 +172,8 @@ public function enableCrossPartitionKeyHeader(http:Request req, boolean isignore
 }
 
 public function setHeadersForQuery(http:Request req) returns http:Request|error {
-    req.setHeader("Content-Type","application/query+json");
-    req.setHeader("x-ms-documentdb-isquery","true");
-    //req.setHeader("x-ms-documentdb-query-enablecrosspartition","true");
+    var header = req.setContentType("application/query+json");
+    req.setHeader("x-ms-documentdb-isquery","True");
     return req;
 }
 
@@ -317,32 +317,36 @@ public function getResourceIdForOffer(string url) returns string {
 public function generateToken(string verb, string resourceType, string resourceId, string keys, string keyType, 
 string tokenVersion, string date) returns string?|error {    
     string authorization;
-    string payload = verb.toLowerAscii()+"\n" 
-        +resourceType.toLowerAscii()+"\n"
-        +resourceId+"\n"
-        +date.toLowerAscii()+"\n"
-        +""+"\n";
+    string payload = verb.toLowerAscii()+"\n" + resourceType.toLowerAscii() + "\n" + resourceId + "\n"
+    + date.toLowerAscii() +"\n" + "" + "\n";
     var decoded = encoding:decodeBase64Url(keys);
-    if decoded is byte[] {
-        var encoded = check encoding:encodeUriComponent(payload,"UTF-8");
-        var digest = crypto:hmacSha256(encoded.toBytes(),decoded);
-        var signature = encoding:encodeBase64Url(digest);
-        var finale = check encoding:decodeUriComponent(signature, "UTF-8");
-        string token = string `type=${keyType}&ver=${tokenVersion}&sig=${signature.substring(0,signature.length()-1)}`;
-        var auth = check encoding:encodeUriComponent(token, "UTF-8");   
-        return auth;
+    if decoded is byte[]{
+        byte[] k = crypto:hmacSha256(payload.toBytes(),decoded);
+        string  t = k.toBase16();
+        string signature = encoding:encodeBase64Url(k);
+        authorization = 
+        check encoding:encodeUriComponent(string `type=${keyType}&ver=${tokenVersion}&sig=${signature}=`, "UTF-8");   
+        return authorization;
+    } else {     
+        io:println("Decoding error");
     }
-//     var decoded = encoding:decodeBase64Url(keys);
-//     if decoded is byte[]{
-//         byte[] k = crypto:hmacSha256(payload.toBytes(),decoded);
-//         string  t = k.toBase16();
-//         string signature = encoding:encodeBase64Url(k);
-//         authorization = 
-//         check encoding:encodeUriComponent(string `type=${keyType}&ver=${tokenVersion}&sig=${signature}=`, "UTF-8");   
-//         return authorization;
-//     } else {     
-//         io:println("Decoding error");
-//     }
+ }
+
+public function generateTokenNewBl(string verb, string resourceType, string resourceId, string keys, string keyType, 
+string tokenVersion, string date) returns string?|error {    
+    string authorization;
+    string payload = verb.toLowerAscii()+"\n" + resourceType.toLowerAscii() + "\n" + resourceId + "\n"
+    + date.toLowerAscii() +"\n" + "" + "\n";
+    var decoded = encoding:decodeBase64Url(keys);
+    if decoded is byte[]{
+        byte[] digest = crypto:hmacSha256(payload.toBytes(),decoded);
+        string signature = encoding:encodeBase64Url(digest);
+        authorization = 
+        check encoding:encodeUriComponent(string `type=${keyType}&ver=${tokenVersion}&sig=${signature}`, "UTF-8");   
+        return authorization;
+    } else {     
+        io:println("Decoding error");
+    }
  }
 
 function generateTokenJ(handle verb, handle resourceType, handle resourceId, handle keyToken, handle tokenType, 

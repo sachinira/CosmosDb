@@ -29,11 +29,11 @@ var uuid = createRandomUUID();
 
 string createDatabaseId = string `database-${uuid.toString()}`;
 string createIfNotExistDatabaseId = "database1";
-string createDatabaseManualId = string `database-${uuid.toString()}`;
+string createDatabaseManualId = string `database1-${uuid.toString()}`;
 ThroughputProperties manualThroughput = {
     throughput: 600
 };
-string createDatabaseAutoId = string `database-${uuid.toString()}`;
+string createDatabaseAutoId = string `database2-${uuid.toString()}`;
 ThroughputProperties tp = {
     maxThroughput: {"maxThroughput": 4000}
 };
@@ -459,7 +459,7 @@ function deleteDocument(){
 int partitionKey = 1234;
 //QueryParameter[] params = [{name: "@id", value: "46c25391-e11d-4327-b7c5-28f44bcf3f2f"}];
 Query sqlQuery = {
-    query: "SELECT id FROM collection1 f WHERE f.Address.City = 'Seattle'",
+    query: "SELECT * FROM collection1 f WHERE f.Address.City = 'Seattle'",
     parameters: []
 };
 
@@ -997,7 +997,7 @@ function replaceOffer(){
 }
 
 Query offerQuery = {
-   query: string `SELECT * FROM root WHERE (root[\"_self\"]) = \""dbs/InV1AA==/colls/InV1AItrS0w=/"\"`
+   query: string `SELECT * FROM collection1 WHERE (collection1["_self"]) = "dbs/InV1AA==/colls/InV1AItrS0w=/"`
 };
 
 @test:Config{
