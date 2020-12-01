@@ -7,6 +7,9 @@ import ballerina/stringutils;
 import ballerina/lang.'string as str;
 import ballerina/io;
 
+# To handle sucess or error reponses to requests
+# + httpResponse - http:Response or http:ClientError returned from an http:Request
+# + return - If successful, returns a tuple containing [json, Headers]
 function parseResponseToTuple(http:Response|http:ClientError httpResponse) returns @tainted [json, Headers]|error {
     var responseBody = check parseResponseToJson(httpResponse);
     var responseHeaders = check parseHeadersToObject(httpResponse);
@@ -43,7 +46,7 @@ function getDeleteResponse(http:Response|http:ClientError httpResponse) returns 
             var jsonResponse = httpResponse.getJsonPayload();
             if jsonResponse is json {
                 return createResponseFailMessage(httpResponse,jsonResponse);
-            }else {
+            } else {
                 return prepareError("Error occurred while accessing the JSON payload of the response");
             }
         }
@@ -66,6 +69,9 @@ function createResponseFailMessage(http:Response httpResponse, json errorRespons
     return prepareError(errorMessage);
 }
 
+# To return the response headers which are useful for the users for future operations
+# + httpResponse - http:Response or http:ClientError returned from an http:Request
+# + return -  returns object of type Headers.
 function parseHeadersToObject(http:Response|http:ClientError httpResponse) returns @tainted Headers|error {
     Headers responseHeaders = {};
     if (httpResponse is http:Response) {
@@ -83,20 +89,15 @@ function parseHeadersToObject(http:Response|http:ClientError httpResponse) retur
     }
 }
 
+# To check if  the givn response header exist
+# + httpResponse - http:Response or http:ClientError returned from an http:Request
+# + headername - the name of header to check
+# + return -  returns the header value in string.
 function getHeaderIfExist(http:Response httpResponse, string headername) returns @tainted string? {
     if httpResponse.hasHeader(headername) {
         return httpResponse.getHeader(headername);
-    }else {
-        return ();
-    }
-}
-
-function mapRequest(http:Request? req) returns http:Request { 
-    http:Request newRequest = new;
-    if req is http:Request{
-        return req;
     } else {
-        return newRequest;
+        return ();
     }
 }
 
@@ -116,6 +117,9 @@ function prepareUrl(string[] paths) returns string {
     return <@untainted> url;
 }
 
+# Convert json string values to boolean
+# + value - json value which has reprsents boolean value
+# + return - boolean value of specified json
 function convertToBoolean(json|error value) returns boolean { 
     if (value is json) {
         boolean|error result = 'boolean:fromString(value.toString());
@@ -126,6 +130,9 @@ function convertToBoolean(json|error value) returns boolean {
     return false;
 }
 
+# Convert json string values to int
+# + value - json value which has reprsents int value
+# + return - int value of specified json
 function convertToInt(json|error value) returns int {
     if (value is json) {
         int|error result = 'int:fromString(value.toString());
@@ -136,105 +143,124 @@ function convertToInt(json|error value) returns int {
     return 0;
 }
 
-function mergeTwoArrays(any[] array1, any[] array2) returns any[] {
-    foreach any element in array2 {
-       array1.push(element);
-    }
-    return array1;
-}
+// function mergeTwoArrays(any[] array1, any[] array2) returns any[] {
+//     foreach any element in array2 {
+//        array1.push(element);
+//     }
+//     return array1;
+// }
 
-public function setThroughputOrAutopilotHeader(http:Request req, ThroughputProperties? throughputProperties) returns 
+# To set the optional headers related to throughput
+# + request - http:Request to set the header
+# + throughputProperties - an object of type ThroughputProperties
+# + return -  returns the header value in string.
+public function setThroughputOrAutopilotHeader(http:Request request, ThroughputProperties? throughputProperties) returns 
 http:Request|error {
   if throughputProperties is ThroughputProperties {
         if throughputProperties.throughput is int &&  throughputProperties.maxThroughput is () {
-            req.setHeader(THROUGHPUT_HEADER, throughputProperties.maxThroughput.toString());
+            request.setHeader(THROUGHPUT_HEADER, throughputProperties.maxThroughput.toString());
         } else if throughputProperties.throughput is () &&  throughputProperties.maxThroughput != () {
-            req.setHeader(AUTOPILET_THROUGHPUT_HEADER, throughputProperties.maxThroughput.toString());
+            request.setHeader(AUTOPILET_THROUGHPUT_HEADER, throughputProperties.maxThroughput.toString());
         } else if throughputProperties.throughput is int &&  throughputProperties.maxThroughput != () {
             return 
             prepareError("Cannot set both x-ms-offer-throughput and x-ms-cosmos-offer-autopilot-settings headers at once");
         }
     }
-    return req;
+    return request;
 }
 
-public function setPartitionKeyHeader(http:Request req, any partitionKey) returns http:Request {
-    req.setHeader("x-ms-documentdb-partitionkey",string `[${partitionKey.toString()}]`);
-    return req;
+# To set the optional header related to partitionkey value
+# + request - http:Request to set the header
+# + partitionKey - the value of the partition key
+# + return -  returns the header value in string.
+public function setPartitionKeyHeader(http:Request request, any partitionKey) returns http:Request {
+    request.setHeader("x-ms-documentdb-partitionkey",string `[${partitionKey.toString()}]`);
+    return request;
 }
 
-public function enableCrossPartitionKeyHeader(http:Request req, boolean isignore) returns http:Request|error {
-    req.setHeader("x-ms-documentdb-query-enablecrosspartition",isignore.toString());
-    return req;
+# To set the optional header related to cross partition value
+# + request - http:Request to set the header
+# + isIgnore - boolean value if user enable or disable cross partitioning
+# + return -  returns the header value in string.
+public function enableCrossPartitionKeyHeader(http:Request request, boolean isIgnore) returns http:Request|error {
+    request.setHeader("x-ms-documentdb-query-enablecrosspartition",isIgnore.toString());
+    return request;
 }
 
-public function setHeadersForQuery(http:Request req) returns http:Request|error {
-    var header = req.setContentType("application/query+json");
-    req.setHeader("x-ms-documentdb-isquery","True");
-    return req;
+# To set the required headers related to query operations
+# + request - http:Request to set the header
+# + return -  returns the header value in string.
+public function setHeadersForQuery(http:Request request) returns http:Request|error {
+    var header = request.setContentType("application/query+json");
+    request.setHeader("x-ms-documentdb-isquery","True");
+    return request;
 }
 
-public function setRequestOptions(http:Request req, RequestHeaderOptions requestOptions) returns http:Request {
+# To set the optional headers
+# + request - http:Request to set the header
+# + requestOptions - object of type RequestHeaderOptions containing the values for optional headers
+# + return -  returns the header value in string.
+public function setRequestOptions(http:Request request, RequestHeaderOptions requestOptions) returns http:Request {
     if requestOptions.indexingDirective is string {
-        req.setHeader("x-ms-indexing-directive",requestOptions.indexingDirective.toString());
+        request.setHeader("x-ms-indexing-directive",requestOptions.indexingDirective.toString());
     }
     if requestOptions.isUpsertRequest == true {
-        req.setHeader("x-ms-documentdb-is-upsert",requestOptions.isUpsertRequest.toString());
+        request.setHeader("x-ms-documentdb-is-upsert",requestOptions.isUpsertRequest.toString());
     }
     if requestOptions.maxItemCount is int{
-        req.setHeader("x-ms-max-item-count",requestOptions.maxItemCount.toString()); 
+        request.setHeader("x-ms-max-item-count",requestOptions.maxItemCount.toString()); 
     }
     if requestOptions.continuationToken is string {
-        req.setHeader("x-ms-continuation",requestOptions.continuationToken.toString());
+        request.setHeader("x-ms-continuation",requestOptions.continuationToken.toString());
     }
     if requestOptions.consistancyLevel is string {
-        req.setHeader("x-ms-consistency-level",requestOptions.consistancyLevel.toString());
+        request.setHeader("x-ms-consistency-level",requestOptions.consistancyLevel.toString());
     }
     if requestOptions.sessionToken is string {
-        req.setHeader("x-ms-session-token",requestOptions.sessionToken.toString());
+        request.setHeader("x-ms-session-token",requestOptions.sessionToken.toString());
     }
     if requestOptions.changeFeedOption is string {
-        req.setHeader("A-IM",requestOptions.changeFeedOption.toString()); 
+        request.setHeader("A-IM",requestOptions.changeFeedOption.toString()); 
     }
     if requestOptions.ifNoneMatch is string {
-        req.setHeader("If-None-Match",requestOptions.ifNoneMatch.toString());
+        request.setHeader("If-None-Match",requestOptions.ifNoneMatch.toString());
     }
     if requestOptions.PartitionKeyRangeId is string {
-        req.setHeader("x-ms-documentdb-partitionkeyrangeid",requestOptions.PartitionKeyRangeId.toString());
+        request.setHeader("x-ms-documentdb-partitionkeyrangeid",requestOptions.PartitionKeyRangeId.toString());
     }
     if requestOptions.PartitionKeyRangeId is string {
-        req.setHeader("If-Match",requestOptions.PartitionKeyRangeId.toString());
+        request.setHeader("If-Match",requestOptions.PartitionKeyRangeId.toString());
     }
-    return req;
+    return request;
 }
 
 # To attach required basic headers to call REST endpoint
-# + req - http:Request to add headers to
-# + host - 
+# + request - http:Request to add headers to
+# + host - the host of the Azure resource
 # + keyToken - master or resource token
 # + tokenType - denotes the type of token: master or resource.
 # + tokenVersion - denotes the version of the token, currently 1.0.
 # + params - an object of type HeaderParamaters
 # + return - If successful, returns same http:Request with newly appended headers. Else returns error.  
-public function setHeaders(http:Request req, string host, string keyToken, string tokenType, string tokenVersion,
+public function setHeaders(http:Request request, string host, string keyToken, string tokenType, string tokenVersion,
 HeaderParamaters params) returns http:Request|error {
-    req.setHeader(API_VERSION_HEADER,params.apiVersion);
-    req.setHeader(HOST_HEADER,host);
-    req.setHeader(ACCEPT_HEADER,"*/*");
-    req.setHeader(CONNECTION_HEADER,"keep-alive");
+    request.setHeader(API_VERSION_HEADER,params.apiVersion);
+    request.setHeader(HOST_HEADER,host);
+    request.setHeader(ACCEPT_HEADER,"*/*");
+    request.setHeader(CONNECTION_HEADER,"keep-alive");
     string?|error date = getTime();
     if date is string {
         string? s = generateTokenNew(params.verb,params.resourceType,params.resourceId,keyToken,tokenType,tokenVersion);
-        req.setHeader(DATE_HEADER,date);
+        request.setHeader(DATE_HEADER,date);
         if s is string {
-            req.setHeader(AUTHORIZATION_HEADER,s);
+            request.setHeader(AUTHORIZATION_HEADER,s);
         } else {
             return prepareError("Authorization token is null");
         }
     } else {
         return prepareError("Date is invalid/null");
     }
-    return req;
+    return request;
 }
 
 # To construct the hashed token signature for a token to set  'Authorization' header
@@ -273,9 +299,9 @@ public function getResourceType(string url) returns string {
     string resourceType = EMPTY_STRING;
     string[] urlParts = stringutils:split(url,FORWARD_SLASH);
     int count = urlParts.length()-1;
-    if count % 2 != 0{
+    if count % 2 != 0 {
         resourceType = urlParts[count];
-        if count > 1{
+        if count > 1 {
             int? i = str:lastIndexOf(url,FORWARD_SLASH);
         }
     } else {
@@ -291,8 +317,8 @@ public function getResourceId(string url) returns string {
     string resourceId = EMPTY_STRING;
     string[] urlParts = stringutils:split(url,FORWARD_SLASH);
     int count = urlParts.length()-1;
-    if count % 2 != 0{
-        if count > 1{
+    if count % 2 != 0 {
+        if count > 1 {
             int? i = str:lastIndexOf(url,FORWARD_SLASH);
             if i is int {
                 resourceId = str:substring(url,1,i);
@@ -304,6 +330,9 @@ public function getResourceId(string url) returns string {
     return resourceId;
 }
 
+# To construct resource id for offers which is used to create the hashed token signature 
+# + url - string parameter part of url to extract the resource id
+# + return - Returns the resource id extracted from url as a string 
 public function getResourceIdForOffer(string url) returns string {
     string resourceId = EMPTY_STRING;
     string[] urlParts = stringutils:split(url,FORWARD_SLASH);
@@ -315,13 +344,14 @@ public function getResourceIdForOffer(string url) returns string {
     return resourceId.toLowerAscii();
 }
 
+//***********************************Ballerina token generators***********************************
 public function generateToken(string verb, string resourceType, string resourceId, string keys, string keyType, 
 string tokenVersion, string date) returns string?|error {    
     string authorization;
     string payload = verb.toLowerAscii()+"\n" + resourceType.toLowerAscii() + "\n" + resourceId + "\n"
     + date.toLowerAscii() +"\n" + "" + "\n";
     var decoded = encoding:decodeBase64Url(keys);
-    if decoded is byte[]{
+    if decoded is byte[] {
         byte[] k = crypto:hmacSha256(payload.toBytes(),decoded);
         string  t = k.toBase16();
         string signature = encoding:encodeBase64Url(k);
@@ -331,7 +361,7 @@ string tokenVersion, string date) returns string?|error {
     } else {     
         io:println("Decoding error");
     }
- }
+}
 
 public function generateTokenNewBl(string verb, string resourceType, string resourceId, string keys, string keyType, 
 string tokenVersion, string date) returns string?|error {    
@@ -339,7 +369,7 @@ string tokenVersion, string date) returns string?|error {
     string payload = verb.toLowerAscii()+"\n" + resourceType.toLowerAscii() + "\n" + resourceId + "\n"
     + date.toLowerAscii() +"\n" + "" + "\n";
     var decoded = encoding:decodeBase64Url(keys);
-    if decoded is byte[]{
+    if decoded is byte[] {
         byte[] digest = crypto:hmacSha256(payload.toBytes(),decoded);
         string signature = encoding:encodeBase64Url(digest);
         authorization = 
@@ -348,7 +378,7 @@ string tokenVersion, string date) returns string?|error {
     } else {     
         io:println("Decoding error");
     }
- }
+}
 
 function generateTokenJ(handle verb, handle resourceType, handle resourceId, handle keyToken, handle tokenType, 
 handle tokenVersion) returns handle = @java:Method {
