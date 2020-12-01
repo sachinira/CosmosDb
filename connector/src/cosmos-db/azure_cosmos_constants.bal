@@ -26,7 +26,7 @@ final  string FORWARD_SLASH = "/";
 # Constant field `FORWARD_SLASH`. Holds the value of "".
 final  string EMPTY_STRING = "";
 
-# Constant fields REST request and response headers.
+# Constant fields REST request headers.
 const string CONTENT_TYPE_HEADER = "Content-Type";
 const string API_VERSION_HEADER = "x-ms-version";
 const string HOST_HEADER = "Host";
@@ -36,6 +36,16 @@ const string DATE_HEADER = "x-ms-date";
 const string AUTHORIZATION_HEADER = "Authorization";
 const string THROUGHPUT_HEADER = "x-ms-offer-throughput";
 const string AUTOPILET_THROUGHPUT_HEADER = "x-ms-cosmos-offer-autopilot-settings";
+const string INDEXING_DIRECTIVE_HEADER = "x-ms-indexing-directive";
+const string IS_UPSERT_HEADER = "x-ms-documentdb-is-upsert";
+const string MAX_ITEM_COUNT_HEADER = "x-ms-max-item-count";
+const string CONSISTANCY_LEVEL_HEADER = "x-ms-consistency-level";
+const string A_IM_HEADER = "A-IM";
+const string NON_MATCH_HEADER = "If-None-Match";
+const string IF_MATCH_HEADER = "If-Match";
+const string PARTITIONKEY_RANGE_HEADER = "x-ms-documentdb-partitionkeyrangeid";
+const string ISQUERY_HEADER = "x-ms-documentdb-isquery";
+const string PARTITION_KEY_HEADER = "x-ms-documentdb-partitionkey";
 
 # Constant fields of Azure SQL API REST response  headers.
 const string CONTINUATION_HEADER = "x-ms-continuation";

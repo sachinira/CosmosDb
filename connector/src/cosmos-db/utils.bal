@@ -24,7 +24,7 @@ function parseResponseToJson(http:Response|http:ClientError httpResponse) return
         var jsonResponse = httpResponse.getJsonPayload();
         if (jsonResponse is json) {
             if (httpResponse.statusCode != http:STATUS_OK && httpResponse.statusCode != http:STATUS_CREATED) {
-                return createResponseFailMessage(httpResponse,jsonResponse);
+                return createResponseFailMessage(httpResponse, jsonResponse);
             }
             return jsonResponse;
         } else {
@@ -174,7 +174,7 @@ http:Request|error {
 # + partitionKey - the value of the partition key
 # + return -  returns the header value in string.
 public function setPartitionKeyHeader(http:Request request, any partitionKey) returns http:Request {
-    request.setHeader("x-ms-documentdb-partitionkey",string `[${partitionKey.toString()}]`);
+    request.setHeader(PARTITION_KEY_HEADER, string `[${partitionKey.toString()}]`);
     return request;
 }
 
@@ -183,7 +183,7 @@ public function setPartitionKeyHeader(http:Request request, any partitionKey) re
 # + isIgnore - boolean value if user enable or disable cross partitioning
 # + return -  returns the header value in string.
 public function enableCrossPartitionKeyHeader(http:Request request, boolean isIgnore) returns http:Request|error {
-    request.setHeader("x-ms-documentdb-query-enablecrosspartition",isIgnore.toString());
+    request.setHeader("x-ms-documentdb-query-enablecrosspartition", isIgnore.toString());
     return request;
 }
 
@@ -192,7 +192,7 @@ public function enableCrossPartitionKeyHeader(http:Request request, boolean isIg
 # + return -  returns the header value in string.
 public function setHeadersForQuery(http:Request request) returns http:Request|error {
     var header = request.setContentType("application/query+json");
-    request.setHeader("x-ms-documentdb-isquery","True");
+    request.setHeader(ISQUERY_HEADER, "True");
     return request;
 }
 
@@ -202,34 +202,34 @@ public function setHeadersForQuery(http:Request request) returns http:Request|er
 # + return -  returns the header value in string.
 public function setRequestOptions(http:Request request, RequestHeaderOptions requestOptions) returns http:Request {
     if requestOptions.indexingDirective is string {
-        request.setHeader("x-ms-indexing-directive",requestOptions.indexingDirective.toString());
+        request.setHeader(INDEXING_DIRECTIVE_HEADER, requestOptions.indexingDirective.toString());
     }
     if requestOptions.isUpsertRequest == true {
-        request.setHeader("x-ms-documentdb-is-upsert",requestOptions.isUpsertRequest.toString());
+        request.setHeader(IS_UPSERT_HEADER, requestOptions.isUpsertRequest.toString());
     }
     if requestOptions.maxItemCount is int{
-        request.setHeader("x-ms-max-item-count",requestOptions.maxItemCount.toString()); 
+        request.setHeader(MAX_ITEM_COUNT_HEADER, requestOptions.maxItemCount.toString()); 
     }
     if requestOptions.continuationToken is string {
-        request.setHeader("x-ms-continuation",requestOptions.continuationToken.toString());
+        request.setHeader(CONTINUATION_HEADER, requestOptions.continuationToken.toString());
     }
     if requestOptions.consistancyLevel is string {
-        request.setHeader("x-ms-consistency-level",requestOptions.consistancyLevel.toString());
+        request.setHeader(CONSISTANCY_LEVEL_HEADER, requestOptions.consistancyLevel.toString());
     }
     if requestOptions.sessionToken is string {
-        request.setHeader("x-ms-session-token",requestOptions.sessionToken.toString());
+        request.setHeader(SESSION_TOKEN_HEADER, requestOptions.sessionToken.toString());
     }
     if requestOptions.changeFeedOption is string {
-        request.setHeader("A-IM",requestOptions.changeFeedOption.toString()); 
+        request.setHeader(A_IM_HEADER, requestOptions.changeFeedOption.toString()); 
     }
     if requestOptions.ifNoneMatch is string {
-        request.setHeader("If-None-Match",requestOptions.ifNoneMatch.toString());
+        request.setHeader(NON_MATCH_HEADER, requestOptions.ifNoneMatch.toString());
     }
     if requestOptions.PartitionKeyRangeId is string {
-        request.setHeader("x-ms-documentdb-partitionkeyrangeid",requestOptions.PartitionKeyRangeId.toString());
+        request.setHeader(PARTITIONKEY_RANGE_HEADER, requestOptions.PartitionKeyRangeId.toString());
     }
     if requestOptions.PartitionKeyRangeId is string {
-        request.setHeader("If-Match",requestOptions.PartitionKeyRangeId.toString());
+        request.setHeader(IF_MATCH_HEADER, requestOptions.PartitionKeyRangeId.toString());
     }
     return request;
 }
@@ -250,7 +250,7 @@ HeaderParamaters params) returns http:Request|error {
     request.setHeader(CONNECTION_HEADER,"keep-alive");
     string?|error date = getTime();
     if date is string {
-        string? s = generateTokenNew(params.verb,params.resourceType,params.resourceId,keyToken,tokenType,tokenVersion);
+        string? s = generateTokenNew(params.verb, params.resourceType, params.resourceId, keyToken, tokenType, tokenVersion);
         request.setHeader(DATE_HEADER,date);
         if s is string {
             request.setHeader(AUTHORIZATION_HEADER,s);
@@ -273,8 +273,8 @@ HeaderParamaters params) returns http:Request|error {
 # + return - If successful, returns string which is the  hashed token signature. Else returns ().  
 public function generateTokenNew(string verb, string resourceType, string resourceId, string keyToken, string tokenType, 
 string tokenVersion) returns string? {
-    var token = generateTokenJ(java:fromString(verb),java:fromString(resourceType),java:fromString(resourceId),
-    java:fromString(keyToken),java:fromString(tokenType),java:fromString(tokenVersion));
+    var token = generateTokenJ(java:fromString(verb), java:fromString(resourceType), java:fromString(resourceId),
+    java:fromString(keyToken), java:fromString(tokenType), java:fromString(tokenVersion));
     return java:toString(token);
 }
 
@@ -297,12 +297,12 @@ public function getTime() returns string?|error {
 # + return - Returns the resource type extracted from url as a string  
 public function getResourceType(string url) returns string {
     string resourceType = EMPTY_STRING;
-    string[] urlParts = stringutils:split(url,FORWARD_SLASH);
+    string[] urlParts = stringutils:split(url, FORWARD_SLASH);
     int count = urlParts.length()-1;
     if count % 2 != 0 {
         resourceType = urlParts[count];
         if count > 1 {
-            int? i = str:lastIndexOf(url,FORWARD_SLASH);
+            int? i = str:lastIndexOf(url, FORWARD_SLASH);
         }
     } else {
         resourceType = urlParts[count-1];
@@ -315,17 +315,17 @@ public function getResourceType(string url) returns string {
 # + return - Returns the resource id extracted from url as a string 
 public function getResourceId(string url) returns string {
     string resourceId = EMPTY_STRING;
-    string[] urlParts = stringutils:split(url,FORWARD_SLASH);
+    string[] urlParts = stringutils:split(url, FORWARD_SLASH);
     int count = urlParts.length()-1;
     if count % 2 != 0 {
         if count > 1 {
-            int? i = str:lastIndexOf(url,FORWARD_SLASH);
+            int? i = str:lastIndexOf(url, FORWARD_SLASH);
             if i is int {
                 resourceId = str:substring(url,1,i);
             }
         }
     } else {
-        resourceId = str:substring(url,1);
+        resourceId = str:substring(url, 1);
     }
     return resourceId;
 }
@@ -335,11 +335,11 @@ public function getResourceId(string url) returns string {
 # + return - Returns the resource id extracted from url as a string 
 public function getResourceIdForOffer(string url) returns string {
     string resourceId = EMPTY_STRING;
-    string[] urlParts = stringutils:split(url,FORWARD_SLASH);
+    string[] urlParts = stringutils:split(url, FORWARD_SLASH);
     int count = urlParts.length()-1;
-    int? i = str:lastIndexOf(url,FORWARD_SLASH);
+    int? i = str:lastIndexOf(url, FORWARD_SLASH);
     if i is int {
-        resourceId = str:substring(url,i+1);
+        resourceId = str:substring(url, i+1);
     }  
     return resourceId.toLowerAscii();
 }
