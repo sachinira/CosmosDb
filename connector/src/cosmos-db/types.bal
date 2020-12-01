@@ -38,27 +38,27 @@ public type ResourceProperties record {|
 |};
 
 public type Headers record {|
-    string? continuationHeader = ();
+    string? continuationHeader?;
     string? sessionTokenHeader = ();
     string? requestChargeHeader = ();
     string? resourceUsageHeader = ();
-    string? itemCountHeader = ();
+    string? itemCountHeader?;
     string? etagHeader = ();
     string? dateHeader = ();
 |};
 
-public type Database record {
-    string _rid?;
+public type Database record {|
     string id = "";
-    Headers reponseHeaders?;
-};
+    string _rid?;
+    string _self?;
+    Headers?...;
+|};
 
 public type DatabaseList record {
     string _rid = "";
     Database[] Databases = [];
     Headers? reponseHeaders = ();
 };
-
 
 //conflict resolution policy must be included
 public type ContainerProperties record {|
@@ -68,15 +68,16 @@ public type ContainerProperties record {|
     IndexingPolicy? indexingPolicy = ();
 |};
 
-
 //conflict resolution policy must be included
-public type Container record {
+public type Container record {|
     string id = "";
+    string _rid?;
+    string _self?;
     boolean allowMaterializedViews?;
     IndexingPolicy indexingPolicy?;
     PartitionKey partitionKey?;
-    Headers reponseHeaders?;
-};
+    Headers?...;
+|};
 
 public type ContainerList record {|
     string _rid = "";
@@ -87,10 +88,12 @@ public type ContainerList record {|
 
 public type Document record {|
     string id = "";
-    json documentBody = {};
-    string? documentId = ();
+    string? _rid?;
+    string? _self?;
+    json? documentBody = {};
+    string? documentId?;
     any? partitionKey = ();
-    Headers reponseHeaders?;
+    Headers?...;
 |};
 
 public type DocumentList record {|
@@ -259,3 +262,5 @@ public type ConflictResolutionPolicyType record {|
 |};
 
 public type AzureError  distinct  error;
+
+type JsonMap map<json>;

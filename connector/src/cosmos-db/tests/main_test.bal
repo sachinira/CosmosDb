@@ -27,13 +27,19 @@ function createRandomUUID() returns handle = @java:Method {
 };
 var uuid = createRandomUUID();
 
-string createDatabaseId = "database2";
+string createDatabaseId = string `database-${uuid.toString()}`;
 string createIfNotExistDatabaseId = "database1";
-string createDatabaseManualId = "database4";
-string createDatabaseAutoId = "database5";
-string createDatabaseBothId = "database6";
+string createDatabaseManualId = string `database-${uuid.toString()}`;
+ThroughputProperties manualThroughput = {
+    throughput: 600
+};
+string createDatabaseAutoId = string `database-${uuid.toString()}`;
+ThroughputProperties tp = {
+    maxThroughput: {"maxThroughput": 4000}
+};
+string createDatabaseBothId = uuid.toString();
 string listOndDbId = "database1"; 
-string deleteDbId = "h"; 
+string deleteDbId = "database"; 
 
 @test:Config{
     groups: ["database"]
@@ -73,10 +79,8 @@ function createIfNotExist(){
 function createDBWithManualThroughput(){
     io:println("--------------Create with manual throguput------------------------\n\n");
 
-    Client AzureCosmosClient = new(config);
-    ThroughputProperties tp = {};
-    tp.throughput = 600; 
-    var result = AzureCosmosClient->createDatabase(createDatabaseManualId, tp);
+    Client AzureCosmosClient = new(config); 
+    var result = AzureCosmosClient->createDatabase(createDatabaseManualId, manualThroughput);
     if (result is Database) {
         io:println(result);
     } else {
@@ -92,8 +96,6 @@ function createDBWithAutoscaling(){
     io:println("--------------Create with autoscaling throguput------------------------\n\n");
 
     Client AzureCosmosClient = new(config);
-    ThroughputProperties tp = {};
-    tp.maxThroughput = {"maxThroughput": 4000};
     var result = AzureCosmosClient->createDatabase(createDatabaseAutoId, tp);
     if (result is Database) {
         io:println(result);
@@ -334,7 +336,7 @@ function GetPartitionKeyRanges(){
     io:println("\n\n");
 }
 
-string createDocumentId = uuid.toString();
+string createDocumentId = "";//uuid.toString();
 Document createDoc = {
         id:createDocumentId,
         documentBody :{
@@ -995,7 +997,7 @@ function replaceOffer(){
 }
 
 Query offerQuery = {
-   // query: "SELECT * FROM root WHERE root.resource = \'dbs/EVQzAA==/colls/EVQzALIIEQw=/\'";
+   query: string `SELECT * FROM root WHERE (root[\"_self\"]) = \""dbs/InV1AA==/colls/InV1AItrS0w=/"\"`
 };
 
 @test:Config{

@@ -13,14 +13,27 @@ function mapOfferHeaderType(string httpVerb, string url) returns HeaderParamater
     return params;
 }
 
-function mapJsonToDatabaseType([json, Headers] jsonPayload) returns Database {
-    json payload;
+function mapTupleToDeleteresponse([string, Headers] jsonPayload)returns @tainted DeleteResponse {
+    string message;
     Headers headers;
+    [message,headers] = jsonPayload;
+    DeleteResponse deleteResponse = {};
+    deleteResponse.message = message;
+    deleteResponse.reponseHeaders = headers;
+    return deleteResponse;
+}
+
+function mapJsonToDatabaseType([json, Headers?] jsonPayload) returns Database {
+    json payload;
+    Headers? headers;
     [payload,headers] = jsonPayload;
     Database db = {};
-    db._rid = payload._rid != ()? payload._rid.toString() : EMPTY_STRING;
     db.id = payload.id != ()? payload.id.toString() : EMPTY_STRING;
-    db.reponseHeaders = headers;
+    db._rid = payload._rid != ()? payload._rid.toString() : EMPTY_STRING;
+    db._self = payload._self != ()? payload._self.toString() : EMPTY_STRING;
+    if headers is Headers {
+        db["reponseHeaders"] = headers;
+    }    
     return db;
 }
 
@@ -35,31 +48,24 @@ function mapJsonToDbList([json, Headers] jsonPayload) returns @tainted DatabaseL
     return dbl;
 }
 
-function mapTupleToDeleteresponse([string, Headers] jsonPayload)returns @tainted DeleteResponse {
-    string message;
-    Headers headers;
-    [message,headers] = jsonPayload;
-    DeleteResponse deleteResponse = {};
-    deleteResponse.message =message;
-    deleteResponse.reponseHeaders = headers;
-    return deleteResponse;
-}
-
-function mapJsonToCollectionType([json, Headers] jsonPayload)returns @tainted Container {
+function mapJsonToCollectionType([json, Headers?] jsonPayload) returns @tainted Container {
     json payload;
-    Headers headers;
+    Headers? headers;
     [payload,headers] = jsonPayload;
-
     Container coll = {};
     coll.id = payload.id.toString();
+    coll._rid = payload._rid != ()? payload._rid.toString() : EMPTY_STRING;
+    coll._self = payload._self != ()? payload._self.toString() : EMPTY_STRING;
     coll.allowMaterializedViews = convertToBoolean(payload.allowMaterializedViews);
     coll.indexingPolicy = mapJsonToIndexingPolicy(<json>payload.indexingPolicy);
     coll.partitionKey = convertJsonToPartitionKey(<json>payload.partitionKey);
-    coll.reponseHeaders = headers;
+    if headers is Headers {
+        coll["reponseHeaders"] = headers;
+    }
     return coll;
 }
 
-function mapJsonToIndexingPolicy(json jsonPayload) returns @tainted IndexingPolicy{
+function mapJsonToIndexingPolicy(json jsonPayload) returns @tainted IndexingPolicy {
     IndexingPolicy indp = {};
     indp.indexingMode = jsonPayload.indexingMode.toString();
     indp.automatic = convertToBoolean(jsonPayload.automatic);
@@ -133,14 +139,21 @@ function mapJsonToPartitionKeyRange([json, Headers] jsonPayload) returns @tainte
     return pkr;
 }
 
-function mapJsonToDocument([json, Headers] jsonPayload) returns @tainted Document|error {  
+function mapJsonToDocument([json, Headers?] jsonPayload) returns @tainted Document {  
     Document doc = {};
     json payload;
-    Headers headers;
+    Headers? headers;
     [payload,headers] = jsonPayload;
-    doc.id = payload.id.toString();
-   // doc.document = check payload.cloneWithType(anydata);//split the document 
-    doc.reponseHeaders = headers;
+    doc.id = payload.id != () ? payload.id.toString(): EMPTY_STRING;
+    doc._rid = payload._rid != () ? payload._rid.toString(): EMPTY_STRING;
+    doc._self = payload._self != () ? payload._self.toString(): EMPTY_STRING;
+    JsonMap|error document = payload.cloneWithType(JsonMap);
+    if document is JsonMap {
+        doc.documentBody = mapJsonToDocumentBody(document);
+    }
+    if headers is Headers {
+        doc["reponseHeaders"] = headers;
+    }
     return doc;
 }
 
@@ -156,7 +169,7 @@ function mapJsonToDocumentList([json, Headers] jsonPayload) returns @tainted Doc
     return documentlist;
 } 
 
-function mapJsonToStoredProcedure([json, Headers?] jsonPayload)returns @tainted StoredProcedure {
+function mapJsonToStoredProcedure([json, Headers?] jsonPayload) returns @tainted StoredProcedure {
     StoredProcedure sproc = {};
     json payload;
     Headers? headers;
@@ -170,12 +183,11 @@ function mapJsonToStoredProcedure([json, Headers?] jsonPayload)returns @tainted 
     return sproc;
 }
 
-function mapJsonToStoredProcedureList([json, Headers] jsonPayload)returns @tainted StoredProcedureList {
+function mapJsonToStoredProcedureList([json, Headers] jsonPayload) returns @tainted StoredProcedureList {
     StoredProcedureList sproclist = {};
     json payload;
     Headers headers;
     [payload,headers] = jsonPayload;
-
     sproclist._rid = payload._rid != () ? payload._rid.toString(): EMPTY_STRING;
     sproclist.storedProcedures = convertToStoredProcedureArray(<json[]>payload.StoredProcedures);
     sproclist._count = convertToInt(payload._count);
@@ -183,7 +195,7 @@ function mapJsonToStoredProcedureList([json, Headers] jsonPayload)returns @taint
     return sproclist;
 }
 
-function mapJsonToUserDefinedFunction([json, Headers?] jsonPayload)returns @tainted UserDefinedFunction {
+function mapJsonToUserDefinedFunction([json, Headers?] jsonPayload) returns @tainted UserDefinedFunction {
     UserDefinedFunction udf = {};
     json payload;
     Headers? headers;
@@ -196,20 +208,19 @@ function mapJsonToUserDefinedFunction([json, Headers?] jsonPayload)returns @tain
     return udf;
 }
 
-function mapJsonToUserDefinedFunctionList([json, Headers] jsonPayload)returns @tainted UserDefinedFunctionList|error {
+function mapJsonToUserDefinedFunctionList([json, Headers] jsonPayload) returns @tainted UserDefinedFunctionList|error {
     UserDefinedFunctionList udflist = {};
     json payload;
     Headers headers;
     [payload,headers] = jsonPayload;
-
     udflist._rid = payload._rid != () ? payload._rid.toString() : EMPTY_STRING;
     udflist.UserDefinedFunctions = userDefinedFunctionArray(<json[]>payload.UserDefinedFunctions);
-    udflist._count = convertToInt(payload._count);//headers
+    udflist._count = convertToInt(payload._count);
     udflist["reponseHeaders"] = headers;
     return udflist;
 }
 
-function mapJsonToTrigger([json, Headers?] jsonPayload)returns @tainted Trigger {
+function mapJsonToTrigger([json, Headers?] jsonPayload) returns @tainted Trigger {
     Trigger trigger = {};
     json payload;
     Headers? headers;
@@ -225,19 +236,19 @@ function mapJsonToTrigger([json, Headers?] jsonPayload)returns @tainted Trigger 
     return trigger;
 }
 
-function mapJsonToTriggerList([json, Headers] jsonPayload)returns @tainted TriggerList|error {
+function mapJsonToTriggerList([json, Headers] jsonPayload) returns @tainted TriggerList|error {
     TriggerList triggerlist = {};
     json payload;
     Headers headers;
     [payload,headers] = jsonPayload;
     triggerlist._rid = payload._rid != () ? payload._rid.toString() : EMPTY_STRING;
     triggerlist.triggers = ConvertToTriggerArray(<json[]>payload.Triggers);
-    triggerlist._count = convertToInt(payload._count);//headers
+    triggerlist._count = convertToInt(payload._count);
     triggerlist["reponseHeaders"] = headers;
     return triggerlist;
 }
 
-function mapJsonToUser([json, Headers?] jsonPayload)returns @tainted User {
+function mapJsonToUser([json, Headers?] jsonPayload) returns @tainted User {
     User user = {};
     json payload;
     Headers? headers;
@@ -250,7 +261,7 @@ function mapJsonToUser([json, Headers?] jsonPayload)returns @tainted User {
     return user;
 }
 
-function mapJsonToUserList([json, Headers?] jsonPayload)returns @tainted UserList {
+function mapJsonToUserList([json, Headers?] jsonPayload) returns @tainted UserList {
     UserList userlist = {};
     json payload;
     Headers? headers;
@@ -262,23 +273,22 @@ function mapJsonToUserList([json, Headers?] jsonPayload)returns @tainted UserLis
     return userlist;
 }
 
-function mapJsonToPermission([json, Headers?] jsonPayload)returns @tainted Permission {
+function mapJsonToPermission([json, Headers?] jsonPayload) returns @tainted Permission {
     Permission permission = {};
     json payload;
     Headers? headers;
     [payload,headers] = jsonPayload;
-    permission._rid = payload._rid != () ? payload._rid.toString() : EMPTY_STRING;
     permission.id = payload.id != () ? payload.id.toString() : EMPTY_STRING;
+    permission._rid = payload._rid != () ? payload._rid.toString() : EMPTY_STRING;
     permission.permissionMode = payload.permissionMode != () ? payload.permissionMode.toString() : EMPTY_STRING;
     permission.'resource = payload.'resource != () ? payload.'resource.toString() : EMPTY_STRING;
-
     if headers is Headers {
         permission["reponseHeaders"] = headers;
     }
     return permission;
 }
 
-function mapJsonToPermissionList([json, Headers?] jsonPayload)returns @tainted PermissionList {
+function mapJsonToPermissionList([json, Headers?] jsonPayload) returns @tainted PermissionList {
     PermissionList permissionList = {};
     json payload;
     Headers? headers;
@@ -290,7 +300,7 @@ function mapJsonToPermissionList([json, Headers?] jsonPayload)returns @tainted P
     return permissionList;
 }
 
-function mapJsonToOffer([json, Headers?] jsonPayload)returns @tainted Offer {
+function mapJsonToOffer([json, Headers?] jsonPayload) returns @tainted Offer {
     Offer offer = {};
     json payload;
     Headers? headers;
@@ -308,7 +318,7 @@ function mapJsonToOffer([json, Headers?] jsonPayload)returns @tainted Offer {
     return offer;
 }
 
-function mapJsonToOfferList([json, Headers?] jsonPayload)returns @tainted OfferList {
+function mapJsonToOfferList([json, Headers?] jsonPayload) returns @tainted OfferList {
     OfferList offerList = {};
     json payload;
     Headers? headers;
@@ -324,7 +334,7 @@ function convertToDatabaseArray(json[] sourceDatabaseArrayJsonObject) returns @t
     Database[] databases = [];
     int i = 0;
     foreach json jsonDatabase in sourceDatabaseArrayJsonObject {
-        databases[i].id = <string>jsonDatabase.id;
+        databases[i] = mapJsonToDatabaseType([jsonDatabase,()]);
         i = i + 1;
     }
     return databases;
@@ -364,10 +374,7 @@ function convertToCollectionArray(json[] sourceCollectionArrayJsonObject) return
     Container[] collections = [];
     int i = 0;
     foreach json jsonCollection in sourceCollectionArrayJsonObject {
-        collections[i].id = <string>jsonCollection.id;
-        collections[i].allowMaterializedViews = convertToBoolean(jsonCollection.allowMaterializedViews);
-        collections[i].indexingPolicy = mapJsonToIndexingPolicy(<json>jsonCollection.indexingPolicy);
-        collections[i].partitionKey = convertJsonToPartitionKey(<json>jsonCollection.partitionKey);
+        collections[i] = mapJsonToCollectionType([jsonCollection,()]);
         i = i + 1;
     }
     return collections;
@@ -390,9 +397,7 @@ function convertToDocumentArray(json[] sourceDocumentArrayJsonObject) returns @t
     Document[] documents = [];
     int i = 0;
     foreach json document in sourceDocumentArrayJsonObject { 
-        documents[i].id = document.id.toString();
-        //documents[i].document = check document.cloneWithType(anydata);
-        documents[i].id = document.id.toString();
+        documents[i] = mapJsonToDocument([document,()]);
         i = i + 1;
     }
     return documents;
@@ -404,7 +409,6 @@ function convertToStoredProcedureArray(json[] sourceSprocArrayJsonObject) return
     foreach json storedProcedure in sourceSprocArrayJsonObject { 
         sprocs[i] = mapJsonToStoredProcedure([storedProcedure,()]);
         i = i + 1;
-
     }
     return sprocs;
 }
@@ -415,7 +419,6 @@ function userDefinedFunctionArray(json[] sourceUdfArrayJsonObject) returns @tain
     foreach json userDefinedFunction in sourceUdfArrayJsonObject { 
         udfs[i] = mapJsonToUserDefinedFunction([userDefinedFunction,()]);
         i = i + 1;
-
     }
     return udfs;
 }
@@ -460,4 +463,12 @@ function ConvertToOfferArray(json[] sourceOfferArrayJsonObject) returns @tainted
     return offers;
 }
 
-
+function mapJsonToDocumentBody(map<json> reponsePayload) returns json {
+    var deleteKeys = ["id","_rid","_self","_etag","_ts","_attachments"];
+    foreach var 'key in deleteKeys {
+        if reponsePayload.hasKey('key) {
+            var removedValue = reponsePayload.remove('key);
+        }
+    }
+    return reponsePayload;
+}

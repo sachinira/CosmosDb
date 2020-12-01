@@ -24,7 +24,8 @@ public  client class Client {
 
     # To create a database inside a resource
     # + databaseId -  id/name for the database
-    # + throughputProperties - Optional throughput parameter which will set 'x-ms-offer-throughput' header 
+    # + throughputProperties - Optional throughput parameter which will set 'x-ms-offer-throughput' or 
+    # 'x-ms-cosmos-offer-autopilot-settings' headers 
     # + return - If successful, returns Database. Else returns error.  
     public remote function createDatabase(string databaseId, ThroughputProperties? throughputProperties = ()) returns 
     @tainted Database|error{
@@ -45,7 +46,8 @@ public  client class Client {
 
     # To create a database inside a resource
     # + databaseId -  id/name for the database
-    # + throughputProperties - Optional throughput parameter which will set 'x-ms-offer-throughput' header 
+    # + throughputProperties - Optional throughput parameter which will set 'x-ms-offer-throughput' or 
+    # 'x-ms-cosmos-offer-autopilot-settings' headers
     # + return - If successful, returns Database. Else returns error.  
     public remote function createDatabaseIfNotExist(string databaseId, ThroughputProperties? throughputProperties = ()) 
     returns @tainted Database?|error{
@@ -70,7 +72,7 @@ public  client class Client {
     }
 
     # To list all databases inside a resource
-    # + return - If successful, returns DatabaseList. Else returns error.  
+    # + return - If successful, returns DatabaseList. else returns error.  
     public remote function getAllDatabases() returns @tainted DatabaseList|error{
         http:Request req = new;
         string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES]);
@@ -82,7 +84,7 @@ public  client class Client {
         return mapJsonToDbList(jsonresponse); 
     }
 
-    # To retrive a given database inside a resource
+    # To delete a given database inside a resource
     # + databaseId -  id/name of the database to retrieve
     # + return - If successful, returns DeleteResponse specifying delete is sucessfull. Else returns error.  
     public remote function deleteDatabase(string databaseId) returns @tainted boolean|error{
@@ -683,10 +685,9 @@ public  client class Client {
         HeaderParamaters header = mapParametersToHeaderType(POST,requestPath);
         req = check setHeaders(req,self.host,self.masterKey,self.keyType,self.tokenVersion,header);
         req = check setHeadersForQuery(req);
-        req.setPayload(<json>sqlQuery.cloneWithType(json));
+        req.setJsonPayload(<json>sqlQuery.cloneWithType(json));
         var response = self.azureCosmosClient->post(requestPath,req);
         json jsonresponse = check parseResponseToJson(response);
         return (jsonresponse);
     }
-
 }
