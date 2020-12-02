@@ -185,13 +185,12 @@ public  client class Client {
     }
 
     # To retrieve a list of partition key ranges for the collection
-    # + databaseId -  id/name of the database which collection is in.
-    # + collectionId - id/name of collection to where partition key range is in.
+    # + properties -  id/name of the database which collection is in.
     # + return - If successful, returns PartitionKeyList. Else returns error.  
-    public remote function getPartitionKeyRanges(string databaseId, string collectionId) returns @tainted 
+    public remote function getPartitionKeyRanges(@tainted ResourceProperties properties) returns @tainted 
     PartitionKeyList|error {
         http:Request request = new;
-        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES, databaseId, RESOURCE_PATH_COLLECTIONS, collectionId, 
+        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES, properties.databaseId, RESOURCE_PATH_COLLECTIONS, properties.containerId, 
         RESOURCE_PATH_PK_RANGES]);
         HeaderParamaters header = mapParametersToHeaderType(GET, requestPath);
         request = check setHeaders(request, self.host, self.masterKey, self.keyType, self.tokenVersion, header);

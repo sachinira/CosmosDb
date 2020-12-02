@@ -162,7 +162,7 @@ public type Permission record {|
     string id = "";
     string permissionMode = "";
     string 'resource = "";
-    int ttl = 3600;
+    int ttl?;
     Headers?...;
 |};
 

@@ -160,10 +160,40 @@ function test_listOneDatabase(){
     }
 }
 
-//everything depends except offers and permissions
 @test:Config{
     groups: ["database"],
-    dependsOn: ["test_createDatabase"],
+    dependsOn: [
+        "test_createDatabase",
+        "test_getAllContainers",
+        "test_GetPartitionKeyRanges",
+        "test_createDocument",
+        "test_getDocumentList",
+        "test_GetOneDocument",
+        "test_deleteDocument",
+        "test_queryDocuments",
+        "test_createStoredProcedure",
+        "test_replaceStoredProcedure",
+        "test_getAllStoredProcedures",
+        "test_executeOneStoredProcedure",
+        "test_deleteOneStoredProcedure",
+        "test_createUDF",
+        "test_replaceUDF",
+        "test_listAllUDF",
+        "test_deleteUDF",
+        "test_createTrigger",
+        "test_replaceTrigger",
+        "test_listTriggers",
+        "test_deleteTrigger",
+        "test_createUser", 
+        "test_replaceUserId", 
+        "test_getUser", 
+        "test_listUsers",
+        "test_createPermission",
+        "test_replacePermission",
+        "test_listPermissions",
+        "test_getPermission",
+        "test_deletePermission"
+    ],
     enable: false
 }
 function test_deleteDatabase(){
@@ -313,10 +343,30 @@ function test_getAllContainers(){
     }
 }
 
-//everything depends except offers and permissions
 @test:Config{
     groups: ["container"],
-    dependsOn: ["test_getAllContainers"],
+    dependsOn: [
+        "test_getAllContainers",
+        "test_GetPartitionKeyRanges",
+        "test_createDocument",
+        "test_getDocumentList",
+        "test_GetOneDocument",
+        "test_deleteDocument",
+        "test_queryDocuments",
+        "test_createStoredProcedure",
+        "test_replaceStoredProcedure",
+        "test_getAllStoredProcedures",
+        "test_executeOneStoredProcedure",
+        "test_deleteOneStoredProcedure",
+        "test_createUDF",
+        "test_replaceUDF",
+        "test_listAllUDF",
+        "test_deleteUDF",
+        "test_createTrigger",
+        "test_replaceTrigger",
+        "test_listTriggers",
+        "test_deleteTrigger"
+    ],
     enable: false
 }
 function test_deleteContainer(){
@@ -325,7 +375,7 @@ function test_deleteContainer(){
     Client AzureCosmosClient = new(config); 
     @tainted ResourceProperties deleteCollectionData = {
             databaseId: database.id,
-            containerId: containerList.containers[containerList.containers.length()-1].id
+            containerId: container.id
     };
     var result = AzureCosmosClient->deleteContainer(deleteCollectionData);
     if result is error {
@@ -333,17 +383,20 @@ function test_deleteContainer(){
     }
 }
 
-//not tested
 @test:Config{
     groups: ["partitionKey"]
 }
-function GetPartitionKeyRanges(){
-    io:println("--------------Get partition key ranges------------------------\n\n");
+function test_GetPartitionKeyRanges(){
+    log:printInfo("ACTION : GetPartitionKeyRanges()");
 
     Client AzureCosmosClient = new(config);
-    var result = AzureCosmosClient->getPartitionKeyRanges("hikall","mycollection1");
+    @tainted ResourceProperties resourceProperties = {
+            databaseId: database.id,
+            containerId: container.id
+    };
+    var result = AzureCosmosClient->getPartitionKeyRanges(resourceProperties);
     if (result is PartitionKeyList) {
-        io:println(result);
+
     } else {
         test:assertFail(msg = result.message());
     }   
@@ -461,7 +514,6 @@ function test_GetOneDocument(){
     }   
 }
 
-//document operations depends
 @test:Config{
     groups: ["document"],
     dependsOn: ["test_createDatabase", "test_createContainer", "test_GetOneDocument"]
@@ -601,7 +653,7 @@ function test_executeOneStoredProcedure(){
     string[] arrayofparameters = ["Sachi"];
     var result = AzureCosmosClient->executeStoredProcedure(resourceProperty,executeSprocId,arrayofparameters);   
     if result is json {
-        io:println(result);
+
     } else {
         test:assertFail(msg = result.message());
     }        
@@ -911,7 +963,17 @@ function test_listUsers(){
 
 @test:Config{
     groups: ["user"],
-    dependsOn: ["test_createUser", "test_replaceUserId", "test_getUser", "test_listUsers"]
+    dependsOn: [
+        "test_createUser", 
+        "test_replaceUserId", 
+        "test_getUser", 
+        "test_listUsers",
+        "test_createPermission",
+        "test_replacePermission",
+        "test_listPermissions",
+        "test_getPermission",
+        "test_deletePermission"
+    ]
 }
 function test_deleteUser(){
     log:printInfo("ACTION : deleteUser()");
@@ -923,7 +985,7 @@ function test_deleteUser(){
     };
     var result = AzureCosmosClient->deleteUser(resourceProperty,deleteUserId);  
     if result is boolean {
-
+        test_user = {};
     } else {
         test:assertFail(msg = result.message());
     }   
@@ -952,9 +1014,7 @@ function test_createPermission(){
         permissionMode: permissionMode,
         'resource: permissionResource
     };
-        io:println(test_user.id);
 
-    io:println(createPermission);
     var result = AzureCosmosClient->createPermission(resourceProperty,permissionUserId,createPermission);  
     if result is Permission {
         permission = <@untainted>result;
@@ -985,7 +1045,7 @@ function test_replacePermission(){
     };
     var result = AzureCosmosClient->replacePermission(resourceProperty,permissionUserId,replacePermission);  
     if result is Permission {
-        io:println(result);
+
     } else {
         test:assertFail(msg = result.message());
     }   
@@ -1005,7 +1065,7 @@ function test_listPermissions(){
     string permissionUserId = test_user.id;
     var result = AzureCosmosClient->listPermissions(resourceProperty,permissionUserId);  
     if result is PermissionList {
-        io:println(result);
+
     } else {
         test:assertFail(msg = result.message());
     }   
@@ -1026,7 +1086,7 @@ function test_getPermission(){
     string permissionId = permission.id;
     var result = AzureCosmosClient->getPermission(resourceProperty,permissionUserId,permissionId);  
     if result is Permission {
-        io:println(result);
+
     } else {
         test:assertFail(msg = result.message());
     }   
@@ -1040,11 +1100,14 @@ function test_deletePermission(){
     log:printInfo("ACTION : deletePermission()");
 
     Client AzureCosmosClient = new(config);
+    @tainted ResourceProperties resourceProperty = {
+        databaseId: database.id
+    };
     string permissionUserId = test_user.id;
     string permissionId = permission.id;
-    var result = AzureCosmosClient->deletePermission(properties,permissionUserId,permissionId);  
+    var result = AzureCosmosClient->deletePermission(resourceProperty,permissionUserId,permissionId);  
     if result is boolean {
-        io:println(result);
+
     } else {
         test:assertFail(msg = result.message());
     }   
@@ -1076,7 +1139,7 @@ function test_getOffer(){
     Client AzureCosmosClient = new(config);
     var result = AzureCosmosClient->getOffer(offerList.offers[0].id);  
     if result is Offer {
-        io:println(result);
+
     } else {
         test:assertFail(msg = result.message());
     }   
@@ -1102,18 +1165,17 @@ function test_replaceOffer(){
     };
     var result = AzureCosmosClient->replaceOffer(replaceOfferBody);  
     if result is Offer {
-        io:println(result);
+
     } else {
         test:assertFail(msg = result.message());
     }   
 }
 
-
 @test:Config{
     groups: ["offer"],
     dependsOn: ["test_createDatabase", "test_createContainer"]
 }
-function test_queryOffer(Query offer){
+function test_queryOffer(){
     log:printInfo("ACTION : queryOffer()");
 
     Client AzureCosmosClient = new(config);
@@ -1122,7 +1184,7 @@ function test_queryOffer(Query offer){
     };
     var result = AzureCosmosClient->queryOffer(offerQuery);   
     if result is json {
-        io:println(result);
+
     } else {
         test:assertFail(msg = result.message());
     }    
