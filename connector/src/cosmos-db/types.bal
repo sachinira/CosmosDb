@@ -63,8 +63,8 @@ public type DatabaseList record {
 //conflict resolution policy must be included
 public type Container record {|
     string id = "";
-    string _rid?;
-    string _self?;
+    string? _rid = ();
+    string? _self = ();
     boolean allowMaterializedViews?;
     IndexingPolicy indexingPolicy?;
     PartitionKey partitionKey?;
