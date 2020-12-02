@@ -56,7 +56,7 @@ public type Database record {|
 
 public type DatabaseList record {
     string _rid = "";
-    Database[] Databases = [];
+    Database[] databases = [];
     Headers? reponseHeaders = ();
 };
 

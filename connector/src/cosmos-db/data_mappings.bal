@@ -5,6 +5,7 @@ function mapParametersToHeaderType(string httpVerb, string url) returns HeaderPa
     params.resourceId = getResourceId(url);
     return params;
 }
+
 function mapOfferHeaderType(string httpVerb, string url) returns HeaderParamaters {
     HeaderParamaters params = {};
     params.verb = httpVerb;
@@ -43,7 +44,7 @@ function mapJsonToDbList([json, Headers] jsonPayload) returns @tainted DatabaseL
     [payload,headers] = jsonPayload;
     DatabaseList dbl = {};
     dbl._rid = payload._rid != ()? payload._rid.toString() : EMPTY_STRING;
-    dbl.Databases =  convertToDatabaseArray(<json[]>payload.Databases);
+    dbl.databases =  convertToDatabaseArray(<json[]>payload.Databases);
     dbl.reponseHeaders = headers;
     return dbl;
 }
@@ -65,6 +66,7 @@ function mapJsonToCollectionType([json, Headers?] jsonPayload) returns @tainted 
     return coll;
 }
 
+//
 function mapJsonToIndexingPolicy(json jsonPayload) returns @tainted IndexingPolicy {
     IndexingPolicy indp = {};
     indp.indexingMode = jsonPayload.indexingMode.toString();
@@ -74,6 +76,7 @@ function mapJsonToIndexingPolicy(json jsonPayload) returns @tainted IndexingPoli
     return indp;
 }
 
+//
 function mapJsonToIncludedPathsType(json jsonPayload) returns @tainted IncludedPath {
     IncludedPath ip = {};
     ip.path = jsonPayload.path.toString();
@@ -85,47 +88,52 @@ function mapJsonToIncludedPathsType(json jsonPayload) returns @tainted IncludedP
     return ip;
 }
 
+//
 function mapJsonToIndexType(json jsonPayload) returns Index {
     Index ind = {};
-    ind.kind = jsonPayload.kind.toString();
+    ind.kind = jsonPayload.kind != () ? jsonPayload.kind.toString(): EMPTY_STRING;
     ind.dataType = jsonPayload.dataType.toString();
     ind.precision = convertToInt(jsonPayload.precision);
     return ind; 
 }
 
+//
 function convertJsonToPartitionKey(json jsonPayload) returns @tainted PartitionKey {
     PartitionKey pk = {};
     pk.paths = convertToStringArray(<json[]>jsonPayload.paths);
-    pk.kind = jsonPayload.kind.toString();
+    pk.kind = jsonPayload.kind != () ? jsonPayload.kind.toString(): EMPTY_STRING;
     pk.'version = convertToInt(jsonPayload.'version);
     return pk;
 }
 
+//
 function mapJsonToCollectionListType([json, Headers] jsonPayload) returns @tainted ContainerList {
     ContainerList cll = {};
     json payload;
     Headers headers;
     [payload,headers] = jsonPayload;
-    cll._rid = payload._rid.toString();
+    cll._rid = payload._rid != () ? payload._rid.toString(): EMPTY_STRING;
     cll._count = convertToInt(payload._count);
     cll.DocumentCollections = convertToCollectionArray(<json[]>payload.DocumentCollections);
     cll.reponseHeaders = headers;
     return cll;
 }
 
+//
 function mapJsonToPartitionKeyType([json, Headers] jsonPayload) returns @tainted PartitionKeyList {
     PartitionKeyList pkl = {};
     PartitionKeyRange pkr = {};
     json payload;
     Headers headers;
     [payload,headers] = jsonPayload;
-    pkl._rid = payload._rid.toString();
+    pkl._rid = payload._rid != () ? payload._rid.toString(): EMPTY_STRING;
     pkl.PartitionKeyRanges = convertToPartitionKeyRangeArray(<json[]>payload.PartitionKeyRanges);
     pkl.reponseHeaders = headers;
     pkl._count = convertToInt(payload._count);
     return pkl;
 }
 
+//
 function mapJsonToPartitionKeyRange([json, Headers] jsonPayload) returns @tainted PartitionKeyRange {
     PartitionKeyRange pkr = {};
     json payload;
@@ -162,7 +170,7 @@ function mapJsonToDocumentList([json, Headers] jsonPayload) returns @tainted Doc
     json payload;
     Headers headers;
     [payload,headers] = jsonPayload;
-    documentlist._rid = payload._rid.toString();
+    documentlist._rid = payload._rid != () ? payload._rid.toString(): EMPTY_STRING;
     documentlist._count = convertToInt(payload._count);
     documentlist.documents = check convertToDocumentArray(<json[]>payload.Documents);
     documentlist.reponseHeaders = headers;
@@ -380,10 +388,11 @@ function convertToCollectionArray(json[] sourceCollectionArrayJsonObject) return
     return collections;
 }
 
-function convertToPartitionKeyRangeArray(json[] sourceAprtitionKeyArrayJsonObject) returns @tainted PartitionKeyRange[] { 
+//
+function convertToPartitionKeyRangeArray(json[] sourcePrtitionKeyArrayJsonObject) returns @tainted PartitionKeyRange[] { 
     PartitionKeyRange[] pkranges = [];
     int i = 0;
-    foreach json jsonPartitionKey in sourceAprtitionKeyArrayJsonObject {
+    foreach json jsonPartitionKey in sourcePrtitionKeyArrayJsonObject {
         pkranges[i].id = jsonPartitionKey.id.toString();
         pkranges[i].minInclusive = jsonPartitionKey.minInclusive.toString();
         pkranges[i].maxExclusive = jsonPartitionKey.maxExclusive.toString();

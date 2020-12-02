@@ -3,3 +3,4 @@ src/cosmos-db/tests/constants.bal
 Ballerina.lock
 src/cosmos-db/ballerina-internal.log
 /ballerina-internal.log
+/ballerina.conf
