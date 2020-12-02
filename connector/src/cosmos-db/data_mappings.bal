@@ -209,6 +209,7 @@ function mapJsonToUserDefinedFunction([json, Headers?] jsonPayload) returns @tai
     Headers? headers;
     [payload,headers] = jsonPayload;
     udf._rid = payload._rid != () ? payload._rid.toString() : EMPTY_STRING;
+    udf.id = payload.id != () ? payload.id.toString() : EMPTY_STRING;
     udf.body = payload.body != () ? payload.body.toString() : EMPTY_STRING;
     if headers is Headers {
         udf["reponseHeaders"] = headers;

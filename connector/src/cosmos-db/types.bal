@@ -106,7 +106,7 @@ public type QueryParameter record {|
 |};
 
 public type StoredProcedure record {|
-    string? _rid = ();
+    string? _rid?;
     string id = "";
     string body = "";
     Headers?...;

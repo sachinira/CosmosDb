@@ -102,7 +102,7 @@ function test_createDBWithAutoscalingThroughput(){
     };
     var result = AzureCosmosClient->createDatabase(createDatabaseAutoId, tp);
     if (result is Database) {
-        io:println(result);
+
     } else {
         test:assertFail(msg = result.message());
     }
@@ -361,8 +361,7 @@ Document document = {};
 }
 function test_createDocument(){
     log:printInfo("ACTION : createDocument()");
-    io:println(database.id);
-    io:println(container.id);
+
     Client AzureCosmosClient = new(config);
     var uuid = createRandomUUID();
     @tainted ResourceProperties resourceProperty = {
@@ -535,13 +534,12 @@ function test_createStoredProcedure(){
     };
     var result = AzureCosmosClient->createStoredProcedure(resourceProperty,sp);  
     if result is StoredProcedure {
-
+        storedPrcedure = <@untainted> result;
     } else {
         test:assertFail(msg = result.message());
     }   
 }
 
-//not working
 @test:Config{
     groups: ["storedProcedure"],
     dependsOn: ["test_createStoredProcedure"]
@@ -550,16 +548,14 @@ function test_replaceStoredProcedure(){
     log:printInfo("ACTION : replaceStoredProcedure()");
 
     Client AzureCosmosClient = new(config);
-    var uuid = createRandomUUID();
     @tainted ResourceProperties resourceProperty = {
         databaseId: database.id,
         containerId: container.id
     };
-    string replaceSprocId = storedPrcedure.id;
     string replaceSprocBody = "function heloo(personToGreet) {\r\n    var context = getContext();\r\n    var response = context.getResponse();\r\n\r\n    response.setBody(\"Hello, \" + personToGreet);\r\n}";
     StoredProcedure sp = {
-        id:replaceSprocId,
-        body:replaceSprocBody
+        id: storedPrcedure.id,
+        body: replaceSprocBody
     }; 
     var result = AzureCosmosClient->replaceStoredProcedure(resourceProperty,sp);  
     if result is StoredProcedure {
@@ -571,7 +567,7 @@ function test_replaceStoredProcedure(){
 
 @test:Config{
     groups: ["storedProcedure"],
-    dependsOn: ["test_createDatabase", "test_createContainer", "test_replaceStoredProcedure"]
+    dependsOn: ["test_createDatabase", "test_createContainer"]
 }
 function test_getAllStoredProcedures(){
     log:printInfo("ACTION : replaceStoredProcedure()");
@@ -611,7 +607,6 @@ function test_executeOneStoredProcedure(){
     }        
 }
 
-//stored procedure operations depends
 @test:Config{
     groups: ["storedProcedure"],
     dependsOn: ["test_createStoredProcedure", "test_replaceStoredProcedure", "test_executeOneStoredProcedure"]
@@ -633,86 +628,105 @@ function test_deleteOneStoredProcedure(){
     }    
 }
 
-var uuid = createRandomUUID();
-
-string udfId = string `udf-${uuid.toString()}`;
-string createUDFBody = "function tax(income) {\r\n    if(income == undefined) \r\n        throw 'no input';\r\n    if (income < 1000) \r\n        return income * 0.1;\r\n    else if (income < 10000) \r\n        return income * 0.2;\r\n    else\r\n        return income * 0.4;\r\n}"; 
-string replaceUDFId = "udf-2972a27c-a447-47f4-9a8d-0daa0fa3e37a";
-string replaceUDFBody = "function taxIncome(income) {\r\n    if(income == undefined) \r\n        throw 'no input';\r\n    if (income < 1000) \r\n        return income * 0.1;\r\n    else if (income < 10000) \r\n        return income * 0.2;\r\n    else\r\n        return income * 0.4;\r\n}"; 
-string deleteUDFId = "udf-7b6f4b7f-7782-47a6-8dad-1fcbf04e9ac7";
+UserDefinedFunction udf = {};
 
 @test:Config{
-    groups: ["userDefineFunction"]
+    groups: ["userDefinedFunction"],
+    dependsOn: ["test_createDatabase", "test_createContainer"]
 }
-function createUDF(){
-    io:println("-----------------Create user defined function-----------------------\n\n");
-
-    Client AzureCosmosClient = new(config);
-    UserDefinedFunction udf = {
-        id:udfId,
-        body:createUDFBody
-    };
-    var result = AzureCosmosClient->createUserDefinedFunction(properties,udf);  
-    if result is UserDefinedFunction {
-        io:println(result);
-    } else {
-        test:assertFail(msg = result.message());
-    }   
-    io:println("\n\n");  
-}
-
-@test:Config{
-    groups: ["userDefineFunction"]
-}
-function replaceUDF(){
-    io:println("-----------------Replace user defined function-----------------------\n\n");
-
-    Client AzureCosmosClient = new(config);
-    UserDefinedFunction udf = {
-        id:replaceUDFId,
-        body:replaceUDFBody
-    };
-    var result = AzureCosmosClient->replaceUserDefinedFunction(properties,udf);  
-    if result is UserDefinedFunction {
-        io:println(result);
-    } else {
-        test:assertFail(msg = result.message());
-    }   
-    io:println("\n\n");  
-}
-
-@test:Config{
-    groups: ["userDefineFunction"]
-}
-function listUDF(){
-    io:println("-----------------List all user defined functions-----------------------\n\n");
-
-    Client AzureCosmosClient = new(config);
-    var result = AzureCosmosClient->listUserDefinedFunctions(properties);  
-    if result is UserDefinedFunctionList {
-        io:println(result);
-    } else {
-        test:assertFail(msg = result.message());
-    }   
-    io:println("\n\n");  
-}
-
-@test:Config{
-    groups: ["userDefineFunction"]
-}
-function deleteUDF(){
-    io:println("-----------------Delete user defined function-----------------------\n\n");
+function test_createUDF(){
+    log:printInfo("ACTION : createUDF()");
 
     Client AzureCosmosClient = new(config);
     var uuid = createRandomUUID();
-    var result = AzureCosmosClient->deleteUserDefinedFunction(properties,deleteUDFId);  
-    if result is boolean {
-        io:println(result);
+    @tainted ResourceProperties resourceProperty = {
+        databaseId: database.id,
+        containerId: container.id
+    };
+    string udfId = string `udf-${uuid.toString()}`;
+    string createUDFBody = "function tax(income) {\r\n    if(income == undefined) \r\n        throw 'no input';\r\n    if (income < 1000) \r\n        return income * 0.1;\r\n    else if (income < 10000) \r\n        return income * 0.2;\r\n    else\r\n        return income * 0.4;\r\n}"; 
+    UserDefinedFunction createUdf = {
+        id: udfId,
+        body: createUDFBody
+    };
+    var result = AzureCosmosClient->createUserDefinedFunction(resourceProperty,createUdf);  
+    if result is UserDefinedFunction {
+        udf = <@untainted> result;
     } else {
         test:assertFail(msg = result.message());
     }   
-    io:println("\n\n");  
 }
+
+@test:Config{
+    groups: ["userDefinedFunction"],
+    dependsOn: ["test_createDatabase", "test_createContainer", "test_createUDF"]
+}
+function test_replaceUDF(){
+    log:printInfo("ACTION : replaceUDF()");
+
+    Client AzureCosmosClient = new(config);
+    @tainted ResourceProperties resourceProperty = {
+        databaseId: database.id,
+        containerId: container.id
+    };
+    string replaceUDFBody = "function taxIncome(income) {\r\n    if(income == undefined) \r\n        throw 'no input';\r\n    if (income < 1000) \r\n        return income * 0.1;\r\n    else if (income < 10000) \r\n        return income * 0.2;\r\n    else\r\n        return income * 0.4;\r\n}"; 
+    io:println(udf.id);
+    UserDefinedFunction replacementUdf = {
+        id: udf.id,
+        body:replaceUDFBody
+    };
+    var result = AzureCosmosClient->replaceUserDefinedFunction(resourceProperty,replacementUdf);  
+    if result is UserDefinedFunction {
+
+    } else {
+        test:assertFail(msg = result.message());
+    }   
+}
+
+
+@test:Config{
+    groups: ["userDefinedFunction"],
+    dependsOn: ["test_createDatabase", "test_createContainer", "test_createUDF"]
+}
+function test_listAllUDF(){
+    log:printInfo("ACTION : listAllUDF()");
+
+    Client AzureCosmosClient = new(config);
+    @tainted ResourceProperties resourceProperty = {
+        databaseId: database.id,
+        containerId: container.id
+    };
+    var result = AzureCosmosClient->listUserDefinedFunctions(resourceProperty);  
+    if result is UserDefinedFunctionList {
+
+    } else {
+        test:assertFail(msg = result.message());
+    }   
+}
+
+@test:Config{
+    groups: ["userDefinedFunction"],
+    dependsOn: ["test_createUDF", "test_replaceUDF", "test_listAllUDF"]
+}
+function test_deleteUDF(){
+    log:printInfo("ACTION : deleteUDF()");
+
+    Client AzureCosmosClient = new(config);
+    var uuid = createRandomUUID();
+    string deleteUDFId = udf.id;
+    @tainted ResourceProperties resourceProperty = {
+        databaseId: database.id,
+        containerId: container.id
+    };
+    var result = AzureCosmosClient->deleteUserDefinedFunction(resourceProperty,deleteUDFId);  
+    if result is boolean {
+
+    } else {
+        test:assertFail(msg = result.message());
+    }   
+}
+
+var uuid = createRandomUUID();
 
 string triggerId = string `trigger-${uuid.toString()}`;
 string createTriggerBody = "function tax(income) {\r\n    if(income == undefined) \r\n        throw 'no input';\r\n    if (income < 1000) \r\n        return income * 0.1;\r\n    else if (income < 10000) \r\n        return income * 0.2;\r\n    else\r\n        return income * 0.4;\r\n}";
