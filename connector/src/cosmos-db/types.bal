@@ -49,7 +49,7 @@ public type Headers record {|
 
 public type Database record {|
     string id = "";
-    string _rid?;
+    string? _rid = ();
     string _self?;
     Headers?...;
 |};

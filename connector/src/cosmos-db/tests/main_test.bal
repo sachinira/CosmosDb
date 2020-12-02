@@ -929,125 +929,140 @@ function test_deleteUser(){
     }   
 }
 
+Permission permission = {};
 //different permissions cannot be created for same resource, already existing permissions can be replaced"
-string permissionId = string `permission-${uuid.toString()}`;
-string permissionModeCreate = "Read";
-string createResource = "dbs/database1/colls/collection1";
-string permissionUserId = "user-41a5c42e-2a54-45b0-90da-41da2abe8cd0";
-string getPermissionId = "permission-81f21af0-221d-407d-b7d3-b1cd69a9b2e5";
-string replacePermissionUser = "";
-string replacePermissionId = "";
-string permissionModeReplace = "All";
-string replaceResource = "dbs/database1/colls/collection1";
-string deletePermissionUserId = "user-010c59a5-065d-43df-862e-cb72966e0b19";
-string deletePermissionId = "permission-2069981b-a529-438e-b8a6-a3d2546cdfdf";
-
 @test:Config{
-    groups: ["permission"]
+    groups: ["permission"],
+    dependsOn: ["test_createDatabase","test_createUser", "test_createContainer"]
 }
-function createPermission(){
-    io:println("-----------------Create permission-----------------------\n\n");
+function test_createPermission(){
+    log:printInfo("ACTION : createPermission()");
 
     Client AzureCosmosClient = new(config);
-    Permission permission = {
+    var uuid = createRandomUUID();
+    @tainted ResourceProperties resourceProperty = {
+        databaseId: database.id
+    };
+    string permissionUserId = test_user.id;
+    string permissionId = string `permission-${uuid.toString()}`;
+    string permissionMode = "Read";
+    string permissionResource = string `dbs/${database._rid.toString()}/colls/${container._rid.toString()}`;
+    Permission createPermission = {
+        id: permissionId,
+        permissionMode: permissionMode,
+        'resource: permissionResource
+    };
+        io:println(test_user.id);
+
+    io:println(createPermission);
+    var result = AzureCosmosClient->createPermission(resourceProperty,permissionUserId,createPermission);  
+    if result is Permission {
+        permission = <@untainted>result;
+    } else {
+        test:assertFail(msg = result.message());
+    }   
+}
+
+@test:Config{
+    groups: ["permission"],
+    dependsOn: ["test_createPermission"]
+}
+function test_replacePermission(){
+    log:printInfo("ACTION : replacePermission()");
+
+    Client AzureCosmosClient = new(config);
+    @tainted ResourceProperties resourceProperty = {
+        databaseId: database.id
+    };
+    string permissionUserId = test_user.id;
+    string permissionId = permission.id;
+    string permissionMode = "All";
+    string permissionResource = string `dbs/${database.id}/colls/${container.id}`;
+    Permission replacePermission = {
         id:permissionId,
-        permissionMode:permissionModeCreate,
-        'resource:createResource
+        permissionMode:permissionMode,
+        'resource:permissionResource
     };
-    var result = AzureCosmosClient->createPermission(properties,permissionUserId,permission);  
+    var result = AzureCosmosClient->replacePermission(resourceProperty,permissionUserId,replacePermission);  
     if result is Permission {
         io:println(result);
     } else {
         test:assertFail(msg = result.message());
     }   
-    io:println("\n\n");  
 }
 
 @test:Config{
-    groups: ["permission"]
+    groups: ["permission"],
+    dependsOn: ["test_createPermission"]
 }
-function replacePermission(){
-    io:println("-----------------Replace permission-----------------------\n\n");
+function test_listPermissions(){
+    log:printInfo("ACTION : listPermissions()");
 
     Client AzureCosmosClient = new(config);
-    Permission permission = {
-        id:replacePermissionId,
-        permissionMode:permissionModeReplace,
-        'resource:replaceResource
+    @tainted ResourceProperties resourceProperty = {
+        databaseId: database.id
     };
-    var result = AzureCosmosClient->replacePermission(properties,replacePermissionUser,permission);  
-    if result is Permission {
-        io:println(result);
-    } else {
-        test:assertFail(msg = result.message());
-    }   
-    io:println("\n\n");  
-}
-
-@test:Config{
-    groups: ["permission"]
-}
-function listPermissions(){
-    io:println("-----------------list permissions-----------------------\n\n");
-
-    Client AzureCosmosClient = new(config);
-    var result = AzureCosmosClient->listPermissions(properties,permissionUserId);  
+    string permissionUserId = test_user.id;
+    var result = AzureCosmosClient->listPermissions(resourceProperty,permissionUserId);  
     if result is PermissionList {
         io:println(result);
     } else {
         test:assertFail(msg = result.message());
     }   
-    io:println("\n\n");  
 }
 
 @test:Config{
-    groups: ["permission"]
+    groups: ["permission"],
+    dependsOn: ["test_createPermission"]
 }
-function getPermission(){
-    io:println("-----------------list one Permission-----------------------\n\n");
+function test_getPermission(){
+    log:printInfo("ACTION : getPermission()");
 
     Client AzureCosmosClient = new(config);
-    var result = AzureCosmosClient->getPermission(properties,permissionUserId,getPermissionId);  
+    @tainted ResourceProperties resourceProperty = {
+        databaseId: database.id
+    };
+    string permissionUserId = test_user.id;
+    string permissionId = permission.id;
+    var result = AzureCosmosClient->getPermission(resourceProperty,permissionUserId,permissionId);  
     if result is Permission {
         io:println(result);
     } else {
         test:assertFail(msg = result.message());
     }   
-    io:println("\n\n");  
 }
 
 @test:Config{
     groups: ["permission"],
-    dependsOn: ["listPermissions","getPermission"]
+    dependsOn: ["test_createPermission","test_getPermission", "test_listPermissions", "test_replacePermission"]
 }
-function deletePermission(){
-    io:println("-----------------Delete permission-----------------------\n\n");
+function test_deletePermission(){
+    log:printInfo("ACTION : deletePermission()");
 
     Client AzureCosmosClient = new(config);
-    var uuid = createRandomUUID();
-    var result = AzureCosmosClient->deletePermission(properties,deletePermissionUserId,deletePermissionId);  
+    string permissionUserId = test_user.id;
+    string permissionId = permission.id;
+    var result = AzureCosmosClient->deletePermission(properties,permissionUserId,permissionId);  
     if result is boolean {
         io:println(result);
     } else {
         test:assertFail(msg = result.message());
     }   
-    io:println("\n\n");  
 }
 
+Offer offer = {};
 @test:Config{
     groups: ["offer"]
 }
-function listOffers(){
-    io:println("-----------------list offers-----------------------\n\n");
+function test_listOffers(){
+    log:printInfo("ACTION : listOffers()");
 
     Client AzureCosmosClient = new(config);
     var result = AzureCosmosClient->listOffers();  
     if result is OfferList {
-        io:println(result);
     } else {
         test:assertFail(msg = result.message());
     }   
-    io:println("\n\n");  
 }
 
 string getOfferId = "vHIQ";
