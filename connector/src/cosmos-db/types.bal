@@ -73,7 +73,7 @@ public type Container record {|
 
 public type ContainerList record {|
     string _rid = "";
-    Container[] DocumentCollections = [];
+    Container[] containers = [];
     Headers reponseHeaders?;
     int _count = 0;
 |};

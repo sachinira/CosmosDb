@@ -53,13 +53,14 @@ function test_createDatabase(){
     groups: ["database"],
     dependsOn: ["test_createDatabase"]
 }
-function test_createIfNotExist(){
+function test_createDatabaseIfNotExist(){
     log:printInfo("ACTION : createIfNotExist()");
 
     Client AzureCosmosClient = new(config);
-    var result = AzureCosmosClient->createDatabaseIfNotExist(database.id);
+    string createDatabaseId = string `databasee-${uuid.toString()}`;
+    var result = AzureCosmosClient->createDatabaseIfNotExist(createDatabaseId);
     if (result is Database?) {
-        io:println(result);
+        
     } else {
         test:assertFail(msg = result.message());
     }
@@ -163,62 +164,63 @@ function test_deleteDatabase(){
 
     Client AzureCosmosClient = new(config);
     var result = AzureCosmosClient->deleteDatabase(databaseList.databases[databaseList.databases.length()-1].id);
-    if (result is boolean) {
-
-    } else {
+    if result is error {
         test:assertFail(msg = result.message());
+    } else {
+
     }
-    io:println("\n\n");
 }
 
-@tainted ResourceProperties propertiesNewCollection = {
-        databaseId: "database1",
-        containerId: ""//uuid.toString()
-};
-
-PartitionKey pk = {
-    paths: ["/AccountNumber"],
-    kind :"Hash",
-    'version: 2
-};
-
-string throughput = "400";
+Container container = {};
+ContainerList containerList = {};
+//string throughput = "400";
 
 @test:Config{
-    groups: ["collection"],
+    groups: ["container"],
     dependsOn: ["test_createDatabase"]
 }
 function test_createContainer(){
     log:printInfo("ACTION : createContainer()");
 
+    @tainted ResourceProperties propertiesNewCollection = {
+            databaseId: database.id,
+            containerId: string `container-${uuid.toString()}`
+    };
+    PartitionKey pk = {
+        paths: ["/AccountNumber"],
+        kind :"Hash",
+        'version: 2
+    };
     Client AzureCosmosClient = new(config);
     var result = AzureCosmosClient->createContainer(propertiesNewCollection,pk);
     if (result is Container) {
-        io:println(result);
+        container = <@untainted>result;
     } else {
         test:assertFail(msg = result.message());
     } 
-    io:println("\n\n");
 }
-
-@tainted ResourceProperties propertiesNewCollectionIfNotExist = {
-        databaseId: "database1",
-        containerId: "39406756-6a94-406a-a0ff-fe9de8b87ac9"
-};
-
+ 
 @test:Config{
-    groups: ["collection"]
+    groups: ["container"],
+    dependsOn: ["test_createDatabase"]
 }
-function createContainerIfNotExist(){
-    io:println("--------------Create Collection if not exist-----------------------\n\n");
+function test_createContainerIfNotExist(string id){
+    log:printInfo("ACTION : createContainerIfNotExist()");
 
     Client AzureCosmosClient = new(config);
-    string throughput = "400";
+    @tainted ResourceProperties propertiesNewCollectionIfNotExist = {
+            databaseId: database.id,
+            containerId: string `containere-${uuid.toString()}`
+    };
+    PartitionKey pk = {
+        paths: ["/AccountNumber"],
+        kind :"Hash",
+        'version: 2
+    };
     var result = AzureCosmosClient->createContainerIfNotExist(propertiesNewCollectionIfNotExist,pk);
     if (result is Container|error) {
         io:println(result);
     }
-    io:println("\n\n");
 }
 
 // @test:Config{
@@ -267,59 +269,62 @@ function createContainerIfNotExist(){
 
 //create collection with autoscale testcase comes here
 
-string databaseId = "database1";
-
 @test:Config{
-    groups: ["collection"]
+    groups: ["container"],
+    dependsOn: ["test_createDatabase"]
 }
-function getAllCollections(){
-    io:println("--------------Get All collections-----------------------\n\n");
+function test_getAllContainers(){
+    log:printInfo("ACTION : getAllContainers()");
 
     Client AzureCosmosClient = new(config);
-    var result = AzureCosmosClient->getAllContainers(databaseId);
+    var result = AzureCosmosClient->getAllContainers(database.id);
     if (result is ContainerList) {
-        io:println(result);
+        containerList = <@untainted>result;
     } else {
         test:assertFail(msg = result.message());
     }
     io:println("\n\n");
 }
 
-@tainted ResourceProperties getCollection = {
-        databaseId: "database1",
-        containerId: "39406756-6a94-406a-a0ff-fe9de8b87ac9"
-};
+
 @test:Config{
-    groups: ["collection"]
+    groups: ["container"],
+    dependsOn: ["test_createDatabase", "test_createContainer"]
 }
-function getOneCollection(){
-    io:println("--------------Get One collection-----------------------\n\n");
+function test_getOneContainer(){
+    log:printInfo("ACTION : getAllContainers()");
 
     Client AzureCosmosClient = new(config);
+    @tainted ResourceProperties getCollection = {
+        databaseId: database.id,
+        containerId: container.id
+    };
     var result = AzureCosmosClient->getContainer(getCollection);
     if (result is Container) {
         io:println(result);
     } else {
         test:assertFail(msg = result.message());
     }
-    io:println("\n\n");
 }
 
-@tainted ResourceProperties deleteCollectionData = {
-        databaseId: "database1",
-        containerId: "6ad17595-81d9-4687-81f2-fb50a2526fef"
-};
 @test:Config{
-    groups: ["collection"]
+    groups: ["container"],
+    dependsOn: ["test_getAllContainers"]
 }
-function deleteCollection(){
-    io:println("--------------Delete one collection------------------------\n\n");
+function test_deleteContainer(){
+    log:printInfo("ACTION : deleteContainer()");
 
     Client AzureCosmosClient = new(config); 
+    @tainted ResourceProperties deleteCollectionData = {
+            databaseId: database.id,
+            containerId: containerList.containers[containerList.containers.length()-1].id
+    };
     var result = AzureCosmosClient->deleteContainer(deleteCollectionData);
-    io:println(result);
-    io:println("\n\n");
+    if result is error {
+        test:assertFail(msg = result.message());
+    }
 }
+
 @test:Config{
     groups: ["partitionKey"]
 }
@@ -333,7 +338,6 @@ function GetPartitionKeyRanges(){
     } else {
         test:assertFail(msg = result.message());
     }   
-    io:println("\n\n");
 }
 
 string createDocumentId = "";//uuid.toString();

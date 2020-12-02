@@ -114,7 +114,7 @@ function mapJsonToCollectionListType([json, Headers] jsonPayload) returns @taint
     [payload,headers] = jsonPayload;
     cll._rid = payload._rid != () ? payload._rid.toString(): EMPTY_STRING;
     cll._count = convertToInt(payload._count);
-    cll.DocumentCollections = convertToCollectionArray(<json[]>payload.DocumentCollections);
+    cll.containers = convertToCollectionArray(<json[]>payload.DocumentCollections);
     cll.reponseHeaders = headers;
     return cll;
 }
