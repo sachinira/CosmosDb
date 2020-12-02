@@ -1050,7 +1050,7 @@ function test_deletePermission(){
     }   
 }
 
-Offer offer = {};
+OfferList offerList = {};
 @test:Config{
     groups: ["offer"]
 }
@@ -1060,74 +1060,72 @@ function test_listOffers(){
     Client AzureCosmosClient = new(config);
     var result = AzureCosmosClient->listOffers();  
     if result is OfferList {
+        offerList = <@untainted>result;
     } else {
         test:assertFail(msg = result.message());
     }   
 }
 
-string getOfferId = "vHIQ";
-
 @test:Config{
-    groups: ["offer"]
+    groups: ["offer"],
+    dependsOn: ["test_listOffers"]
 }
-function listOffer(){
-    io:println("-----------------list one offer-----------------------\n\n");
+function test_getOffer(){
+    log:printInfo("ACTION : getOffer()");
 
     Client AzureCosmosClient = new(config);
-    var result = AzureCosmosClient->getOffer(getOfferId);  
+    var result = AzureCosmosClient->getOffer(offerList.offers[0].id);  
     if result is Offer {
         io:println(result);
     } else {
         test:assertFail(msg = result.message());
     }   
-    io:println("\n\n");  
 }
 
-Offer replaceOfferBody = {
-    offerVersion: "V2",
-    offerType: "Invalid",    
-    content: {  
-        "offerThroughput": 600
-    }, 
-    'resource: "dbs/InV1AA==/colls/InV1AOOYBOo=/",  
-    offerResourceId: "InV1AJmRKts=",
-    id: "vHIQ",
-    _rid: "vHIQ" 
-};
 @test:Config{
     groups: ["offer"]
 }
-function replaceOffer(){
-    io:println("-----------------Replace offer-----------------------\n\n");
+function test_replaceOffer(){
+    log:printInfo("ACTION : replaceOffer()");
 
     Client AzureCosmosClient = new(config);
+    Offer replaceOfferBody = {
+        offerVersion: "V2",
+        offerType: "Invalid",    
+        content: {  
+            "offerThroughput": 600
+        }, 
+        'resource: string `dbs/${database._rid.toString()}/colls/${container._rid.toString()}/`,  
+        offerResourceId: string `${container._rid.toString()}`,
+        id: offerList.offers[0].id,
+        _rid: offerList.offers[0]._rid 
+    };
     var result = AzureCosmosClient->replaceOffer(replaceOfferBody);  
     if result is Offer {
         io:println(result);
     } else {
         test:assertFail(msg = result.message());
     }   
-    io:println("\n\n");  
 }
 
-Query offerQuery = {
-   query: string `SELECT * FROM collection1 WHERE (collection1["_self"]) = "dbs/InV1AA==/colls/InV1AItrS0w=/"`
-};
 
 @test:Config{
-    groups: ["offer"]
+    groups: ["offer"],
+    dependsOn: ["test_createDatabase", "test_createContainer"]
 }
-function queryOffer(Query offer){
-    io:println("--------------Query offer-----------------------\n\n");
+function test_queryOffer(Query offer){
+    log:printInfo("ACTION : queryOffer()");
 
     Client AzureCosmosClient = new(config);
+    Query offerQuery = {
+    query: string `SELECT * FROM ${container.id} WHERE (${container.id}["_self"]) = ${container._self.toString()} "`
+    };
     var result = AzureCosmosClient->queryOffer(offerQuery);   
     if result is json {
         io:println(result);
     } else {
         test:assertFail(msg = result.message());
     }    
-    io:println("\n\n");  
 }
 
 function getConfigValue(string key) returns string {
