@@ -682,7 +682,6 @@ function test_replaceUDF(){
     }   
 }
 
-
 @test:Config{
     groups: ["userDefinedFunction"],
     dependsOn: ["test_createDatabase", "test_createContainer", "test_createUDF"]
@@ -774,7 +773,7 @@ function test_replaceTrigger(){
     string replaceTriggerOperation = "All"; // All, Create, Replace, and Delete.
     string replaceTriggerType = "Post"; // he acceptable values are: Pre and Post. 
     Trigger replaceTrigger = {
-        id:trigger.id,
+        id: trigger.id,
         body:replaceTriggerBody,
         triggerOperation:replaceTriggerOperation,
         triggerType: replaceTriggerType
@@ -828,91 +827,106 @@ function test_deleteTrigger(){
     }   
 }
 
-string userId = string `user-${uuid.toString()}`;
-string replaceUserId = "userr-c04de06a-df65-4c94-b7ae-8e9c5cf5611a";
-string deleteUserId = "user-0b5df167-dc9f-4395-9ba3-f561fc166e97";
-string getUserId = "user-af93f765-fad1-418d-98ef-9cad66886e36";
+User test_user = {};
 
 @test:Config{
-    groups: ["user"]
+    groups: ["user"],
+    dependsOn: ["test_createDatabase"]
 }
-function createUser(){
-    io:println("-----------------Create user-----------------------\n\n");
+function test_createUser(){
+    log:printInfo("ACTION : createUser()");
 
     Client AzureCosmosClient = new(config);
-    var result = AzureCosmosClient->createUser(properties,userId);  
+    @tainted ResourceProperties resourceProperty = {
+        databaseId: database.id
+    };
+    string userId = string `user-${uuid.toString()}`;
+    var result = AzureCosmosClient->createUser(resourceProperty,userId);  
     if result is User {
-        io:println(result);
+        test_user = <@untainted>result;
     } else {
         test:assertFail(msg = result.message());
     }   
-    io:println("\n\n");  
 }
 
 @test:Config{
-    groups: ["user"]
+    groups: ["user"],
+    dependsOn: ["test_createUser"]
 }
-function replaceUser(){
-    io:println("-----------------Replace user id-----------------------\n\n");
+function test_replaceUserId(){
+    log:printInfo("ACTION : replaceUserId()");
     string newReplaceId = string `user-${uuid.toString()}`;
 
     Client AzureCosmosClient = new(config);
-    var result = AzureCosmosClient->replaceUserId(properties,replaceUserId,newReplaceId);  
+    @tainted ResourceProperties resourceProperty = {
+        databaseId: database.id
+    };
+    string replaceUser = test_user.id;
+    var result = AzureCosmosClient->replaceUserId(resourceProperty,replaceUser,newReplaceId);  
     if result is User {
-        io:println(result);
+
     } else {
         test:assertFail(msg = result.message());
     }   
-    io:println("\n\n");  
 }
 
 @test:Config{
-    groups: ["user"]
+    groups: ["user"],
+    dependsOn: ["test_createUser"]
 }
-function getUser(){
-    io:println("-----------------Get user-----------------------\n\n");
+function test_getUser(){
+    log:printInfo("ACTION : getUser()");
 
     Client AzureCosmosClient = new(config);
-    var result = AzureCosmosClient->getUser(properties,getUserId);  
+    @tainted ResourceProperties resourceProperty = {
+        databaseId: database.id
+    };
+    string getUserId = test_user.id;
+    var result = AzureCosmosClient->getUser(resourceProperty,getUserId);  
     if result is User {
-        io:println(result);
+
     } else {
         test:assertFail(msg = result.message());
     }   
-    io:println("\n\n");  
 }
 
 @test:Config{
-    groups: ["user"]
+    groups: ["user"],
+    dependsOn: ["test_createUser"]
 }
-function listUsers(){
-    io:println("-----------------List users-----------------------\n\n");
+function test_listUsers(){
+    log:printInfo("ACTION : listUsers()");
 
     Client AzureCosmosClient = new(config);
-    var result = AzureCosmosClient->listUsers(properties);  
+    @tainted ResourceProperties resourceProperty = {
+        databaseId: database.id
+    };
+    var result = AzureCosmosClient->listUsers(resourceProperty);  
     if result is UserList {
-        io:println(result);
+
     } else {
         test:assertFail(msg = result.message());
     }   
-    io:println("\n\n");  
 }
 
 @test:Config{
-    groups: ["user"]
+    groups: ["user"],
+    dependsOn: ["test_createUser", "test_replaceUserId", "test_getUser", "test_listUsers"]
 }
-function deleteUser(){
-    io:println("-----------------Delete user-----------------------\n\n");
+function test_deleteUser(){
+    log:printInfo("ACTION : deleteUser()");
 
     Client AzureCosmosClient = new(config);
-    var uuid = createRandomUUID();
-    var result = AzureCosmosClient->deleteUser(properties,deleteUserId);  
+    string deleteUserId = test_user.id;
+    @tainted ResourceProperties resourceProperty = {
+        databaseId: database.id
+    };
+    var result = AzureCosmosClient->deleteUser(resourceProperty,deleteUserId);  
     if result is boolean {
-        io:println(result);
+
     } else {
         test:assertFail(msg = result.message());
     }   
-    io:println("\n\n");  
 }
 
 //different permissions cannot be created for same resource, already existing permissions can be replaced"
