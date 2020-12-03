@@ -10,16 +10,16 @@ import ballerina/io;
 # To handle sucess or error reponses to requests
 # + httpResponse - http:Response or http:ClientError returned from an http:Request
 # + return - If successful, returns a tuple containing [json, Headers]
-function parseResponseToTuple(http:Response|http:ClientError httpResponse) returns @tainted [json, Headers]|error {
-    var responseBody = check parseResponseToJson(httpResponse);
-    var responseHeaders = check parseHeadersToObject(httpResponse);
+function mapResponseToTuple(http:Response|http:ClientError httpResponse) returns @tainted [json, Headers]|error {
+    var responseBody = check mapResponseToJson(httpResponse);
+    var responseHeaders = check mapResponseHeadersToObject(httpResponse);
     return [responseBody,responseHeaders];
 }
 
 # To handle sucess or error reponses to requests
 # + httpResponse - http:Response or http:ClientError returned from an http:Request
 # + return - If successful, returns json. Else returns error.  
-function parseResponseToJson(http:Response|http:ClientError httpResponse) returns @tainted json|error { 
+function mapResponseToJson(http:Response|http:ClientError httpResponse) returns @tainted json|error { 
     if (httpResponse is http:Response) {
         var jsonResponse = httpResponse.getJsonPayload();
         if (jsonResponse is json) {
@@ -72,7 +72,7 @@ function createResponseFailMessage(http:Response httpResponse, json errorRespons
 # To return the response headers which are useful for the users for future operations
 # + httpResponse - http:Response or http:ClientError returned from an http:Request
 # + return -  returns object of type Headers.
-function parseHeadersToObject(http:Response|http:ClientError httpResponse) returns @tainted Headers|error {
+function mapResponseHeadersToObject(http:Response|http:ClientError httpResponse) returns @tainted Headers|error {
     Headers responseHeaders = {};
     if (httpResponse is http:Response) {
         responseHeaders.continuationHeader = getHeaderIfExist(httpResponse,CONTINUATION_HEADER);
@@ -240,10 +240,10 @@ public function setRequestOptions(http:Request request, RequestHeaderOptions req
 # + keyToken - master or resource token
 # + tokenType - denotes the type of token: master or resource.
 # + tokenVersion - denotes the version of the token, currently 1.0.
-# + params - an object of type HeaderParamaters
+# + params - an object of type HeaderParameters
 # + return - If successful, returns same http:Request with newly appended headers. Else returns error.  
 public function setHeaders(http:Request request, string host, string keyToken, string tokenType, string tokenVersion,
-HeaderParamaters params) returns http:Request|error {
+HeaderParameters params) returns http:Request|error {
     request.setHeader(API_VERSION_HEADER,params.apiVersion);
     request.setHeader(HOST_HEADER,host);
     request.setHeader(ACCEPT_HEADER,"*/*");

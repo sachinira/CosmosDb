@@ -1,4 +1,4 @@
-//import ballerina/io;
+import ballerina/io;
 import ballerina/test;
 import ballerina/java;
 import ballerina/config;
@@ -812,7 +812,7 @@ function test_replaceTrigger(){
         databaseId: database.id, 
         containerId: container.id
     };
-    string replaceTriggerBody = "function updateMetadata() {\r\n    var context = getContext();\r\n    var collection = context.getCollection();\r\n    var response = context.getResponse();\r\n    var createdDocument = response.getBody();\r\n\r\n    // query for metadata document\r\n    var filterQuery = 'SELECT * FROM root r WHERE r.id = \"_metadata\"';\r\n    var accept = collection.queryDocuments(collection.getSelfLink(),  filterQuery, \r\n      updateMetadataCallback);\r\n    if(!accept) throw \"Unable to update metadata,  abort\";\r\n\r\n    function updateMetadataCallback(err,  documents,  responseOptions) {\r\n      if(err) throw new Error(\"Error\" + err.message);\r\n           if(documents.length != 1) throw 'Unable to find metadata document';\r\n           var metadataDocument = documents[0];\r\n\r\n           // update metadata\r\n           metadataDocument.createdDocuments += 1;\r\n           metadataDocument.createdNames += \" \" + createdDocument.id;\r\n           var accept = collection.replaceDocument(metadataDocument._self, \r\n               metadataDocument,  function(err,  docReplaced) {\r\n                  if(err) throw \"Unable to update metadata,  abort\";\r\n               });\r\n           if(!accept) throw \"Unable to update metadata,  abort\";\r\n           return;          \r\n    }";
+    string replaceTriggerBody = "function updateMetadata() {\r\n var context = getContext();\r\n var collection = context.getCollection();\r\n var response = context.getResponse();\r\n var createdDocument = response.getBody();\r\n\r\n // query for metadata document\r\n var filterQuery = 'SELECT * FROM root r WHERE r.id = \"_metadata\"';\r\n var accept = collection.queryDocuments(collection.getSelfLink(),  filterQuery, \r\n updateMetadataCallback);\r\n if(!accept) throw \"Unable to update metadata,  abort\";\r\n\r\n function updateMetadataCallback(err,  documents,  responseOptions) {\r\n if(err) throw new Error(\"Error\" + err.message);\r\n if(documents.length != 1) throw 'Unable to find metadata document';\r\n var metadataDocument = documents[0];\r\n\r\n // update metadata\r\n metadataDocument.createdDocuments += 1;\r\n metadataDocument.createdNames += \" \" + createdDocument.id;\r\n var accept = collection.replaceDocument(metadataDocument._self, \r\n metadataDocument,  function(err,  docReplaced) {\r\n if(err) throw \"Unable to update metadata,  abort\";\r\n });\r\n if(!accept) throw \"Unable to update metadata,  abort\";\r\n return; \r\n }";
     string replaceTriggerOperation = "All"; // All,  Create,  Replace,  and Delete.
     string replaceTriggerType = "Post"; // he acceptable values are: Pre and Post. 
     Trigger replaceTrigger = {
@@ -919,6 +919,8 @@ function test_replaceUserId(){
 }
 function test_getUser(){
     log:printInfo("ACTION : getUser()");
+io:println(database.id);
+io:println(test_user.id);
 
     Client AzureCosmosClient = new(config);
     @tainted ResourceProperties resourceProperty = {
@@ -964,7 +966,8 @@ function test_listUsers(){
         "test_listPermissions", 
         "test_getPermission", 
         "test_deletePermission"
-    ]
+    ],
+    enable: false
 }
 function test_deleteUser(){
     log:printInfo("ACTION : deleteUser()");

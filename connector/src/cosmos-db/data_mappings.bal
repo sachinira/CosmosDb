@@ -1,13 +1,13 @@
-function mapParametersToHeaderType(string httpVerb, string url) returns HeaderParamaters {
-    HeaderParamaters params = {};
+function mapParametersToHeaderType(string httpVerb, string url) returns HeaderParameters {
+    HeaderParameters params = {};
     params.verb = httpVerb;
     params.resourceType = getResourceType(url);
     params.resourceId = getResourceId(url);
     return params;
 }
 
-function mapOfferHeaderType(string httpVerb, string url) returns HeaderParamaters {
-    HeaderParamaters params = {};
+function mapOfferHeaderType(string httpVerb, string url) returns HeaderParameters {
+    HeaderParameters params = {};
     params.verb = httpVerb;
     params.resourceType = getResourceType(url);
     params.resourceId = getResourceIdForOffer(url);
@@ -38,7 +38,7 @@ function mapJsonToDatabaseType([json, Headers?] jsonPayload) returns Database {
     return db;
 }
 
-function mapJsonToDbList([json, Headers] jsonPayload) returns @tainted DatabaseList {
+function mapJsonToDatabaseList([json, Headers] jsonPayload) returns @tainted DatabaseList {
     json payload;
     Headers headers;
     [payload,headers] = jsonPayload;
@@ -49,7 +49,7 @@ function mapJsonToDbList([json, Headers] jsonPayload) returns @tainted DatabaseL
     return dbl;
 }
 
-function mapJsonToCollectionType([json, Headers?] jsonPayload) returns @tainted Container {
+function mapJsonToContainerType([json, Headers?] jsonPayload) returns @tainted Container {
     json payload;
     Headers? headers;
     [payload,headers] = jsonPayload;
@@ -69,7 +69,7 @@ function mapJsonToCollectionType([json, Headers?] jsonPayload) returns @tainted 
 //
 function mapJsonToIndexingPolicy(json jsonPayload) returns @tainted IndexingPolicy {
     IndexingPolicy indp = {};
-    indp.indexingMode = jsonPayload.indexingMode.toString();
+    indp.indexingMode = jsonPayload.indexingMode != ()? jsonPayload.indexingMode.toString() : EMPTY_STRING;
     indp.automatic = convertToBoolean(jsonPayload.automatic);
     indp.includedPaths =  convertToIncludedPathsArray(<json[]>jsonPayload.includedPaths);
     indp.excludedPaths =  convertToIncludedPathsArray(<json[]>jsonPayload.excludedPaths);
@@ -107,14 +107,14 @@ function convertJsonToPartitionKey(json jsonPayload) returns @tainted PartitionK
 }
 
 //
-function mapJsonToCollectionListType([json, Headers] jsonPayload) returns @tainted ContainerList {
+function mapJsonToContainerListType([json, Headers] jsonPayload) returns @tainted ContainerList {
     ContainerList cll = {};
     json payload;
     Headers headers;
     [payload,headers] = jsonPayload;
     cll._rid = payload._rid != () ? payload._rid.toString(): EMPTY_STRING;
     cll._count = convertToInt(payload._count);
-    cll.containers = convertToCollectionArray(<json[]>payload.DocumentCollections);
+    cll.containers = convertToContainerArray(<json[]>payload.DocumentCollections);
     cll.reponseHeaders = headers;
     return cll;
 }
@@ -379,11 +379,11 @@ function convertToStringArray(json[] sourcePathArrayJsonObject) returns @tainted
     return strings;
 }
 
-function convertToCollectionArray(json[] sourceCollectionArrayJsonObject) returns @tainted Container[] {
+function convertToContainerArray(json[] sourceCollectionArrayJsonObject) returns @tainted Container[] {
     Container[] collections = [];
     int i = 0;
     foreach json jsonCollection in sourceCollectionArrayJsonObject {
-        collections[i] = mapJsonToCollectionType([jsonCollection,()]);
+        collections[i] = mapJsonToContainerType([jsonCollection,()]);
         i = i + 1;
     }
     return collections;
