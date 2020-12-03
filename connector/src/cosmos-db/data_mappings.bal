@@ -147,7 +147,7 @@ function mapJsonToPartitionKeyRange([json, Headers] jsonPayload) returns @tainte
     return pkr;
 }
 
-function mapJsonToDocument([json, Headers?] jsonPayload) returns @tainted Document {  
+function mapJsonToDocumentType([json, Headers?] jsonPayload) returns @tainted Document {  
     Document doc = {};
     json payload;
     Headers? headers;
@@ -165,7 +165,7 @@ function mapJsonToDocument([json, Headers?] jsonPayload) returns @tainted Docume
     return doc;
 }
 
-function mapJsonToDocumentList([json, Headers] jsonPayload) returns @tainted DocumentList|error {
+function mapJsonToDocumentListType([json, Headers] jsonPayload) returns @tainted DocumentList|error {
     DocumentList documentlist = {};
     json payload;
     Headers headers;
@@ -407,7 +407,7 @@ function convertToDocumentArray(json[] sourceDocumentArrayJsonObject) returns @t
     Document[] documents = [];
     int i = 0;
     foreach json document in sourceDocumentArrayJsonObject { 
-        documents[i] = mapJsonToDocument([document,()]);
+        documents[i] = mapJsonToDocumentType([document,()]);
         i = i + 1;
     }
     return documents;

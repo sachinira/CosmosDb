@@ -6,6 +6,7 @@ import ballerina/http;
 import ballerina/stringutils;
 import ballerina/lang.'string as str;
 import ballerina/io;
+import ballerina/lang.array as array; 
 
 # To handle sucess or error reponses to requests
 # + httpResponse - http:Response or http:ClientError returned from an http:Request
@@ -250,7 +251,7 @@ HeaderParameters params) returns http:Request|error {
     request.setHeader(CONNECTION_HEADER,"keep-alive");
     string?|error date = getTime();
     if date is string {
-        string? s = generateTokenNew(params.verb, params.resourceType, params.resourceId, keyToken, tokenType, tokenVersion);
+        string? s = check generateToken(params.verb, params.resourceType, params.resourceId, keyToken, tokenType, tokenVersion,date);
         request.setHeader(DATE_HEADER,date);
         if s is string {
             request.setHeader(AUTHORIZATION_HEADER,s);
@@ -344,36 +345,26 @@ public function getResourceIdForOffer(string url) returns string {
     return resourceId.toLowerAscii();
 }
 
-//***********************************Ballerina token generators***********************************
-public function generateToken(string verb, string resourceType, string resourceId, string keys, string keyType, 
+# To construct the hashed token signature for a token to set  'Authorization' header
+# + verb - HTTP verb, such as GET, POST, or PUT
+# + resourceType - identifies the type of resource that the request is for, Eg. "dbs", "colls", "docs"
+# + resourceId -dentity property of the resource that the request is directed at
+# + keyToken - master or resource token
+# + tokenType - denotes the type of token: master or resource.
+# + tokenVersion - denotes the version of the token, currently 1.0.
+# + date - current GMT date and time
+# + return - If successful, returns string which is the  hashed token signature. Else returns (). 
+public function generateToken(string verb, string resourceType, string resourceId, string keyToken, string tokenType, 
 string tokenVersion, string date) returns string?|error {    
     string authorization;
     string payload = verb.toLowerAscii()+"\n" + resourceType.toLowerAscii() + "\n" + resourceId + "\n"
     + date.toLowerAscii() +"\n" + "" + "\n";
-    var decoded = encoding:decodeBase64Url(keys);
-    if decoded is byte[] {
-        byte[] k = crypto:hmacSha256(payload.toBytes(),decoded);
-        string  t = k.toBase16();
-        string signature = encoding:encodeBase64Url(k);
-        authorization = 
-        check encoding:encodeUriComponent(string `type=${keyType}&ver=${tokenVersion}&sig=${signature}=`, "UTF-8");   
-        return authorization;
-    } else {     
-        io:println("Decoding error");
-    }
-}
-
-public function generateTokenNewBl(string verb, string resourceType, string resourceId, string keys, string keyType, 
-string tokenVersion, string date) returns string?|error {    
-    string authorization;
-    string payload = verb.toLowerAscii()+"\n" + resourceType.toLowerAscii() + "\n" + resourceId + "\n"
-    + date.toLowerAscii() +"\n" + "" + "\n";
-    var decoded = encoding:decodeBase64Url(keys);
+    var decoded = array:fromBase64(keyToken);
     if decoded is byte[] {
         byte[] digest = crypto:hmacSha256(payload.toBytes(),decoded);
-        string signature = encoding:encodeBase64Url(digest);
+        string signature = array:toBase64(digest);
         authorization = 
-        check encoding:encodeUriComponent(string `type=${keyType}&ver=${tokenVersion}&sig=${signature}`, "UTF-8");   
+        check encoding:encodeUriComponent(string `type=${tokenType}&ver=${tokenVersion}&sig=${signature}`, "UTF-8");   
         return authorization;
     } else {     
         io:println("Decoding error");
