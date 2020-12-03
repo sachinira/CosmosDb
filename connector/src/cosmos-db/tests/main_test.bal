@@ -1,4 +1,4 @@
-import ballerina/io;
+//import ballerina/io;
 import ballerina/test;
 import ballerina/java;
 import ballerina/config;
@@ -18,12 +18,6 @@ AzureCosmosConfiguration config = {
                             }
                         }
 };
-
-function createRandomUUID() returns handle = @java:Method {
-    name : "randomUUID", 
-    'class : "java.util.UUID"
-} external;
-
 
 Database database = {};
 DatabaseList databaseList = {};
@@ -112,7 +106,7 @@ function test_createDBWithAutoscalingThroughput(){
         var output = "";
     }
 }
-//check
+
 @test:Config{
     groups: ["database"]
 }
@@ -127,10 +121,10 @@ function test_createDatabaseWithBothHeaders(){
         throughput: 600
     };
     var result = AzureCosmosClient->createDatabase(createDatabaseBothId,  tp);
-    if (result is Database) {
-        io:println(result);
+    if result is error {
+        var output = "";
     } else {
-        test:assertFail(msg = result.message());
+        test:assertFail(msg = "Created database with both throughput values!!");
     }
 }
 
@@ -775,8 +769,6 @@ function test_deleteUDF(){
     }
 }
 
-var uuid = createRandomUUID();
-
 @test:Config{
     groups: ["trigger"], 
     dependsOn: ["test_createDatabase", "test_createContainer"]
@@ -886,6 +878,7 @@ function test_createUser(){
     log:printInfo("ACTION : createUser()");
 
     Client AzureCosmosClient = new(config);
+    var uuid = createRandomUUID();
     @tainted ResourceProperties resourceProperty = {
         databaseId: database.id
     };
@@ -904,9 +897,10 @@ function test_createUser(){
 }
 function test_replaceUserId(){
     log:printInfo("ACTION : replaceUserId()");
-    string newReplaceId = string `user-${uuid.toString()}`;
 
     Client AzureCosmosClient = new(config);
+    var uuid = createRandomUUID();
+    string newReplaceId = string `user-${uuid.toString()}`;
     @tainted ResourceProperties resourceProperty = {
         databaseId: database.id
     };
@@ -1188,3 +1182,8 @@ function test_queryOffer(){
 function getConfigValue(string key) returns string {
     return (system:getEnv(key) != "") ? system:getEnv(key) : config:getAsString(key);
 }
+
+function createRandomUUID() returns handle = @java:Method {
+    name : "randomUUID", 
+    'class : "java.util.UUID"
+} external;
