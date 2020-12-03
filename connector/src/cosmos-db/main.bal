@@ -348,7 +348,7 @@ public  client class Client {
         request.setJsonPayload(<json>storedProcedure.cloneWithType(json));
         var response = self.azureCosmosClient->post(requestPath, request);
         [json, Headers] jsonResponse = check mapResponseToTuple(response);
-        return mapJsonToStoredProcedure(jsonResponse);    
+        return mapJsonToStoredProcedureType(jsonResponse);    
     }
 
     # To replace a stored procedure with new one inside a collection
@@ -365,7 +365,7 @@ public  client class Client {
         request.setJsonPayload(<@untainted><json>storedProcedure.cloneWithType(json));
         var response = self.azureCosmosClient->put(requestPath, request);
         [json, Headers] jsonResponse = check mapResponseToTuple(response);
-        return mapJsonToStoredProcedure(jsonResponse);  
+        return mapJsonToStoredProcedureType(jsonResponse);  
     }
 
     # To list all stored procedures inside a collection
@@ -380,7 +380,7 @@ public  client class Client {
         request = check setHeaders(request, self.host, self.masterKey, self.keyType, self.tokenVersion, header);
         var response = self.azureCosmosClient->get(requestPath, request);
         [json, Headers] jsonResponse = check mapResponseToTuple(response);
-        return mapJsonToStoredProcedureList(jsonResponse);  
+        return mapJsonToStoredProcedureListType(jsonResponse);  
     }
 
     # To delete a stored procedure inside a collection
@@ -432,7 +432,7 @@ public  client class Client {
         request.setJsonPayload(<json>userDefinedFunction.cloneWithType(json));
         var response = self.azureCosmosClient->post(requestPath, request);
         [json, Headers] jsonResponse = check mapResponseToTuple(response);
-        return mapJsonToUserDefinedFunction(jsonResponse);      
+        return mapJsonToUserDefinedFunctionType(jsonResponse);      
     }
 
     # To replace an existing user defined function inside a collection
@@ -449,7 +449,7 @@ public  client class Client {
         request.setJsonPayload(<@untainted><json>userDefinedFunction.cloneWithType(json));
         var response = self.azureCosmosClient->put(requestPath, request);
         [json, Headers] jsonResponse = check mapResponseToTuple(response);
-        return mapJsonToUserDefinedFunction(jsonResponse);      
+        return mapJsonToUserDefinedFunctionType(jsonResponse);      
     }
 
     # To get a list of existing user defined functions inside a collection
@@ -464,7 +464,7 @@ public  client class Client {
         request = check setHeaders(request, self.host, self.masterKey, self.keyType, self.tokenVersion, header);
         var response = self.azureCosmosClient->get(requestPath, request);
         [json, Headers] jsonResponse = check mapResponseToTuple(response);
-        return mapJsonToUserDefinedFunctionList(jsonResponse);      
+        return mapJsonToUserDefinedFunctionListType(jsonResponse);      
     }
 
     # To delete an existing user defined function inside a collection
@@ -498,7 +498,7 @@ public  client class Client {
         request.setJsonPayload(<json>trigger.cloneWithType(json));
         var response = self.azureCosmosClient->post(requestPath, request);
         [json, Headers] jsonResponse = check mapResponseToTuple(response);
-        return mapJsonToTrigger(jsonResponse);      
+        return mapJsonToTriggerType(jsonResponse);      
     }
     
     # To replace an existing trigger inside a collection
@@ -515,7 +515,7 @@ public  client class Client {
         request.setJsonPayload(<@untainted><json>trigger.cloneWithType(json));
         var response = self.azureCosmosClient->put(requestPath, request);
         [json, Headers] jsonResponse = check mapResponseToTuple(response);
-        return mapJsonToTrigger(jsonResponse); 
+        return mapJsonToTriggerType(jsonResponse); 
     }
 
     # To list existing triggers inside a collection
@@ -529,7 +529,7 @@ public  client class Client {
         request = check setHeaders(request, self.host, self.masterKey, self.keyType, self.tokenVersion, header);
         var response = self.azureCosmosClient->get(requestPath, request);
         [json, Headers] jsonResponse = check mapResponseToTuple(response);
-        return mapJsonToTriggerList(jsonResponse);      
+        return mapJsonToTriggerListType(jsonResponse);      
     }
 
     # To delete an existing trigger inside a collection
@@ -563,7 +563,7 @@ public  client class Client {
         request.setJsonPayload(reqBody);
         var response = self.azureCosmosClient->post(requestPath, request);
         [json, Headers] jsonResponse = check mapResponseToTuple(response);
-        return mapJsonToUser(jsonResponse);     
+        return mapJsonToUserType(jsonResponse);     
     }
     
     # To replace the id of an existing user for a database
@@ -583,7 +583,7 @@ public  client class Client {
         request.setJsonPayload(reqBody);
         var response = self.azureCosmosClient->put(requestPath, request);
         [json, Headers] jsonResponse = check mapResponseToTuple(response);
-        return mapJsonToUser(jsonResponse); 
+        return mapJsonToUserType(jsonResponse); 
     }
 
     # To get information of a user from a database
@@ -597,7 +597,7 @@ public  client class Client {
         request = check setHeaders(request, self.host, self.masterKey, self.keyType, self.tokenVersion, header);
         var response = self.azureCosmosClient->get(requestPath, request);
         [json, Headers] jsonResponse = check mapResponseToTuple(response);
-        return mapJsonToUser(jsonResponse);      
+        return mapJsonToUserType(jsonResponse);      
     }
 
     # To list users in a database
@@ -610,7 +610,7 @@ public  client class Client {
         request = check setHeaders(request, self.host, self.masterKey, self.keyType, self.tokenVersion, header);
         var response = self.azureCosmosClient->get(requestPath, request);
         [json, Headers] jsonResponse = check mapResponseToTuple(response);
-        return mapJsonToUserList(jsonResponse);     
+        return mapJsonToUserListType(jsonResponse);     
     }
 
     # To delete a user from a database
@@ -642,7 +642,7 @@ public  client class Client {
         request.setJsonPayload(<@untainted><json>permission.cloneWithType(json));
         var response = self.azureCosmosClient->post(requestPath, request);
         [json, Headers] jsonResponse = check mapResponseToTuple(response);
-        return mapJsonToPermission(jsonResponse);
+        return mapJsonToPermissionType(jsonResponse);
     }
 
     # To replace an existing permission
@@ -660,7 +660,7 @@ public  client class Client {
         request.setJsonPayload(<@untainted><json>permission.cloneWithType(json));
         var response = self.azureCosmosClient->put(requestPath, request);
         [json, Headers] jsonResponse = check mapResponseToTuple(response);
-        return mapJsonToPermission(jsonResponse);
+        return mapJsonToPermissionType(jsonResponse);
     }
 
     # To list permissions belong to a user
@@ -676,7 +676,7 @@ public  client class Client {
         request = check setHeaders(request, self.host, self.masterKey, self.keyType, self.tokenVersion, header);
         var response = self.azureCosmosClient->get(requestPath, request);
         [json, Headers] jsonResponse = check mapResponseToTuple(response);
-        return mapJsonToPermissionList(jsonResponse);
+        return mapJsonToPermissionListType(jsonResponse);
     }
 
     # To get information of a permission belongs to a user
@@ -692,7 +692,7 @@ public  client class Client {
         request = check setHeaders(request, self.host, self.masterKey, self.keyType, self.tokenVersion, header);
         var response = self.azureCosmosClient->get(requestPath, request);
         [json, Headers] jsonResponse = check mapResponseToTuple(response);
-        return mapJsonToPermission(jsonResponse);
+        return mapJsonToPermissionType(jsonResponse);
     }
 
     # To delete a permission belongs to a user
@@ -723,7 +723,7 @@ public  client class Client {
         request = check setHeaders(request, self.host, self.masterKey, self.keyType, self.tokenVersion, header);
         var response = self.azureCosmosClient->get(requestPath, request);
         [json, Headers] jsonResponse = check mapResponseToTuple(response);
-        return mapJsonToOfferList(jsonResponse);
+        return mapJsonToOfferListType(jsonResponse);
     }
 
     # To get information of an offer
@@ -736,7 +736,7 @@ public  client class Client {
         request = check setHeaders(request, self.host, self.masterKey, self.keyType, self.tokenVersion, header);
         var response = self.azureCosmosClient->get(requestPath, request);
         [json, Headers] jsonResponse = check mapResponseToTuple(response);
-        return mapJsonToOffer(jsonResponse);
+        return mapJsonToOfferType(jsonResponse);
     }
 
     # To replace an existing offer
@@ -750,7 +750,7 @@ public  client class Client {
         request.setJsonPayload(offer);
         var response = self.azureCosmosClient->put(requestPath, request);
         [json, Headers] jsonResponse = check mapResponseToTuple(response);
-        return mapJsonToOffer(jsonResponse);
+        return mapJsonToOfferType(jsonResponse);
     }
 
     # To get information of a user from a database

@@ -27,9 +27,9 @@ Document document = {};
 StoredProcedure storedPrcedure = {};
 UserDefinedFunction udf = {};
 Trigger trigger = {};
-OfferList offerList = {};
 User test_user = {};
 Permission permission = {};
+OfferList offerList = {};
 
 @test:Config{
     groups: ["database"]
@@ -893,7 +893,7 @@ function test_createUser(){
 
 @test:Config{
     groups: ["user"], 
-    dependsOn: ["test_createUser"]
+    dependsOn: ["test_createUser","test_getUser"]
 }
 function test_replaceUserId(){
     log:printInfo("ACTION : replaceUserId()");

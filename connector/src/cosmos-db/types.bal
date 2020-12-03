@@ -163,6 +163,7 @@ public type Permission record {|
     string permissionMode = "";
     string 'resource = "";
     int ttl?;
+    string? _token = ();
     Headers?...;
 |};
 
