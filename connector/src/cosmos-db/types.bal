@@ -9,7 +9,7 @@ public type AzureCosmosConfiguration record {|
     http:ClientSecureSocket? secureSocketConfig;
 |};
 
-public type HeaderParamaters record {|
+public type HeaderParameters record {|
     string verb = "";
     string apiVersion = API_VERSION;
     string resourceType = "";
@@ -49,22 +49,22 @@ public type Headers record {|
 
 public type Database record {|
     string id = "";
-    string _rid?;
+    string? _rid = ();
     string _self?;
     Headers?...;
 |};
 
 public type DatabaseList record {
     string _rid = "";
-    Database[] Databases = [];
+    Database[] databases = [];
     Headers? reponseHeaders = ();
 };
 
 //conflict resolution policy must be included
 public type Container record {|
     string id = "";
-    string _rid?;
-    string _self?;
+    string? _rid = ();
+    string? _self = ();
     boolean allowMaterializedViews?;
     IndexingPolicy indexingPolicy?;
     PartitionKey partitionKey?;
@@ -73,7 +73,7 @@ public type Container record {|
 
 public type ContainerList record {|
     string _rid = "";
-    Container[] DocumentCollections = [];
+    Container[] containers = [];
     Headers reponseHeaders?;
     int _count = 0;
 |};
@@ -106,7 +106,7 @@ public type QueryParameter record {|
 |};
 
 public type StoredProcedure record {|
-    string? _rid = ();
+    string? _rid?;
     string id = "";
     string body = "";
     Headers?...;
@@ -162,7 +162,7 @@ public type Permission record {|
     string id = "";
     string permissionMode = "";
     string 'resource = "";
-    int ttl = 3600;
+    int ttl?;
     Headers?...;
 |};
 
