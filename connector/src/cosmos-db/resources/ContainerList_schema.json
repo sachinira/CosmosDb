@@ -1,1 +1,1 @@
-{"sachini/cosmos-db:0.1.0:ContainerList":{"_rid":"string","containers":"sachini/cosmos-db:0.1.0:Container[]","reponseHeaders":"sachini/cosmos-db:0.1.0:Headers","_count":"int"}}
+{"sachini/cosmos-db:0.1.0:ContainerList":{"_rid":"string","containers":"sachini/cosmos-db:0.1.0:ContainerType[]","reponseHeaders":"sachini/cosmos-db:0.1.0:Headers","_count":"int"}}

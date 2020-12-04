@@ -7,6 +7,7 @@ public  client class Database {
     private string host;
     private string keyType;
     private string tokenVersion;
+    AzureCosmosConfiguration azureConfig;
 
     public http:Client azureCosmosClient;
 
@@ -16,6 +17,7 @@ public  client class Database {
     Headers? headers = ();
 
     function init(AzureCosmosConfiguration azureConfig){
+        self.azureConfig = azureConfig;
         self.baseUrl = azureConfig.baseUrl;
         self.keyOrResourceToken = azureConfig.keyOrResourceToken;
         self.host = azureConfig.host;
@@ -46,7 +48,7 @@ public  client class Database {
         request.setJsonPayload(<@untainted>finalc);
         var response = self.azureCosmosClient->post(requestPath, request);
         [json, Headers] jsonreponse = check mapResponseToTuple(response);
-        return mapJsonToContainerType(jsonreponse);
+        return mapJsonToContainerType(jsonreponse, self.azureConfig);
     }
 
     # To create a database inside a resource
@@ -98,19 +100,19 @@ public  client class Database {
         request = check setHeaders(request, self.host, self.keyOrResourceToken, self.keyType, self.tokenVersion, header);
         var response = self.azureCosmosClient->get(requestPath, request);
         [json, Headers] jsonreponse = check mapResponseToTuple(response);
-        return mapJsonToContainerType(jsonreponse);
+        return mapJsonToContainerType(jsonreponse, self.azureConfig);
     }
 
-    // # To delete one collection inside a database
-    // # + properties - object of type ResourceProperties
-    // # + return - If successful, returns boolean specifying 'true' if delete is sucessful. Else returns error. 
-    // public remote function deleteContainer(@tainted ResourceProperties properties) returns @tainted json|error {
-    //     http:Request request = new;
-    //     string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES, properties.databaseId, RESOURCE_PATH_COLLECTIONS, 
-    //     properties.containerId]);
-    //     HeaderParameters header = mapParametersToHeaderType(DELETE, requestPath);
-    //     request = check setHeaders(request, self.host, self.keyOrResourceToken, self.keyType, self.tokenVersion, header);
-    //     var response = self.azureCosmosClient->delete(requestPath, request);
-    //     return check getDeleteResponse(response);
-    // }
+    # To delete one collection inside a database
+    # + properties - object of type ResourceProperties
+    # + return - If successful, returns boolean specifying 'true' if delete is sucessful. Else returns error. 
+    public remote function deleteContainer(@tainted ResourceProperties properties) returns @tainted json|error {
+        http:Request request = new;
+        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES, properties.databaseId, RESOURCE_PATH_COLLECTIONS, 
+        properties.containerId]);
+        HeaderParameters header = mapParametersToHeaderType(DELETE, requestPath);
+        request = check setHeaders(request, self.host, self.keyOrResourceToken, self.keyType, self.tokenVersion, header);
+        var response = self.azureCosmosClient->delete(requestPath, request);
+        return check getDeleteResponse(response);
+    }
 }

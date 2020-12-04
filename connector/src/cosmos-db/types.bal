@@ -61,7 +61,7 @@ public type DatabaseList record {
 };
 
 //conflict resolution policy must be included
-public type Container record {|
+public type ContainerType record {|
     string id = "";
     string _rid?;
     string _self?;
@@ -73,7 +73,7 @@ public type Container record {|
 
 public type ContainerList record {|
     string _rid = "";
-    Container[] containers = [];
+    ContainerType[] containers = [];
     Headers reponseHeaders?;
     int _count?;
 |};

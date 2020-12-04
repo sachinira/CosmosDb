@@ -24,7 +24,7 @@ function mapTupleToDeleteresponse([string, Headers] jsonPayload)returns @tainted
     return deleteResponse;
 }
 
-function mapJsonToDatabaseType([json, Headers?] jsonPayload,AzureCosmosConfiguration config) returns Database {
+function mapJsonToDatabaseType([json, Headers?] jsonPayload, AzureCosmosConfiguration config) returns Database {
     json payload;
     Headers? headers;
     [payload,headers] = jsonPayload;
@@ -47,20 +47,18 @@ function mapJsonToDatabaseList([json, Headers] jsonPayload) returns @tainted Dat
     return dbl;
 }
 
-function mapJsonToContainerType([json, Headers?] jsonPayload) returns @tainted Container {
+function mapJsonToContainerType([json, Headers?] jsonPayload, AzureCosmosConfiguration config) returns @tainted Container {
     json payload;
     Headers? headers;
     [payload,headers] = jsonPayload;
-    Container coll = {};
+    Container coll = new(config);
     coll.id = payload.id.toString();
     coll._rid = payload._rid != ()? payload._rid.toString() : EMPTY_STRING;
     coll._self = payload._self != ()? payload._self.toString() : EMPTY_STRING;
     coll.allowMaterializedViews = convertToBoolean(payload.allowMaterializedViews);
     coll.indexingPolicy = mapJsonToIndexingPolicy(<json>payload.indexingPolicy);
     coll.partitionKey = convertJsonToPartitionKey(<json>payload.partitionKey);
-    if headers is Headers {
-        coll["reponseHeaders"] = headers;
-    }
+    coll.headers = headers;
     return coll;
 }
 
@@ -378,11 +376,11 @@ function convertToStringArray(json[] sourcePathArrayJsonObject) returns @tainted
     return strings;
 }
 
-function convertToContainerArray(json[] sourceCollectionArrayJsonObject) returns @tainted Container[] {
-    Container[] collections = [];
+function convertToContainerArray(json[] sourceCollectionArrayJsonObject) returns @tainted ContainerType[] {
+    ContainerType[] collections = [];
     int i = 0;
     foreach json jsonCollection in sourceCollectionArrayJsonObject {
-        collections[i] = mapJsonToContainerType([jsonCollection,()]);
+        collections[i]._rid = jsonCollection._rid != () ? jsonCollection._rid.toString() : EMPTY_STRING;
         i = i + 1;
     }
     return collections;
