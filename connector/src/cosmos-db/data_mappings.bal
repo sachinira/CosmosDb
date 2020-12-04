@@ -24,17 +24,15 @@ function mapTupleToDeleteresponse([string, Headers] jsonPayload)returns @tainted
     return deleteResponse;
 }
 
-function mapJsonToDatabaseType([json, Headers?] jsonPayload) returns Database {
+function mapJsonToDatabaseType([json, Headers?] jsonPayload,AzureCosmosConfiguration config) returns Database {
     json payload;
     Headers? headers;
     [payload,headers] = jsonPayload;
-    Database db = {};
+    Database db = new(config);
     db.id = payload.id != ()? payload.id.toString() : EMPTY_STRING;
     db._rid = payload._rid != ()? payload._rid.toString() : EMPTY_STRING;
     db._self = payload._self != ()? payload._self.toString() : EMPTY_STRING;
-    if headers is Headers {
-        db["reponseHeaders"] = headers;
-    }    
+    db.headers = headers;   
     return db;
 }
 
@@ -340,11 +338,11 @@ function mapJsonToOfferListType([json, Headers?] jsonPayload) returns @tainted O
     return offerList;
 }
 
-function convertToDatabaseArray(json[] sourceDatabaseArrayJsonObject) returns @tainted Database[] {
-    Database[] databases = [];
+function convertToDatabaseArray(json[] sourceDatabaseArrayJsonObject) returns @tainted DatabaseType[] {
+    DatabaseType[] databases = [];
     int i = 0;
     foreach json jsonDatabase in sourceDatabaseArrayJsonObject {
-        databases[i] = mapJsonToDatabaseType([jsonDatabase,()]);
+        databases[i]._rid = jsonDatabase._rid != () ? jsonDatabase._rid.toString() : EMPTY_STRING;
         i = i + 1;
     }
     return databases;

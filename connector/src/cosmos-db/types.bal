@@ -1,12 +1,12 @@
 import ballerina/http;
 
 public type AzureCosmosConfiguration record {|
-    string baseUrl;    
-    string keyOrResourceToken;
-    string host;
-    string tokenType;
-    string tokenVersion;
-    http:ClientSecureSocket? secureSocketConfig;
+    string baseUrl = "";    
+    string keyOrResourceToken = "";
+    string host = "";
+    string tokenType = "";
+    string tokenVersion = "";
+    http:ClientSecureSocket? secureSocketConfig = ();
 |};
 
 public type HeaderParameters record {|
@@ -47,7 +47,7 @@ public type Headers record {|
     string? dateHeader?;
 |};
 
-public type Database record {|
+public type DatabaseType record {|
     string id = "";
     string _rid?;
     string _self?;
@@ -56,7 +56,7 @@ public type Database record {|
 
 public type DatabaseList record {
     string _rid = "";
-    Database[] databases = [];
+    DatabaseType[] databases = [];
     Headers? reponseHeaders = ();
 };
 
@@ -146,7 +146,9 @@ public type TriggerList record {|
 |};
 
 public type User  record {|
-    *Database;
+    string id = "";
+    string _rid?;
+    string _self?;
     Headers?...;
 |};
 
