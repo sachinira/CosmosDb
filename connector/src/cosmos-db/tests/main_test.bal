@@ -7,7 +7,7 @@ import ballerina/log;
 
 AzureCosmosConfiguration config = {
     baseUrl : getConfigValue("BASE_URL"), 
-    masterKey : getConfigValue("MASTER_KEY"), 
+    keyOrResourceToken : getConfigValue("KEY_OR_RESOURCE_TOKEN"), 
     host : getConfigValue("HOST"), 
     tokenType : getConfigValue("TOKEN_TYPE"), 
     tokenVersion : getConfigValue("TOKEN_VERSION"), 
@@ -893,7 +893,8 @@ function test_createUser(){
 
 @test:Config{
     groups: ["user"], 
-    dependsOn: ["test_createUser","test_getUser"]
+    dependsOn: ["test_createUser","test_getUser"],
+    enable: false
 }
 function test_replaceUserId(){
     log:printInfo("ACTION : replaceUserId()");
@@ -988,7 +989,7 @@ function test_deleteUser(){
 //different permissions cannot be created for same resource,  already existing permissions can be replaced"
 @test:Config{
     groups: ["permission"], 
-    dependsOn: ["test_createDatabase", "test_createUser",  "test_createContainer"]
+    dependsOn: ["test_createDatabase", "test_createUser"]
 }
 function test_createPermission(){
     log:printInfo("ACTION : createPermission()");
@@ -1000,8 +1001,9 @@ function test_createPermission(){
     };
     string permissionUserId = test_user.id;
     string permissionId = string `permission-${uuid.toString()}`;
-    string permissionMode = "Read";
-    string permissionResource = string `dbs/${database._rid.toString()}/colls/${container._rid.toString()}`;
+    string permissionMode = "All";
+    string permissionResource = string `dbs/${database?._rid.toString()}/colls/${container?._rid.toString()}`;
+    //string permissionResource = string `dbs/${database._rid.toString()}/`;
     Permission createPermission = {
         id: permissionId, 
         permissionMode: permissionMode, 
@@ -1011,6 +1013,7 @@ function test_createPermission(){
     var result = AzureCosmosClient->createPermission(resourceProperty, permissionUserId, createPermission);  
     if result is Permission {
         permission = <@untainted>result;
+        io:println(permission);
     } else {
         test:assertFail(msg = result.message());
     }   
@@ -1031,6 +1034,7 @@ function test_replacePermission(){
     string permissionId = permission.id;
     string permissionMode = "All";
     string permissionResource = string `dbs/${database.id}/colls/${container.id}`;
+    //string permissionResource = string `dbs/${database._rid.toString()}/`;
     Permission replacePermission = {
         id:permissionId, 
         permissionMode:permissionMode, 
@@ -1041,6 +1045,8 @@ function test_replacePermission(){
         test:assertFail(msg = result.message());
     } else {
         var output = "";
+        io:println(result);
+
     }  
 }
 
@@ -1061,6 +1067,7 @@ function test_listPermissions(){
         test:assertFail(msg = result.message());
     } else {
         var output = "";
+        io:println(result);
     } 
 }
 
@@ -1082,12 +1089,14 @@ function test_getPermission(){
         test:assertFail(msg = result.message());
     } else {
         var output = "";
+        io:println(result);
     }
 }
 
 @test:Config{
     groups: ["permission"], 
-    dependsOn: ["test_createPermission", "test_getPermission", "test_listPermissions", "test_replacePermission"]
+    dependsOn: ["test_createPermission", "test_getPermission", "test_listPermissions", "test_replacePermission"],
+    enable: false
 }
 function test_deletePermission(){
     log:printInfo("ACTION : deletePermission()");
@@ -1103,6 +1112,7 @@ function test_deletePermission(){
         test:assertFail(msg = result.message());
     } else {
         var output = "";
+        io:println(result);
     } 
 }
 
@@ -1150,10 +1160,10 @@ function test_replaceOffer(){
         content: {  
             "offerThroughput": 600
         },  
-        'resource: string `dbs/${database._rid.toString()}/colls/${container._rid.toString()}/`,  
-        offerResourceId: string `${container._rid.toString()}`, 
+        'resource: string `dbs/${database?._rid.toString()}/colls/${container?._rid.toString()}/`,  
+        offerResourceId: string `${container?._rid.toString()}`, 
         id: offerList.offers[0].id, 
-        _rid: offerList.offers[0]._rid 
+        _rid: offerList.offers[0]["_rid"] 
     };
     var result = AzureCosmosClient->replaceOffer(replaceOfferBody);  
     if result is error {
@@ -1172,7 +1182,7 @@ function test_queryOffer(){
 
     Client AzureCosmosClient = new(config);
     Query offerQuery = {
-    query: string `SELECT * FROM ${container.id} WHERE (${container.id}["_self"]) = ${container._self.toString()} "`
+    query: string `SELECT * FROM ${container.id} WHERE (${container.id}["_self"]) = ${container?._self.toString()} "`
     };
     var result = AzureCosmosClient->queryOffer(offerQuery);   
     if result is error {
@@ -1181,6 +1191,58 @@ function test_queryOffer(){
         var output = "";
     }  
 }
+
+///using resource token
+@test:Config{
+    groups: ["permission"], 
+    dependsOn: ["test_createPermission"]
+}
+function test_getCollection_Resource_Token(){
+    log:printInfo("ACTION : createCollection_Resource_Token()");
+
+    Client AzureCosmosClient = new(config);
+    @tainted ResourceProperties resourceProperty = {
+        databaseId: database.id
+    };
+    string permissionUserId = test_user.id;
+    string permissionId = permission.id;
+    var result = AzureCosmosClient->getPermission(resourceProperty, permissionUserId, permissionId);  
+    if result is error {
+        test:assertFail(msg = result.message());
+    } else {
+        if result?._token is string {
+            AzureCosmosConfiguration configdb = {
+                baseUrl : getConfigValue("BASE_URL"), 
+                keyOrResourceToken : result?._token.toString(), 
+                host : getConfigValue("HOST"), 
+                tokenType : "resource", 
+                tokenVersion : getConfigValue("TOKEN_VERSION"), 
+                secureSocketConfig :{
+                                        trustStore: {
+                                        path: getConfigValue("b7a_home") + "/bre/security/ballerinaTruststore.p12", 
+                                        password: getConfigValue("SSL_PASSWORD")
+                                        }
+                                    }
+            };
+
+            Client AzureCosmosClientDatabase = new(configdb);
+
+            @tainted ResourceProperties getCollection = {
+                databaseId: database.id, 
+                containerId: container.id
+            };
+            var resultdb = AzureCosmosClientDatabase->getContainer(getCollection);
+            if resultdb is error {
+                test:assertFail(msg = resultdb.message());
+            } else {
+                var output = "";
+                io:println(resultdb);
+            }
+        }
+       
+    }
+}
+
 
 function getConfigValue(string key) returns string {
     return (system:getEnv(key) != "") ? system:getEnv(key) : config:getAsString(key);

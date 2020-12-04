@@ -1,11 +1,11 @@
 import ballerina/java;
 import ballerina/time;
-import ballerina/crypto;
-import ballerina/encoding;
 import ballerina/http;
 import ballerina/stringutils;
 import ballerina/lang.'string as str;
-import ballerina/io;
+import ballerina/crypto;
+import ballerina/encoding;
+//import ballerina/io;
 import ballerina/lang.array as array; 
 
 # To handle sucess or error reponses to requests
@@ -235,6 +235,15 @@ public function setRequestOptions(http:Request request, RequestHeaderOptions req
     return request;
 }
 
+# To set the optional header related to expiration period value
+# + request - http:Request to set the header
+# + validationPeriod - the time to live value for the permission
+# + return -  returns the header value in string.
+public function setExpiryHeader(http:Request request, int validationPeriod) returns http:Request {
+    request.setHeader(EXPIRY_HEADER, validationPeriod.toString());
+    return request;
+}
+
 # To attach required basic headers to call REST endpoint
 # + request - http:Request to add headers to
 # + host - the host of the Azure resource
@@ -251,10 +260,17 @@ HeaderParameters params) returns http:Request|error {
     request.setHeader(CONNECTION_HEADER,"keep-alive");
     string?|error date = getTime();
     if date is string {
-        string? s = check generateToken(params.verb, params.resourceType, params.resourceId, keyToken, tokenType, tokenVersion,date);
+        string? signature = ();
+        if tokenType.toLowerAscii() == "master" {
+            signature = check generateMasterTokenSignature(params.verb, params.resourceType, params.resourceId, keyToken, tokenType, tokenVersion,date);
+        } else if tokenType.toLowerAscii() == "resource" {
+            signature = check encoding:encodeUriComponent(keyToken, "UTF-8"); 
+        } else {
+            return prepareError("ResourceType is incorrect/null");
+        }
         request.setHeader(DATE_HEADER,date);
-        if s is string {
-            request.setHeader(AUTHORIZATION_HEADER,s);
+        if signature is string {
+            request.setHeader(AUTHORIZATION_HEADER,signature);
         } else {
             return prepareError("Authorization token is null");
         }
@@ -277,6 +293,31 @@ string tokenVersion) returns string? {
     var token = generateTokenJ(java:fromString(verb), java:fromString(resourceType), java:fromString(resourceId),
     java:fromString(keyToken), java:fromString(tokenType), java:fromString(tokenVersion));
     return java:toString(token);
+}
+
+# To construct the hashed token signature for a token to set  'Authorization' header
+# + verb - HTTP verb, such as GET, POST, or PUT
+# + resourceType - identifies the type of resource that the request is for, Eg. "dbs", "colls", "docs"
+# + resourceId -dentity property of the resource that the request is directed at
+# + keyToken - master or resource token
+# + tokenType - denotes the type of token: master or resource.
+# + tokenVersion - denotes the version of the token, currently 1.0.
+# + date - current GMT date and time
+# + return - If successful, returns string which is the  hashed token signature. Else returns (). 
+public function generateMasterTokenSignature(string verb, string resourceType, string resourceId, string keyToken, string tokenType, 
+string tokenVersion, string date) returns string?|error {    
+    string authorization;
+    string payload = verb.toLowerAscii()+"\n" + resourceType.toLowerAscii() + "\n" + resourceId + "\n"
+    + date.toLowerAscii() +"\n" + "" + "\n";
+    var decoded = array:fromBase64(keyToken);
+    if decoded is byte[] {
+        byte[] digest = crypto:hmacSha256(payload.toBytes(),decoded);
+        string signature = array:toBase64(digest);
+        authorization = 
+        check encoding:encodeUriComponent(string `type=${tokenType}&ver=${tokenVersion}&sig=${signature}`, "UTF-8");   
+        return authorization;
+    } else {     
+    }
 }
 
 # To construct the hashed token signature for a token 
@@ -343,32 +384,6 @@ public function getResourceIdForOffer(string url) returns string {
         resourceId = str:substring(url, i+1);
     }  
     return resourceId.toLowerAscii();
-}
-
-# To construct the hashed token signature for a token to set  'Authorization' header
-# + verb - HTTP verb, such as GET, POST, or PUT
-# + resourceType - identifies the type of resource that the request is for, Eg. "dbs", "colls", "docs"
-# + resourceId -dentity property of the resource that the request is directed at
-# + keyToken - master or resource token
-# + tokenType - denotes the type of token: master or resource.
-# + tokenVersion - denotes the version of the token, currently 1.0.
-# + date - current GMT date and time
-# + return - If successful, returns string which is the  hashed token signature. Else returns (). 
-public function generateToken(string verb, string resourceType, string resourceId, string keyToken, string tokenType, 
-string tokenVersion, string date) returns string?|error {    
-    string authorization;
-    string payload = verb.toLowerAscii()+"\n" + resourceType.toLowerAscii() + "\n" + resourceId + "\n"
-    + date.toLowerAscii() +"\n" + "" + "\n";
-    var decoded = array:fromBase64(keyToken);
-    if decoded is byte[] {
-        byte[] digest = crypto:hmacSha256(payload.toBytes(),decoded);
-        string signature = array:toBase64(digest);
-        authorization = 
-        check encoding:encodeUriComponent(string `type=${tokenType}&ver=${tokenVersion}&sig=${signature}`, "UTF-8");   
-        return authorization;
-    } else {     
-        io:println("Decoding error");
-    }
 }
 
 function generateTokenJ(handle verb, handle resourceType, handle resourceId, handle keyToken, handle tokenType, 

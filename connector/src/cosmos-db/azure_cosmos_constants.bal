@@ -47,6 +47,8 @@ const string PARTITIONKEY_RANGE_HEADER = "x-ms-documentdb-partitionkeyrangeid";
 const string ISQUERY_HEADER = "x-ms-documentdb-isquery";
 const string PARTITION_KEY_HEADER = "x-ms-documentdb-partitionkey";
 
+const string EXPIRY_HEADER = "x-ms-documentdb-expiry-seconds";
+
 # Constant fields of Azure SQL API REST response  headers.
 const string CONTINUATION_HEADER = "x-ms-continuation";
 const string SESSION_TOKEN_HEADER = "x-ms-session-token";
