@@ -29,6 +29,9 @@ public  client class Client {
     # + return - If successful, returns Database. Else returns error.  
     public remote function createDatabase(string databaseId, ThroughputProperties? throughputProperties = ()) returns 
     @tainted Database|error {
+        if self.keyType == TOKEN_TYPE_RESOURCE {
+            return prepareError("Enter a valid master key and token type should be master key");
+        }
         json jsonPayload;
         http:Request request = new;
         string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES]);
@@ -51,6 +54,9 @@ public  client class Client {
     # + return - If successful, returns Database. Else returns error.  
     public remote function createDatabaseIfNotExist(string databaseId, ThroughputProperties? throughputProperties = ()) 
     returns @tainted Database?|error {
+        if self.keyType == TOKEN_TYPE_RESOURCE {
+            return prepareError("Enter a valid master key and token type should be master key");
+        }
         var result = self->getDatabase(databaseId);
         if result is error{
             return self->createDatabase(databaseId, throughputProperties);
@@ -62,6 +68,9 @@ public  client class Client {
     # + databaseId -  id/name of the database 
     # + return - If successful, returns Database. Else returns error.  
     public remote function getDatabase(string databaseId) returns @tainted Database|error {
+        if self.keyType == TOKEN_TYPE_RESOURCE {
+            return prepareError("Enter a valid master key and token type should be master key");
+        }
         http:Request request = new;
         string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES, databaseId]);
         HeaderParameters header = mapParametersToHeaderType(GET, requestPath);
@@ -74,6 +83,9 @@ public  client class Client {
     # To list all databases inside a resource
     # + return - If successful, returns DatabaseList. else returns error.  
     public remote function getAllDatabases() returns @tainted DatabaseList|error {
+        if self.keyType == TOKEN_TYPE_RESOURCE {
+            return prepareError("Enter a valid master key and token type should be master key");
+        }
         http:Request request = new;
         string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES]);
         HeaderParameters header = mapParametersToHeaderType(GET, requestPath);
@@ -87,6 +99,9 @@ public  client class Client {
     # + databaseId -  id/name of the database to retrieve
     # + return - If successful, returns boolean specifying 'true' if delete is sucessful. Else returns error. 
     public remote function deleteDatabase(string databaseId) returns @tainted boolean|error {
+        if self.keyType == TOKEN_TYPE_RESOURCE {
+            return prepareError("Enter a valid master key and token type should be master key");
+        }
         http:Request request = new;
         string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES, databaseId]);
         HeaderParameters header = mapParametersToHeaderType(DELETE, requestPath);
@@ -553,6 +568,9 @@ public  client class Client {
     # + return - If successful, returns a User. Else returns error.
     public remote function createUser(@tainted ResourceProperties properties, string userId) returns @tainted 
     User|error {
+        if self.keyType == TOKEN_TYPE_RESOURCE {
+            return prepareError("Enter a valid master key and token type should be master key");
+        }
         http:Request request = new;
         string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES, properties.databaseId, RESOURCE_PATH_USER]);       
         HeaderParameters header = mapParametersToHeaderType(POST, requestPath);
@@ -573,6 +591,9 @@ public  client class Client {
     # + return - If successful, returns a User. Else returns error.
     public remote function replaceUserId(@tainted ResourceProperties properties, string userId, string newUserId) returns 
     @tainted User|error {
+        if self.keyType == TOKEN_TYPE_RESOURCE {
+            return prepareError("Enter a valid master key and token type should be master key");
+        }
         http:Request request = new;
         string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES, properties.databaseId, RESOURCE_PATH_USER, userId]);       
         HeaderParameters header = mapParametersToHeaderType(PUT, requestPath);
@@ -591,6 +612,9 @@ public  client class Client {
     # + userId - the id of user to get information
     # + return - If successful, returns a User. Else returns error.
     public remote function getUser(@tainted ResourceProperties properties, string userId) returns @tainted User|error {
+        if self.keyType == TOKEN_TYPE_RESOURCE {
+            return prepareError("Enter a valid master key and token type should be master key");
+        }
         http:Request request = new;
         string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES, properties.databaseId, RESOURCE_PATH_USER, userId]);
         HeaderParameters header = mapParametersToHeaderType(GET, requestPath);
@@ -604,6 +628,9 @@ public  client class Client {
     # + properties - object of type ResourceProperties
     # + return - If successful, returns a UserList. Else returns error.
     public remote function listUsers(@tainted ResourceProperties properties) returns @tainted UserList|error {
+        if self.keyType == TOKEN_TYPE_RESOURCE {
+            return prepareError("Enter a valid master key and token type should be master key");
+        }
         http:Request request = new;
         string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES, properties.databaseId, RESOURCE_PATH_USER]);
         HeaderParameters header = mapParametersToHeaderType(GET, requestPath);
@@ -619,6 +646,9 @@ public  client class Client {
     # + return - If successful, returns boolean specifying 'true' if delete is sucessful. Else returns error. 
     public remote function deleteUser(@tainted ResourceProperties properties, string userId) returns @tainted 
     boolean|error {
+        if self.keyType == TOKEN_TYPE_RESOURCE {
+            return prepareError("Enter a valid master key and token type should be master key");
+        }
         http:Request request = new;
         string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES, properties.databaseId, RESOURCE_PATH_USER, userId]);       
         HeaderParameters header = mapParametersToHeaderType(DELETE, requestPath);
@@ -635,6 +665,9 @@ public  client class Client {
     # + return - If successful, returns a Permission. Else returns error.
     public remote function createPermission(@tainted ResourceProperties properties, string userId, Permission permission, 
     int? validityPeriod = ()) returns @tainted Permission|error {
+        if self.keyType == TOKEN_TYPE_RESOURCE {
+            return prepareError("Enter a valid master key and token type should be master key");
+        }
         http:Request request = new;
         string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES, properties.databaseId, RESOURCE_PATH_USER, userId, 
         RESOURCE_PATH_PERMISSION]);       
@@ -657,6 +690,9 @@ public  client class Client {
     # + return - If successful, returns a Permission. Else returns error.
     public remote function replacePermission(@tainted ResourceProperties properties, string userId, @tainted 
     Permission permission, int? validityPeriod = ()) returns @tainted Permission|error {
+        if self.keyType == TOKEN_TYPE_RESOURCE {
+            return prepareError("Enter a valid master key and token type should be master key");
+        }
         http:Request request = new;
         string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES, properties.databaseId, RESOURCE_PATH_USER, userId, 
         RESOURCE_PATH_PERMISSION, permission.id]);       
@@ -677,6 +713,9 @@ public  client class Client {
     # + return - If successful, returns a PermissionList. Else returns error.
     public remote function listPermissions(@tainted ResourceProperties properties, string userId) returns @tainted 
     PermissionList|error {
+        if self.keyType == TOKEN_TYPE_RESOURCE {
+            return prepareError("Enter a valid master key and token type should be master key");
+        }
         http:Request request = new;
         string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES, properties.databaseId, RESOURCE_PATH_USER, userId, 
         RESOURCE_PATH_PERMISSION]);       
@@ -694,6 +733,9 @@ public  client class Client {
     # + return - If successful, returns a Permission. Else returns error.
     public remote function getPermission(@tainted ResourceProperties properties, string userId, string permissionId)
     returns @tainted Permission|error {
+        if self.keyType == TOKEN_TYPE_RESOURCE {
+            return prepareError("Enter a valid master key and token type should be master key");
+        }
         http:Request request = new;
         string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES, properties.databaseId, RESOURCE_PATH_USER, userId, RESOURCE_PATH_PERMISSION, permissionId]);       
         HeaderParameters header = mapParametersToHeaderType(GET, requestPath);
@@ -710,6 +752,9 @@ public  client class Client {
     # + return - If successful, returns boolean specifying 'true' if delete is sucessful. Else returns error. 
     public remote function deletePermission(@tainted ResourceProperties properties, string userId, string permissionId) 
     returns @tainted boolean|error {
+        if self.keyType == TOKEN_TYPE_RESOURCE {
+            return prepareError("Enter a valid master key and token type should be master key");
+        }
         http:Request request = new;
         string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES, properties.databaseId, RESOURCE_PATH_USER, userId, 
         RESOURCE_PATH_PERMISSION, permissionId]);       

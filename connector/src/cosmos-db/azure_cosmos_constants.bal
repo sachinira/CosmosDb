@@ -60,3 +60,7 @@ const string ETAG_HEADER = "etag";
 
 # Constant field for GMT time zone
 const string GMT_ZONE = "Europe/London";
+
+#Token Type constants
+const string TOKEN_TYPE_MASTER = "master";
+const string TOKEN_TYPE_RESOURCE = "resource";

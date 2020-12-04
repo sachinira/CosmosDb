@@ -261,9 +261,9 @@ HeaderParameters params) returns http:Request|error {
     string?|error date = getTime();
     if date is string {
         string? signature = ();
-        if tokenType.toLowerAscii() == "master" {
+        if tokenType.toLowerAscii() == TOKEN_TYPE_MASTER {
             signature = check generateMasterTokenSignature(params.verb, params.resourceType, params.resourceId, keyToken, tokenType, tokenVersion,date);
-        } else if tokenType.toLowerAscii() == "resource" {
+        } else if tokenType.toLowerAscii() == TOKEN_TYPE_RESOURCE {
             signature = check encoding:encodeUriComponent(keyToken, "UTF-8"); 
         } else {
             return prepareError("ResourceType is incorrect/null");

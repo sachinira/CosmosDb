@@ -1239,7 +1239,6 @@ function test_getCollection_Resource_Token(){
                 io:println(resultdb);
             }
         }
-       
     }
 }
 
