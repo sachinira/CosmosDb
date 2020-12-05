@@ -39,7 +39,7 @@ function test_createDatabase(){
 
     var uuid = createRandomUUID();
     string createDatabaseId = string `database-${uuid.toString()}`;
-    Client|error AzureCosmosClient = new(config);
+    Client AzureCosmosClient = new(config);
     var result = AzureCosmosClient->createDatabase(createDatabaseId);
     if result is error {
         test:assertFail(msg = result.message());
@@ -56,7 +56,7 @@ function test_createDatabase(){
 function test_createDatabaseIfNotExist(){
     log:printInfo("ACTION : createIfNotExist()");
 
-    Client|error AzureCosmosClient = new(config);
+    Client AzureCosmosClient = new(config);
     var uuid = createRandomUUID();
     string createDatabaseId = string `databasee-${uuid.toString()}`;
     var result = AzureCosmosClient->createDatabaseIfNotExist(createDatabaseId);
@@ -97,7 +97,7 @@ function test_createDatabaseWithManualThroughput(){
 function test_createDBWithAutoscalingThroughput(){
     log:printInfo("ACTION : createDBWithAutoscalingThroughput()");
 
-    Client|error AzureCosmosClient = new(config);
+    Client AzureCosmosClient = new(config);
 
     var uuid = createRandomUUID();
     string createDatabaseAutoId = string `databasea-${uuid.toString()}`;
@@ -120,7 +120,7 @@ function test_createDBWithAutoscalingThroughput(){
 function test_createDatabaseWithBothHeaders(){
     log:printInfo("ACTION : createDatabaseWithBothHeaders()");
 
-    Client|error AzureCosmosClient = new(config);
+    Client AzureCosmosClient = new(config);
     var uuid = createRandomUUID();
     string createDatabaseBothId = string `database-${uuid.toString()}`;
     ThroughputProperties tp = {
@@ -130,6 +130,8 @@ function test_createDatabaseWithBothHeaders(){
     var result = AzureCosmosClient->createDatabase(createDatabaseBothId,  tp);
     if result is error {
         var output = "";
+                io:println(result);
+
     } else {
         test:assertFail(msg = "Created database with both throughput values!!");
     }
@@ -141,10 +143,12 @@ function test_createDatabaseWithBothHeaders(){
 function test_listAllDatabases(){
     log:printInfo("ACTION : listAllDatabases()");
 
-    Client|error AzureCosmosClient = new(config);
+    Client AzureCosmosClient = new(config);
     var result = AzureCosmosClient->getAllDatabases();
     if result is DatabaseList {
         databaseList = <@untainted>result;
+                io:println(result);
+
     } else {
         test:assertFail(msg = result.message());
     }
@@ -157,7 +161,7 @@ function test_listAllDatabases(){
 function test_listOneDatabase(){
     log:printInfo("ACTION : listOneDatabase()");
 
-    Client|error AzureCosmosClient = new(config);
+    Client AzureCosmosClient = new(config);
     var result = AzureCosmosClient->getDatabase(databaseList.databases[0].id);
     if result is error {
         test:assertFail(msg = result.message());
@@ -208,12 +212,14 @@ function test_listOneDatabase(){
 function test_deleteDatabase(){
     log:printInfo("ACTION : deleteDatabase()");
 
-    Client|error AzureCosmosClient = new(config);
+    Client AzureCosmosClient = new(config);
     var result = AzureCosmosClient->deleteDatabase(databaseList.databases[databaseList.databases.length()-1].id);
     if result is error {
         test:assertFail(msg = result.message());
     } else {
         var output = "";
+                io:println(result);
+
     }
 }
 
@@ -329,6 +335,8 @@ function test_getOneContainer(){
         test:assertFail(msg = result.message());
     } else {
         var output = "";
+                io:println(result);
+
     }
 }
 
@@ -342,6 +350,8 @@ function test_getAllContainers(){
     var result = database->getAllContainers(database.id);
     if (result is ContainerList) {
         containerList = <@untainted>result;
+                io:println(result);
+
     } else {
         test:assertFail(msg = result.message());
     }
@@ -385,6 +395,8 @@ function test_deleteContainer(){
         test:assertFail(msg = result.message());
     } else {
         var output = "";
+                io:println(result);
+
     }
 }
 
@@ -403,6 +415,8 @@ function test_GetPartitionKeyRanges(){
         test:assertFail(msg = result.message());
     } else {
         var output = "";
+                io:println(result);
+
     }   
 }
 
@@ -466,6 +480,8 @@ function test_createDocument(){
     var result = container->createDocument(resourceProperty,  createDoc,  options);
     if result is Document {
         document = <@untainted>result;
+                io:println(result);
+
     } else {
         test:assertFail(msg = result.message());
     }   
@@ -488,6 +504,8 @@ function test_getDocumentList(){
         test:assertFail(msg = result.message());
     } else {
         var output = "";
+                io:println(result);
+
     }
 }
 
@@ -511,6 +529,8 @@ function test_GetOneDocument(){
         test:assertFail(msg = result.message());
     } else {
         var output = "";
+                io:println(result);
+
     }  
 }
 
@@ -534,6 +554,8 @@ function test_deleteDocument(){
         test:assertFail(msg = result.message());
     } else {
         var output = "";
+                io:println(result);
+
     }  
 }
 
@@ -560,6 +582,8 @@ function test_queryDocuments(){
         test:assertFail(msg = result.message());
     } else {
         var output = "";
+                io:println(result);
+
     }   
 }
 
@@ -583,6 +607,8 @@ function test_createStoredProcedure(){
     var result = container->createStoredProcedure(resourceProperty, sp);  
     if result is StoredProcedure {
         storedPrcedure = <@untainted> result;
+                io:println(result);
+
     } else {
         test:assertFail(msg = result.message());
     }   
@@ -609,6 +635,8 @@ function test_replaceStoredProcedure(){
         test:assertFail(msg = result.message());
     } else {
         var output = "";
+                io:println(result);
+
     }   
 }
 
@@ -628,6 +656,8 @@ function test_getAllStoredProcedures(){
         test:assertFail(msg = result.message());
     } else {
         var output = "";
+                io:println(result);
+
     }  
 }
 
@@ -649,6 +679,8 @@ function test_executeOneStoredProcedure(){
         test:assertFail(msg = result.message());
     } else {
         var output = "";
+                io:println(result);
+
     }        
 }
 
@@ -669,6 +701,8 @@ function test_deleteOneStoredProcedure(){
         test:assertFail(msg = result.message());
     } else {
         var output = "";
+                io:println(result);
+
     }   
 }
 
@@ -693,6 +727,8 @@ function test_createUDF(){
     var result = container->createUserDefinedFunction(resourceProperty, createUdf);  
     if result is UserDefinedFunction {
         udf = <@untainted> result;
+                io:println(result);
+
     } else {
         test:assertFail(msg = result.message());
     }   
@@ -719,6 +755,8 @@ function test_replaceUDF(){
         test:assertFail(msg = result.message());
     } else {
         var output = "";
+                io:println(result);
+
     }   
 }
 
@@ -738,6 +776,8 @@ function test_listAllUDF(){
         test:assertFail(msg = result.message());
     } else {
         var output = "";
+                io:println(result);
+
     }  
 }
 
@@ -758,6 +798,8 @@ function test_deleteUDF(){
         test:assertFail(msg = result.message());
     } else {
         var output = "";
+                io:println(result);
+
     }
 }
 
@@ -786,6 +828,8 @@ function test_createTrigger(){
     var result = container->createTrigger(resourceProperty, createTrigger);  
     if result is Trigger {
         trigger = <@untainted>result;
+                io:println(result);
+
     } else {
         test:assertFail(msg = result.message());
     }   
@@ -816,6 +860,8 @@ function test_replaceTrigger(){
         test:assertFail(msg = result.message());
     } else {
         var output = "";
+                io:println(result);
+
     }   
 }
 
@@ -835,6 +881,8 @@ function test_listTriggers(){
         test:assertFail(msg = result.message());
     } else {
         var output = "";
+                io:println(result);
+
     } 
 }
 
@@ -855,6 +903,8 @@ function test_deleteTrigger(){
         test:assertFail(msg = result.message());
     } else {
         var output = "";
+                io:println(result);
+
     } 
 }
 
@@ -865,7 +915,7 @@ function test_deleteTrigger(){
 function test_createUser(){
     log:printInfo("ACTION : createUser()");
 
-    Client|error AzureCosmosClient = new(config);
+    Client AzureCosmosClient = new(config);
     var uuid = createRandomUUID();
     @tainted ResourceProperties resourceProperty = {
         databaseId: database.id
@@ -874,6 +924,8 @@ function test_createUser(){
     var result = AzureCosmosClient->createUser(resourceProperty, userId);  
     if result is User {
         test_user = <@untainted>result;
+                io:println(result);
+
     } else {
         test:assertFail(msg = result.message());
     }   
@@ -887,7 +939,7 @@ function test_createUser(){
 function test_replaceUserId(){
     log:printInfo("ACTION : replaceUserId()");
 
-    Client|error AzureCosmosClient = new(config);
+    Client AzureCosmosClient = new(config);
     var uuid = createRandomUUID();
     string newReplaceId = string `user-${uuid.toString()}`;
     @tainted ResourceProperties resourceProperty = {
@@ -899,6 +951,8 @@ function test_replaceUserId(){
         test:assertFail(msg = result.message());
     } else {
         var output = "";
+                io:println(result);
+
     }  
 }
 
@@ -911,7 +965,7 @@ function test_getUser(){
 io:println(database.id);
 io:println(test_user.id);
 
-    Client|error AzureCosmosClient = new(config);
+    Client AzureCosmosClient = new(config);
     @tainted ResourceProperties resourceProperty = {
         databaseId: database.id
     };
@@ -921,6 +975,8 @@ io:println(test_user.id);
         test:assertFail(msg = result.message());
     } else {
         var output = "";
+                io:println(result);
+
     }  
 }
 
@@ -931,7 +987,7 @@ io:println(test_user.id);
 function test_listUsers(){
     log:printInfo("ACTION : listUsers()");
 
-    Client|error AzureCosmosClient = new(config);
+    Client AzureCosmosClient = new(config);
     @tainted ResourceProperties resourceProperty = {
         databaseId: database.id
     };
@@ -940,6 +996,8 @@ function test_listUsers(){
         test:assertFail(msg = result.message());
     } else {
         var output = "";
+                io:println(result);
+
     } 
 }
 
@@ -961,7 +1019,7 @@ function test_listUsers(){
 function test_deleteUser(){
     log:printInfo("ACTION : deleteUser()");
 
-    Client|error AzureCosmosClient = new(config);
+    Client AzureCosmosClient = new(config);
     string deleteUserId = test_user.id;
     @tainted ResourceProperties resourceProperty = {
         databaseId: database.id
@@ -971,6 +1029,8 @@ function test_deleteUser(){
         test:assertFail(msg = result.message());
     } else {
         var output = "";
+                io:println(result);
+
     } 
 }
 
@@ -982,7 +1042,7 @@ function test_deleteUser(){
 function test_createPermission(){
     log:printInfo("ACTION : createPermission()");
 
-    Client|error AzureCosmosClient = new(config);
+    Client AzureCosmosClient = new(config);
     var uuid = createRandomUUID();
     @tainted ResourceProperties resourceProperty = {
         databaseId: database.id
@@ -1014,7 +1074,7 @@ function test_createPermission(){
 function test_replacePermission(){
     log:printInfo("ACTION : replacePermission()");
 
-    Client|error AzureCosmosClient = new(config);
+    Client AzureCosmosClient = new(config);
     @tainted ResourceProperties resourceProperty = {
         databaseId: database.id
     };
@@ -1045,7 +1105,7 @@ function test_replacePermission(){
 function test_listPermissions(){
     log:printInfo("ACTION : listPermissions()");
 
-    Client|error AzureCosmosClient = new(config);
+    Client AzureCosmosClient = new(config);
     @tainted ResourceProperties resourceProperty = {
         databaseId: database.id
     };
@@ -1066,7 +1126,7 @@ function test_listPermissions(){
 function test_getPermission(){
     log:printInfo("ACTION : getPermission()");
 
-    Client|error AzureCosmosClient = new(config);
+    Client AzureCosmosClient = new(config);
     @tainted ResourceProperties resourceProperty = {
         databaseId: database.id
     };
@@ -1089,7 +1149,7 @@ function test_getPermission(){
 function test_deletePermission(){
     log:printInfo("ACTION : deletePermission()");
 
-    Client|error AzureCosmosClient = new(config);
+    Client AzureCosmosClient = new(config);
     @tainted ResourceProperties resourceProperty = {
         databaseId: database.id
     };
@@ -1110,10 +1170,12 @@ function test_deletePermission(){
 function test_listOffers(){
     log:printInfo("ACTION : listOffers()");
 
-    Client|error AzureCosmosClient = new(config);
+    Client AzureCosmosClient = new(config);
     var result = AzureCosmosClient->listOffers();  
     if result is OfferList {
         offerList = <@untainted>result;
+                io:println(result);
+
     } else {
         test:assertFail(msg = result.message());
     }   
@@ -1126,12 +1188,14 @@ function test_listOffers(){
 function test_getOffer(){
     log:printInfo("ACTION : getOffer()");
 
-    Client|error AzureCosmosClient = new(config);
+    Client AzureCosmosClient = new(config);
     var result = AzureCosmosClient->getOffer(offerList.offers[0].id);  
     if result is error {
         test:assertFail(msg = result.message());
     } else {
         var output = "";
+                io:println(result);
+
     }  
 }
 
@@ -1141,7 +1205,7 @@ function test_getOffer(){
 function test_replaceOffer(){
     log:printInfo("ACTION : replaceOffer()");
 
-    Client|error AzureCosmosClient = new(config);
+    Client AzureCosmosClient = new(config);
     Offer replaceOfferBody = {
         offerVersion: "V2", 
         offerType: "Invalid",    
@@ -1158,6 +1222,8 @@ function test_replaceOffer(){
         test:assertFail(msg = result.message());
     } else {
         var output = "";
+                io:println(result);
+
     } 
 }
 
@@ -1168,7 +1234,7 @@ function test_replaceOffer(){
 function test_queryOffer(){
     log:printInfo("ACTION : queryOffer()");
 
-    Client|error AzureCosmosClient = new(config);
+    Client AzureCosmosClient = new(config);
     Query offerQuery = {
     query: string `SELECT * FROM ${container.id} WHERE (${container.id}["_self"]) = ${container._self.toString()} "`
     };
@@ -1177,6 +1243,8 @@ function test_queryOffer(){
         test:assertFail(msg = result.message());
     } else {
         var output = "";
+                io:println(result);
+
     }  
 }
 
@@ -1188,7 +1256,7 @@ function test_queryOffer(){
 function test_getCollection_Resource_Token(){
     log:printInfo("ACTION : createCollection_Resource_Token()");
 
-    Client|error AzureCosmosClient = new(config);
+    Client AzureCosmosClient = new(config);
     @tainted ResourceProperties resourceProperty = {
         databaseId: database.id
     };

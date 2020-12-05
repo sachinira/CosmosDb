@@ -12,7 +12,7 @@ public  client class Client {
     AzureCosmosConfiguration azureConfig;
     public http:Client azureCosmosClient;
 
-    function init(AzureCosmosConfiguration azureConfig) returns error? {
+    function init(AzureCosmosConfiguration azureConfig) {
         self.azureConfig = azureConfig;
         self.baseUrl = azureConfig.baseUrl;
         self.keyOrResourceToken = azureConfig.keyOrResourceToken;
@@ -21,9 +21,9 @@ public  client class Client {
         self.tokenVersion = azureConfig.tokenVersion;
         http:ClientConfiguration httpClientConfig = {secureSocket: azureConfig.secureSocketConfig};
         self.azureCosmosClient = new (self.baseUrl, httpClientConfig);
-        if self.keyType == TOKEN_TYPE_RESOURCE {
-            return prepareError("Enter a valid master key and token type should be master key");
-        }
+        // if self.keyType == TOKEN_TYPE_RESOURCE {
+        //     return prepareError("Enter a valid master key and token type should be master key");
+        // }
     }
 
     # To create a database inside a resource
