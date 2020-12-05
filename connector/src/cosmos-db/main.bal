@@ -1,5 +1,5 @@
 import ballerina/http;
-//import ballerina/io;
+
 # Azure Cosmos DB Client object.
 # + azureCosmosClient - The HTTP Client
 public  client class Client {
@@ -213,8 +213,6 @@ public  client class Client {
         [json, Headers] jsonreponse = check mapResponseToTuple(response);
         return mapJsonToPartitionKeyType(jsonreponse);
     }
-
-    //Replace Collection supports changing the indexing policy of a collection after creation. must be implemented here
 
     # To create a Document inside a collection
     # + properties - object of type ResourceProperties
