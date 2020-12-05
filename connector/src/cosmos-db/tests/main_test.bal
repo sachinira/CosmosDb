@@ -19,6 +19,8 @@ AzureCosmosConfiguration config = {
                         }
 };
 
+Client AzureCosmosClient = new(config);
+
 Database database = {};
 DatabaseList databaseList = {};
 Container container = {};
@@ -233,59 +235,81 @@ function test_createContainer(){
     } 
 }
 
-//@test:Config{
-//     enable: false
-// }
-// function createCollectionWithManualThroughputAndIndexingPolicy(){
-//     io:println("--------------Create Collection with manual throughput-----------------------\n\n");
+@test:Config{
+    groups: ["container"], 
+    dependsOn: ["test_createDatabase",  "test_createContainer"]
+}
+function test_createCollectionWithManualThroughputAndIndexingPolicy(){
+    log:printInfo("ACTION : createCollectionWithManualThroughputAndIndexingPolicy()");
+    
+    IndexingPolicy ip = {
+        indexingMode : "Consistent",
+        automatic : true,
+        includedPaths : [{
+            path : "*/",
+            indexes : [{
+                dataType: "String",  
+                precision: -1,  
+                kind: "Range"  
+            }]
+        }]
+    };
 
-//     Client AzureCosmosClient = new(config);
-//     json indexingPolicy =   {  
-//                                 "automatic": true,  
-//                                 "indexingMode": "Consistent",  
-//                                 "includedPaths": [  
-//                                     {  
-//                                         "path": "/*",  
-//                                         "indexes": [  
-//                                         {  
-//                                             "dataType": "String",  
-//                                             "precision": -1,  
-//                                             "kind": "Range"  
-//                                         }  
-//                                         ]  
-//                                     }  
-//                                 ]  
-//                             };
-    
-    
-//     ThroughputProperties tp = {};
-//     tp.throughput = 600; 
-//     PartitionKey pk = {};
-//     pk.paths = ["/AccountNumber"];
-//     pk.kind = "Hash";
-//     pk.'version = 2;
-//     ContainerProperties con = {};
-//     con.partitionKey = pk;
-//     con.databaseId = "hikall";
-//     con.containerId = "mycollect";
-//     var result = AzureCosmosClient->createContainer(con,  tp);
-//     if (result is Container) {
-//         io:println(result);
-//     } else {
-//         test:assertFail(msg = result.message());
-//     } 
-//     io:println("\n\n");
-// }
+    ThroughputProperties tp = {
+        throughput: 600
+    };
+    PartitionKey pk = {
+        paths: ["/AccountNumber"],
+        kind : "Hash",
+        'version : 2
+    };
+    var uuid = createRandomUUID();
+    @tainted ResourceProperties getCollection = {
+        databaseId: database.id, 
+        containerId: string `container-${uuid.toString()}`
+    };
+    var result = AzureCosmosClient->createContainer(getCollection, pk, ip, tp);
+    if (result is Container) {
+        io:println(result);
+    } else {
+        test:assertFail(msg = result.message());
+    } 
+}
  
+@test:Config{
+    groups: ["container"], 
+    dependsOn: ["test_createDatabase",  "test_getOneContainer"]
+}
+function test_createContainerIfNotExist(){
+    log:printInfo("ACTION : createContainerIfNotExist()");
+
+    var uuid = createRandomUUID();
+    @tainted ResourceProperties propertiesNewCollectionIfNotExist = {
+            databaseId: database.id, 
+            containerId: string `containere-${uuid.toString()}`
+    };
+    PartitionKey pk = {
+        paths: ["/AccountNumber"], 
+        kind :"Hash", 
+        'version: 2
+    };
+    var result = AzureCosmosClient->createContainerIfNotExist(propertiesNewCollectionIfNotExist, pk);
+    if (result is Container?) {
+        io:println(result);
+    } else {
+        test:assertFail(msg = result.message());
+    }
+}
+
 // @test:Config{
 //     groups: ["container"], 
 //     dependsOn: ["test_createDatabase",  "test_getOneContainer"]
 // }
-// function test_createContainerIfNotExist(string id){
+// function test_createContainerIfNotExist(){
 //     log:printInfo("ACTION : createContainerIfNotExist()");
-//     io:println(database.id);
 
 //     Client AzureCosmosClient = new(config);
+//     var uuid = createRandomUUID();
 //     @tainted ResourceProperties propertiesNewCollectionIfNotExist = {
 //             databaseId: database.id, 
 //             containerId: string `containere-${uuid.toString()}`
@@ -296,7 +320,7 @@ function test_createContainer(){
 //         'version: 2
 //     };
 //     var result = AzureCosmosClient->createContainerIfNotExist(propertiesNewCollectionIfNotExist, pk);
-//     if (result is Container?) {
+//     if result is Container? {
 //         io:println(result);
 //     } else {
 //         test:assertFail(msg = result.message());
