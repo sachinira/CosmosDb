@@ -1,11 +1,9 @@
-#   Supported HTTP methods.
  public const GET = "GET";
  public const PUT = "PUT";
  public const POST = "POST";
  public const PATCH = "PATCH";
  public const DELETE = "DELETE";
 
-# Holds the value for the resource types in Azure Cosmos db.
 const string RESOURCE_PATH_DATABASES = "dbs";
 const string RESOURCE_PATH_COLLECTIONS = "colls";
 const string RESOURCE_PATH_DOCUMENTS = "docs";
@@ -17,16 +15,12 @@ const string RESOURCE_PATH_USER = "users";
 const string RESOURCE_PATH_PERMISSION = "permissions";
 const string RESOURCE_PATH_OFFER = "offers";
 
-# Azure Cosmos DB Document API (REST) version
 final  string API_VERSION = "2018-12-31";
 
-# Constant field `FORWARD_SLASH`. Holds the value of "/".
 final  string FORWARD_SLASH = "/";
 
-# Constant field `FORWARD_SLASH`. Holds the value of "".
 final  string EMPTY_STRING = "";
 
-# Constant fields REST request headers.
 const string CONTENT_TYPE_HEADER = "Content-Type";
 const string API_VERSION_HEADER = "x-ms-version";
 const string HOST_HEADER = "Host";
@@ -46,10 +40,8 @@ const string IF_MATCH_HEADER = "If-Match";
 const string PARTITIONKEY_RANGE_HEADER = "x-ms-documentdb-partitionkeyrangeid";
 const string ISQUERY_HEADER = "x-ms-documentdb-isquery";
 const string PARTITION_KEY_HEADER = "x-ms-documentdb-partitionkey";
-
 const string EXPIRY_HEADER = "x-ms-documentdb-expiry-seconds";
 
-# Constant fields of Azure SQL API REST response  headers.
 const string CONTINUATION_HEADER = "x-ms-continuation";
 const string SESSION_TOKEN_HEADER = "x-ms-session-token";
 const string REQUEST_CHARGE_HEADER = "x-ms-request-charge";
@@ -58,9 +50,7 @@ const string ITEM_COUNT_HEADER = "x-ms-item-count";
 const string RESPONSE_DATE_HEADER = "Date";
 const string ETAG_HEADER = "etag";
 
-# Constant field for GMT time zone
 const string GMT_ZONE = "Europe/London";
 
-#Token Type constants
 const string TOKEN_TYPE_MASTER = "master";
 const string TOKEN_TYPE_RESOURCE = "resource";
