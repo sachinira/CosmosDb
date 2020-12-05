@@ -1,25 +1,14 @@
- public const GET = "GET";
- public const PUT = "PUT";
- public const POST = "POST";
- public const PATCH = "PATCH";
- public const DELETE = "DELETE";
-
-const string RESOURCE_PATH_DATABASES = "dbs";
-const string RESOURCE_PATH_COLLECTIONS = "colls";
-const string RESOURCE_PATH_DOCUMENTS = "docs";
-const string RESOURCE_PATH_STORED_POCEDURES = "sprocs";
-const string RESOURCE_PATH_PK_RANGES = "pkranges";
-const string RESOURCE_PATH_UDF = "udfs";
-const string RESOURCE_PATH_TRIGGER = "triggers";
-const string RESOURCE_PATH_USER = "users";
-const string RESOURCE_PATH_PERMISSION = "permissions";
-const string RESOURCE_PATH_OFFER = "offers";
-
-final  string API_VERSION = "2018-12-31";
-
+# Represents Forward slash
 final  string FORWARD_SLASH = "/";
 
+#Represents Empty string
 final  string EMPTY_STRING = "";
+
+# Represents Token type for a master token
+const string TOKEN_TYPE_MASTER = "master";
+
+# Represents Token type for a resource token
+const string TOKEN_TYPE_RESOURCE = "resource";
 
 const string CONTENT_TYPE_HEADER = "Content-Type";
 const string API_VERSION_HEADER = "x-ms-version";
@@ -52,5 +41,21 @@ const string ETAG_HEADER = "etag";
 
 const string GMT_ZONE = "Europe/London";
 
-const string TOKEN_TYPE_MASTER = "master";
-const string TOKEN_TYPE_RESOURCE = "resource";
+const string GET = "GET";
+const string PUT = "PUT";
+const string POST = "POST";
+const string PATCH = "PATCH";
+const string DELETE = "DELETE";
+
+const string RESOURCE_PATH_DATABASES = "dbs";
+const string RESOURCE_PATH_COLLECTIONS = "colls";
+const string RESOURCE_PATH_DOCUMENTS = "docs";
+const string RESOURCE_PATH_STORED_POCEDURES = "sprocs";
+const string RESOURCE_PATH_PK_RANGES = "pkranges";
+const string RESOURCE_PATH_UDF = "udfs";
+const string RESOURCE_PATH_TRIGGER = "triggers";
+const string RESOURCE_PATH_USER = "users";
+const string RESOURCE_PATH_PERMISSION = "permissions";
+const string RESOURCE_PATH_OFFER = "offers";
+
+final  string API_VERSION = "2018-12-31";

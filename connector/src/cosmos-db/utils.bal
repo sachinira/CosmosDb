@@ -7,18 +7,12 @@ import ballerina/crypto;
 import ballerina/encoding;
 import ballerina/lang.array as array; 
 
-// # To handle sucess or error reponses to requests
-// # + httpResponse - http:Response or http:ClientError returned from an http:Request
-// # + return - If successful, returns a tuple containing [json, Headers]
 function mapResponseToTuple(http:Response|http:ClientError httpResponse) returns @tainted [json, Headers]|error {
     var responseBody = check mapResponseToJson(httpResponse);
     var responseHeaders = check mapResponseHeadersToObject(httpResponse);
     return [responseBody,responseHeaders];
 }
-
-// # To handle sucess or error reponses to requests
-// # + httpResponse - http:Response or http:ClientError returned from an http:Request
-// # + return - If successful, returns json. Else returns error.  
+  
 function mapResponseToJson(http:Response|http:ClientError httpResponse) returns @tainted json|error { 
     if (httpResponse is http:Response) {
         var jsonResponse = httpResponse.getJsonPayload();
@@ -34,10 +28,7 @@ function mapResponseToJson(http:Response|http:ClientError httpResponse) returns 
         return prepareError("Error occurred while invoking the REST API");
     }
 }
-
-// # To handle the delete responses which return without a json payload
-// # + httpResponse - http:Response or http:ClientError returned from an http:Request
-// # + return - If successful, returns boolean. Else returns error.  
+ 
 function getDeleteResponse(http:Response|http:ClientError httpResponse) returns @tainted boolean|error {
     if (httpResponse is http:Response) {
         if(httpResponse.statusCode == http:STATUS_NO_CONTENT) {
@@ -55,10 +46,6 @@ function getDeleteResponse(http:Response|http:ClientError httpResponse) returns 
     }
 }
 
-// # To handle the delete responses which return without a json payload
-// # + httpResponse - http:Response or http:ClientError returned from an http:Request
-// # + errorResponse - the error response returned from the Azure endpoint
-// # + return -  returns error.
 function createResponseFailMessage(http:Response httpResponse, json errorResponse) returns error {
     string message = errorResponse.message.toString();
     string errorMessage = httpResponse.statusCode.toString() + " " + httpResponse.reasonPhrase; 
@@ -69,9 +56,6 @@ function createResponseFailMessage(http:Response httpResponse, json errorRespons
     return prepareError(errorMessage);
 }
 
-// # To return the response headers which are useful for the users for future operations
-// # + httpResponse - http:Response or http:ClientError returned from an http:Request
-// # + return -  returns object of type Headers.
 function mapResponseHeadersToObject(http:Response|http:ClientError httpResponse) returns @tainted Headers|error {
     Headers responseHeaders = {};
     if (httpResponse is http:Response) {
@@ -89,10 +73,6 @@ function mapResponseHeadersToObject(http:Response|http:ClientError httpResponse)
     }
 }
 
-// # To check if  the givn response header exist
-// # + httpResponse - http:Response or http:ClientError returned from an http:Request
-// # + headername - the name of header to check
-// # + return -  returns the header value in string.
 function getHeaderIfExist(http:Response httpResponse, string headername) returns @tainted string? {
     if httpResponse.hasHeader(headername) {
         return httpResponse.getHeader(headername);
@@ -101,9 +81,6 @@ function getHeaderIfExist(http:Response httpResponse, string headername) returns
     }
 }
 
-// # Returns the prepared URL.
-// # + paths - An array of paths prefixes
-// # + return - The prepared URL
 function prepareUrl(string[] paths) returns string {
     string url = EMPTY_STRING;
     if (paths.length() > 0) {
@@ -117,9 +94,6 @@ function prepareUrl(string[] paths) returns string {
     return <@untainted> url;
 }
 
-// # Convert json string values to boolean
-// # + value - json value which has reprsents boolean value
-// # + return - boolean value of specified json
 function convertToBoolean(json|error value) returns boolean { 
     if (value is json) {
         boolean|error result = 'boolean:fromString(value.toString());
@@ -130,9 +104,6 @@ function convertToBoolean(json|error value) returns boolean {
     return false;
 }
 
-// # Convert json string values to int
-// # + value - json value which has reprsents int value
-// # + return - int value of specified json
 function convertToInt(json|error value) returns int {
     if (value is json) {
         int|error result = 'int:fromString(value.toString());
@@ -143,17 +114,6 @@ function convertToInt(json|error value) returns int {
     return 0;
 }
 
-// function mergeTwoArrays(any[] array1, any[] array2) returns any[] {
-//     foreach any element in array2 {
-//        array1.push(element);
-//     }
-//     return array1;
-// }
-
-// # To set the optional headers related to throughput
-// # + request - http:Request to set the header
-// # + throughputProperties - an object of type ThroughputProperties
-// # + return -  returns the header value in string.
 public function setThroughputOrAutopilotHeader(http:Request request, ThroughputProperties? throughputProperties) returns 
 http:Request|error {
   if throughputProperties is ThroughputProperties {
@@ -169,27 +129,16 @@ http:Request|error {
     return request;
 }
 
-// # To set the optional header related to partitionkey value
-// # + request - http:Request to set the header
-// # + partitionKey - the value of the partition key
-// # + return -  returns the header value in string.
 public function setPartitionKeyHeader(http:Request request, any partitionKey) returns http:Request {
     request.setHeader(PARTITION_KEY_HEADER, string `[${partitionKey.toString()}]`);
     return request;
 }
 
-// # To set the optional header related to cross partition value
-// # + request - http:Request to set the header
-// # + isIgnore - boolean value if user enable or disable cross partitioning
-// # + return -  returns the header value in string.
 public function enableCrossPartitionKeyHeader(http:Request request, boolean isIgnore) returns http:Request|error {
     request.setHeader("x-ms-documentdb-query-enablecrosspartition", isIgnore.toString());
     return request;
 }
 
-// # To set the required headers related to query operations
-// # + request - http:Request to set the header
-// # + return -  returns the header value in string.
 public function setHeadersForQuery(http:Request request) returns http:Request|error {
     var header = request.setContentType("application/query+json");
     request.setHeader(ISQUERY_HEADER, "True");
@@ -234,23 +183,11 @@ public function setRequestOptions(http:Request request, RequestHeaderOptions req
     return request;
 }
 
-// # To set the optional header related to expiration period value
-// # + request - http:Request to set the header
-// # + validationPeriod - the time to live value for the permission
-// # + return -  returns the header value in string.
 public function setExpiryHeader(http:Request request, int validationPeriod) returns http:Request {
     request.setHeader(EXPIRY_HEADER, validationPeriod.toString());
     return request;
 }
-
-// # To attach required basic headers to call REST endpoint
-// # + request - http:Request to add headers to
-// # + host - the host of the Azure resource
-// # + keyToken - master or resource token
-// # + tokenType - denotes the type of token: master or resource.
-// # + tokenVersion - denotes the version of the token, currently 1.0.
-// # + params - an object of type HeaderParameters
-// # + return - If successful, returns same http:Request with newly appended headers. Else returns error.  
+ 
 public function setHeaders(http:Request request, string host, string keyToken, string tokenType, string tokenVersion,
 HeaderParameters params) returns http:Request|error {
     request.setHeader(API_VERSION_HEADER,params.apiVersion);
@@ -279,14 +216,6 @@ HeaderParameters params) returns http:Request|error {
     return request;
 }
 
-// # To construct the hashed token signature for a token to set  'Authorization' header
-// # + verb - HTTP verb, such as GET, POST, or PUT
-// # + resourceType - identifies the type of resource that the request is for, Eg. "dbs", "colls", "docs"
-// # + resourceId -dentity property of the resource that the request is directed at
-// # + keyToken - master or resource token
-// # + tokenType - denotes the type of token: master or resource.
-// # + tokenVersion - denotes the version of the token, currently 1.0.
-// # + return - If successful, returns string which is the  hashed token signature. Else returns ().  
 public function generateTokenNew(string verb, string resourceType, string resourceId, string keyToken, string tokenType, 
 string tokenVersion) returns string? {
     var token = generateTokenJ(java:fromString(verb), java:fromString(resourceType), java:fromString(resourceId),
@@ -294,15 +223,6 @@ string tokenVersion) returns string? {
     return java:toString(token);
 }
 
-// # To construct the hashed token signature for a token to set  'Authorization' header
-// # + verb - HTTP verb, such as GET, POST, or PUT
-// # + resourceType - identifies the type of resource that the request is for, Eg. "dbs", "colls", "docs"
-// # + resourceId -dentity property of the resource that the request is directed at
-// # + keyToken - master or resource token
-// # + tokenType - denotes the type of token: master or resource.
-// # + tokenVersion - denotes the version of the token, currently 1.0.
-// # + date - current GMT date and time
-// # + return - If successful, returns string which is the  hashed token signature. Else returns (). 
 public function generateMasterTokenSignature(string verb, string resourceType, string resourceId, string keyToken, string tokenType, 
 string tokenVersion, string date) returns string?|error {    
     string authorization;
@@ -319,9 +239,6 @@ string tokenVersion, string date) returns string?|error {
     }
 }
 
-// # To construct the hashed token signature for a token 
-// # + return - If successful, returns string representing UTC date and time 
-// #   (in "HTTP-date" format as defined by RFC 7231 Date/Time Formats). Else returns error.  
 public function getTime() returns string?|error {
     time:Time time1 = time:currentTime();
     var timeWithZone = check time:toTimeZone(time1, GMT_ZONE);
@@ -333,9 +250,6 @@ public function getTime() returns string?|error {
     }
 }
 
-// # To construct resource type  which is used to create the hashed token signature 
-// # + url - string parameter part of url to extract the resource type
-// # + return - Returns the resource type extracted from url as a string  
 public function getResourceType(string url) returns string {
     string resourceType = EMPTY_STRING;
     string[] urlParts = stringutils:split(url, FORWARD_SLASH);
@@ -351,9 +265,6 @@ public function getResourceType(string url) returns string {
     return resourceType;
 }
 
-// # To construct resource id  which is used to create the hashed token signature 
-// # + url - string parameter part of url to extract the resource id
-// # + return - Returns the resource id extracted from url as a string 
 public function getResourceId(string url) returns string {
     string resourceId = EMPTY_STRING;
     string[] urlParts = stringutils:split(url, FORWARD_SLASH);
@@ -371,9 +282,6 @@ public function getResourceId(string url) returns string {
     return resourceId;
 }
 
-// # To construct resource id for offers which is used to create the hashed token signature 
-// # + url - string parameter part of url to extract the resource id
-// # + return - Returns the resource id extracted from url as a string 
 public function getResourceIdForOffer(string url) returns string {
     string resourceId = EMPTY_STRING;
     string[] urlParts = stringutils:split(url, FORWARD_SLASH);

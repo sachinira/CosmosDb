@@ -66,7 +66,6 @@ function mapJsonToContainerType([json, Headers?] jsonPayload) returns @tainted C
     return coll;
 }
 
-//
 function mapJsonToIndexingPolicy(json jsonPayload) returns @tainted IndexingPolicy {
     IndexingPolicy indp = {};
     indp.indexingMode = jsonPayload.indexingMode != ()? jsonPayload.indexingMode.toString() : EMPTY_STRING;
@@ -76,7 +75,6 @@ function mapJsonToIndexingPolicy(json jsonPayload) returns @tainted IndexingPoli
     return indp;
 }
 
-//
 function mapJsonToIncludedPathsType(json jsonPayload) returns @tainted IncludedPath {
     IncludedPath ip = {};
     ip.path = jsonPayload.path.toString();
@@ -88,7 +86,6 @@ function mapJsonToIncludedPathsType(json jsonPayload) returns @tainted IncludedP
     return ip;
 }
 
-//
 function mapJsonToIndexType(json jsonPayload) returns Index {
     Index ind = {};
     ind.kind = jsonPayload.kind != () ? jsonPayload.kind.toString(): EMPTY_STRING;
@@ -97,7 +94,6 @@ function mapJsonToIndexType(json jsonPayload) returns Index {
     return ind; 
 }
 
-//
 function convertJsonToPartitionKey(json jsonPayload) returns @tainted PartitionKey {
     PartitionKey pk = {};
     pk.paths = convertToStringArray(<json[]>jsonPayload.paths);
@@ -106,7 +102,6 @@ function convertJsonToPartitionKey(json jsonPayload) returns @tainted PartitionK
     return pk;
 }
 
-//
 function mapJsonToContainerListType([json, Headers] jsonPayload) returns @tainted ContainerList {
     ContainerList cll = {};
     json payload;
@@ -119,7 +114,6 @@ function mapJsonToContainerListType([json, Headers] jsonPayload) returns @tainte
     return cll;
 }
 
-//
 function mapJsonToPartitionKeyType([json, Headers] jsonPayload) returns @tainted PartitionKeyList {
     PartitionKeyList pkl = {};
     PartitionKeyRange pkr = {};
@@ -133,7 +127,6 @@ function mapJsonToPartitionKeyType([json, Headers] jsonPayload) returns @tainted
     return pkl;
 }
 
-//
 function mapJsonToPartitionKeyRange([json, Headers] jsonPayload) returns @tainted PartitionKeyRange {
     PartitionKeyRange pkr = {};
     json payload;
