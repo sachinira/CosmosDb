@@ -114,7 +114,7 @@ function convertToInt(json|error value) returns int {
     return 0;
 }
 
-public function setThroughputOrAutopilotHeader(http:Request request, ThroughputProperties? throughputProperties) returns 
+function setThroughputOrAutopilotHeader(http:Request request, ThroughputProperties? throughputProperties) returns 
 http:Request|error {
   if throughputProperties is ThroughputProperties {
         if throughputProperties.throughput is int &&  throughputProperties.maxThroughput is () {
@@ -129,27 +129,23 @@ http:Request|error {
     return request;
 }
 
-public function setPartitionKeyHeader(http:Request request, any partitionKey) returns http:Request {
+function setPartitionKeyHeader(http:Request request, any partitionKey) returns http:Request {
     request.setHeader(PARTITION_KEY_HEADER, string `[${partitionKey.toString()}]`);
     return request;
 }
 
-public function enableCrossPartitionKeyHeader(http:Request request, boolean isIgnore) returns http:Request|error {
+function enableCrossPartitionKeyHeader(http:Request request, boolean isIgnore) returns http:Request|error {
     request.setHeader("x-ms-documentdb-query-enablecrosspartition", isIgnore.toString());
     return request;
 }
 
-public function setHeadersForQuery(http:Request request) returns http:Request|error {
+function setHeadersForQuery(http:Request request) returns http:Request|error {
     var header = request.setContentType("application/query+json");
     request.setHeader(ISQUERY_HEADER, "True");
     return request;
 }
 
-// # To set the optional headers
-// # + request - http:Request to set the header
-// # + requestOptions - object of type RequestHeaderOptions containing the values for optional headers
-// # + return -  returns the header value in string.
-public function setRequestOptions(http:Request request, RequestHeaderOptions requestOptions) returns http:Request {
+function setRequestOptions(http:Request request, RequestHeaderOptions requestOptions) returns http:Request {
     if requestOptions.indexingDirective is string {
         request.setHeader(INDEXING_DIRECTIVE_HEADER, requestOptions.indexingDirective.toString());
     }
@@ -174,21 +170,21 @@ public function setRequestOptions(http:Request request, RequestHeaderOptions req
     if requestOptions.ifNoneMatch is string {
         request.setHeader(NON_MATCH_HEADER, requestOptions.ifNoneMatch.toString());
     }
-    if requestOptions.PartitionKeyRangeId is string {
-        request.setHeader(PARTITIONKEY_RANGE_HEADER, requestOptions.PartitionKeyRangeId.toString());
+    if requestOptions.partitionKeyRangeId is string {
+        request.setHeader(PARTITIONKEY_RANGE_HEADER, requestOptions.partitionKeyRangeId.toString());
     }
-    if requestOptions.PartitionKeyRangeId is string {
-        request.setHeader(IF_MATCH_HEADER, requestOptions.PartitionKeyRangeId.toString());
+    if requestOptions.ifMatch is string {
+        request.setHeader(IF_MATCH_HEADER, requestOptions.ifMatch.toString());
     }
     return request;
 }
 
-public function setExpiryHeader(http:Request request, int validationPeriod) returns http:Request {
+function setExpiryHeader(http:Request request, int validationPeriod) returns http:Request {
     request.setHeader(EXPIRY_HEADER, validationPeriod.toString());
     return request;
 }
  
-public function setHeaders(http:Request request, string host, string keyToken, string tokenType, string tokenVersion,
+function setHeaders(http:Request request, string host, string keyToken, string tokenType, string tokenVersion,
 HeaderParameters params) returns http:Request|error {
     request.setHeader(API_VERSION_HEADER,params.apiVersion);
     request.setHeader(HOST_HEADER,host);
@@ -216,14 +212,14 @@ HeaderParameters params) returns http:Request|error {
     return request;
 }
 
-public function generateTokenNew(string verb, string resourceType, string resourceId, string keyToken, string tokenType, 
+function generateTokenNew(string verb, string resourceType, string resourceId, string keyToken, string tokenType, 
 string tokenVersion) returns string? {
     var token = generateTokenJ(java:fromString(verb), java:fromString(resourceType), java:fromString(resourceId),
     java:fromString(keyToken), java:fromString(tokenType), java:fromString(tokenVersion));
     return java:toString(token);
 }
 
-public function generateMasterTokenSignature(string verb, string resourceType, string resourceId, string keyToken, string tokenType, 
+function generateMasterTokenSignature(string verb, string resourceType, string resourceId, string keyToken, string tokenType, 
 string tokenVersion, string date) returns string?|error {    
     string authorization;
     string payload = verb.toLowerAscii()+"\n" + resourceType.toLowerAscii() + "\n" + resourceId + "\n"
@@ -239,7 +235,7 @@ string tokenVersion, string date) returns string?|error {
     }
 }
 
-public function getTime() returns string?|error {
+function getTime() returns string?|error {
     time:Time time1 = time:currentTime();
     var timeWithZone = check time:toTimeZone(time1, GMT_ZONE);
     string|error timeString = time:format(timeWithZone, "EEE, dd MMM yyyy HH:mm:ss z");
@@ -250,7 +246,7 @@ public function getTime() returns string?|error {
     }
 }
 
-public function getResourceType(string url) returns string {
+function getResourceType(string url) returns string {
     string resourceType = EMPTY_STRING;
     string[] urlParts = stringutils:split(url, FORWARD_SLASH);
     int count = urlParts.length()-1;
@@ -265,7 +261,7 @@ public function getResourceType(string url) returns string {
     return resourceType;
 }
 
-public function getResourceId(string url) returns string {
+function getResourceId(string url) returns string {
     string resourceId = EMPTY_STRING;
     string[] urlParts = stringutils:split(url, FORWARD_SLASH);
     int count = urlParts.length()-1;
@@ -282,7 +278,7 @@ public function getResourceId(string url) returns string {
     return resourceId;
 }
 
-public function getResourceIdForOffer(string url) returns string {
+function getResourceIdForOffer(string url) returns string {
     string resourceId = EMPTY_STRING;
     string[] urlParts = stringutils:split(url, FORWARD_SLASH);
     int count = urlParts.length()-1;

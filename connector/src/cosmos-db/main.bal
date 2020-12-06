@@ -1,7 +1,7 @@
 import ballerina/http;
 
 # Azure Cosmos DB Client object.
-public  client class AzureCosmosClient {
+public  client class Client {
     
     private string baseUrl;
     private string keyOrResourceToken;
@@ -9,7 +9,7 @@ public  client class AzureCosmosClient {
     private string keyType;
     private string tokenVersion;
 
-    public http:Client azureCosmosClient;
+    private http:Client azureCosmosClient;
 
     function init(AzureCosmosConfiguration azureConfig){
         self.baseUrl = azureConfig.baseUrl;

@@ -1,14 +1,14 @@
 # Represents Forward slash
-final  string FORWARD_SLASH = "/";
-
-#Represents Empty string
-final  string EMPTY_STRING = "";
+public const FORWARD_SLASH = "/";
+ 
+# Represents Empty string
+public const string EMPTY_STRING = "";
 
 # Represents Token type for a master token
-const string TOKEN_TYPE_MASTER = "master";
+public const string TOKEN_TYPE_MASTER = "master";
 
 # Represents Token type for a resource token
-const string TOKEN_TYPE_RESOURCE = "resource";
+public const string TOKEN_TYPE_RESOURCE = "resource";
 
 const string CONTENT_TYPE_HEADER = "Content-Type";
 const string API_VERSION_HEADER = "x-ms-version";
@@ -58,4 +58,4 @@ const string RESOURCE_PATH_USER = "users";
 const string RESOURCE_PATH_PERMISSION = "permissions";
 const string RESOURCE_PATH_OFFER = "offers";
 
-final  string API_VERSION = "2018-12-31";
+const string API_VERSION = "2018-12-31";

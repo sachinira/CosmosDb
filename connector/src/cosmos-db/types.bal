@@ -28,7 +28,7 @@ public type RequestHeaderOptions record {|
     string? ifNoneMatch = (); //No header: returns all changes from the beginning (collection creation)//"*": 
     //returns all new changes to data within the collection <etag>: If set to a collection ETag, returns all 
     //changes made since that logical timestamp.only for GET
-    string? PartitionKeyRangeId = ();
+    string? partitionKeyRangeId = ();
     string? ifMatch = ();//Only for PUT and DELETE 
 |};
 

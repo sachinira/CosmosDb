@@ -1,13 +1,13 @@
-The Mongo DB connector allows you to connect to a Mongo DB from Ballerina and perform various operations such as `getDatabaseNames`, `getCollectionNames`, `count`, `find`, `insert`, `update`, and `delete`.
+The Mongo DB connector allows you to connect to a Azure Cosmos DB resourece from Ballerina and perform various operations such as  `find`, `create`, `read`, `update`, and `delete` operations of `Databases`, `Containers`, `User Defined Functions`, `Tiggers`, `Stored Procedures`, `Users`, `Permissions` and `Offers`.
 
 ## Compatibility
 
 |                             |       Version               |
 |:---------------------------:|:---------------------------:|
-| Ballerina Language          | Swan Lake Preview1          |
+| Ballerina Language          | Swan Lake Preview4          |
 | Mongo DB                    | V4.2.0                      |
 
-## MongoDB Clients
+## CosmosDB Clients
 
 There are 3 clients provided by Ballerina to interact with MongoDB.
 

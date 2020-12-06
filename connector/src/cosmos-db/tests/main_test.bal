@@ -155,45 +155,36 @@ function test_listOneDatabase(){
 }
 
 @test:Config{
-    groups: ["database"], 
+    groups: ["database"],
     dependsOn: [
+        "test_createDatabase",
+        "test_createDatabaseIfNotExist",
+        "test_createDBWithAutoscalingThroughput",
+        "test_createDatabaseWithBothHeaders",
+        "test_listAllDatabases",
         "test_createDatabase", 
         "test_getAllContainers", 
         "test_GetPartitionKeyRanges", 
-        "test_createDocument", 
-        "test_getDocumentList", 
-        "test_GetOneDocument", 
+        "test_queryDocuments",
+        "test_getDocumentListWithRequestOptions",
+        "test_createDocumentWithRequestOptions",
+        "test_getDocumentList",
+        "test_createCollectionWithManualThroughputAndIndexingPolicy",
         "test_deleteDocument", 
-        "test_queryDocuments", 
-        "test_createStoredProcedure", 
-        "test_replaceStoredProcedure", 
-        "test_getAllStoredProcedures", 
-        "test_executeOneStoredProcedure", 
-        "test_deleteOneStoredProcedure", 
-        "test_createUDF", 
-        "test_replaceUDF", 
-        "test_listAllUDF", 
-        "test_deleteUDF", 
-        "test_createTrigger", 
-        "test_replaceTrigger", 
-        "test_listTriggers", 
-        "test_deleteTrigger", 
-        "test_createUser",  
-        "test_replaceUserId",  
-        "test_getUser",  
+        "test_deleteOneStoredProcedure",
+        "test_getAllStoredProcedures",
         "test_listUsers", 
-        "test_createPermission", 
-        "test_replacePermission", 
-        "test_listPermissions", 
-        "test_getPermission", 
-        "test_deletePermission"
-    ], 
-    enable: false
+        "test_deleteUDF", 
+        "test_deleteTrigger", 
+        "test_deleteUser",
+        "test_createContainerIfNotExist",
+        "test_deleteContainer"
+    ]
 }
 function test_deleteDatabase(){
     log:printInfo("ACTION : deleteDatabase()");
 
-    var result = AzureCosmosClient->deleteDatabase(databaseList.databases[databaseList.databases.length()-1].id);
+    var result = AzureCosmosClient->deleteDatabase(database.id);
     if result is error {
         test:assertFail(msg = result.message());
     } else {
@@ -228,7 +219,7 @@ function test_createContainer(){
 
 @test:Config{
     groups: ["container"], 
-    dependsOn: ["test_createDatabase",  "test_createContainer"]
+    dependsOn: ["test_createContainer"]
 }
 function test_createCollectionWithManualThroughputAndIndexingPolicy(){
     log:printInfo("ACTION : createCollectionWithManualThroughputAndIndexingPolicy()");
@@ -320,7 +311,7 @@ function test_createContainerIfNotExist(){
 
 @test:Config{
     groups: ["container"], 
-    dependsOn: ["test_createDatabase",  "test_createContainer"]
+    dependsOn: ["test_createContainer"]
 }
 function test_getOneContainer(){
     log:printInfo("ACTION : getOneContainer()");
@@ -355,28 +346,17 @@ function test_getAllContainers(){
 @test:Config{
     groups: ["container"], 
     dependsOn: [
-        "test_getAllContainers", 
+        "test_getOneContainer",
         "test_GetPartitionKeyRanges", 
-        "test_createDocument", 
         "test_getDocumentList", 
-        "test_GetOneDocument", 
         "test_deleteDocument", 
         "test_queryDocuments", 
-        "test_createStoredProcedure", 
-        "test_replaceStoredProcedure", 
         "test_getAllStoredProcedures", 
-        "test_executeOneStoredProcedure", 
         "test_deleteOneStoredProcedure", 
-        "test_createUDF", 
-        "test_replaceUDF", 
         "test_listAllUDF", 
         "test_deleteUDF", 
-        "test_createTrigger", 
-        "test_replaceTrigger", 
-        "test_listTriggers", 
         "test_deleteTrigger"
-    ], 
-    enable: false
+    ]
 }
 function test_deleteContainer(){
     log:printInfo("ACTION : deleteContainer()");
@@ -394,7 +374,8 @@ function test_deleteContainer(){
 }
 
 @test:Config{
-    groups: ["partitionKey"]
+    groups: ["partitionKey"],
+    dependsOn: ["test_createContainer"]
 }
 function test_GetPartitionKeyRanges(){
     log:printInfo("ACTION : GetPartitionKeyRanges()");
@@ -411,11 +392,9 @@ function test_GetPartitionKeyRanges(){
     }   
 }
 
-//write testcase with requestoptions
-
 @test:Config{
     groups: ["document"], 
-    dependsOn: ["test_createDatabase",  "test_createContainer"]
+    dependsOn: ["test_createContainer"]
 }
 function test_createDocument(){
     log:printInfo("ACTION : createDocument()");
@@ -473,7 +452,7 @@ function test_createDocument(){
 
 @test:Config{
     groups: ["document"], 
-    dependsOn: ["test_createDatabase",  "test_createContainer"]
+    dependsOn: ["test_createContainer"]
 }
 function test_createDocumentWithRequestOptions(){
     log:printInfo("ACTION : createDocumentWithRequestOptions()");
@@ -487,7 +466,6 @@ function test_createDocumentWithRequestOptions(){
         isUpsertRequest: true,
         indexingDirective : "Include"
     };
-
     Document createDoc = {
         id: string `document_${uuid.toString()}`, 
         documentBody :{
@@ -535,7 +513,7 @@ function test_createDocumentWithRequestOptions(){
 
 @test:Config{
     groups: ["document"], 
-    dependsOn: ["test_createDatabase",  "test_createContainer",  "test_createDocument"]
+    dependsOn: ["test_createDocument"]
 }
 function test_getDocumentList(){
     log:printInfo("ACTION : getDocumentList()");
@@ -554,7 +532,30 @@ function test_getDocumentList(){
 
 @test:Config{
     groups: ["document"], 
-    dependsOn: ["test_createDatabase",  "test_createContainer",  "test_createDocument"]
+    dependsOn: ["test_createDocument"]
+}
+function test_getDocumentListWithRequestOptions(){
+    log:printInfo("ACTION : getDocumentListWithRequestOptions()");
+
+    @tainted ResourceProperties resourceProperty = {
+        databaseId: database.id, 
+        containerId: container.id
+    };
+    RequestHeaderOptions options = {
+        isUpsertRequest: true,
+        indexingDirective : "Include"
+    };
+    var result = AzureCosmosClient->getDocumentList(resourceProperty, options);
+    if result is error {
+        test:assertFail(msg = result.message());
+    } else {
+        var output = "";
+    }
+}
+
+@test:Config{
+    groups: ["document"], 
+    dependsOn: ["test_createDocument"]
 }
 function test_GetOneDocument(){
     log:printInfo("ACTION : GetOneDocument()");
@@ -577,7 +578,7 @@ function test_GetOneDocument(){
 
 @test:Config{
     groups: ["document"], 
-    dependsOn: ["test_createDatabase", "test_createContainer", "test_GetOneDocument"]
+    dependsOn: ["test_createContainer", "test_createDocument", "test_GetOneDocument"]
 }
 function test_deleteDocument(){
     log:printInfo("ACTION : deleteDocument()");
@@ -598,10 +599,9 @@ function test_deleteDocument(){
     }  
 }
 
-//check
 @test:Config{
     groups: ["document"], 
-    dependsOn: ["test_createDatabase", "test_createContainer"]
+    dependsOn: ["test_createContainer"]
 }
 function test_queryDocuments(){
     log:printInfo("ACTION : queryDocuments()");
@@ -615,7 +615,6 @@ function test_queryDocuments(){
         query: string `SELECT * FROM ${container.id.toString()} f WHERE f.Address.City = 'Seattle'`, 
         parameters: []
     };
-    //QueryParameter[] params = [{name: "@id",  value: "46c25391-e11d-4327-b7c5-28f44bcf3f2f"}];
     var result = AzureCosmosClient->queryDocuments(resourceProperty, partitionKey, sqlQuery);   
     if result is error {
         test:assertFail(msg = result.message());
@@ -626,7 +625,7 @@ function test_queryDocuments(){
 
 @test:Config{
     groups: ["storedProcedure"], 
-    dependsOn: ["test_createDatabase", "test_createContainer"]
+    dependsOn: ["test_createContainer"]
 }
 function test_createStoredProcedure(){
     log:printInfo("ACTION : createStoredProcedure()");
@@ -675,7 +674,7 @@ function test_replaceStoredProcedure(){
 
 @test:Config{
     groups: ["storedProcedure"], 
-    dependsOn: ["test_createDatabase", "test_createContainer"]
+    dependsOn: ["test_createContainer"]
 }
 function test_getAllStoredProcedures(){
     log:printInfo("ACTION : replaceStoredProcedure()");
@@ -694,7 +693,7 @@ function test_getAllStoredProcedures(){
 
 @test:Config{
     groups: ["storedProcedure"], 
-    dependsOn: ["test_createStoredProcedure", "test_replaceStoredProcedure"]
+    dependsOn: ["test_replaceStoredProcedure"]
 }
 function test_executeOneStoredProcedure(){
     log:printInfo("ACTION : executeOneStoredProcedure()");
@@ -715,7 +714,7 @@ function test_executeOneStoredProcedure(){
 
 @test:Config{
     groups: ["storedProcedure"], 
-    dependsOn: ["test_createStoredProcedure", "test_replaceStoredProcedure", "test_executeOneStoredProcedure"]
+    dependsOn: ["test_createStoredProcedure", "test_executeOneStoredProcedure"]
 }
 function test_deleteOneStoredProcedure(){
     log:printInfo("ACTION : deleteOneStoredProcedure()");
@@ -735,7 +734,7 @@ function test_deleteOneStoredProcedure(){
 
 @test:Config{
     groups: ["userDefinedFunction"], 
-    dependsOn: ["test_createDatabase", "test_createContainer"]
+    dependsOn: ["test_createContainer"]
 }
 function test_createUDF(){
     log:printInfo("ACTION : createUDF()");
@@ -761,7 +760,7 @@ function test_createUDF(){
 
 @test:Config{
     groups: ["userDefinedFunction"], 
-    dependsOn: ["test_createDatabase", "test_createContainer", "test_createUDF"]
+    dependsOn: ["test_createContainer", "test_createUDF"]
 }
 function test_replaceUDF(){
     log:printInfo("ACTION : replaceUDF()");
@@ -785,7 +784,7 @@ function test_replaceUDF(){
 
 @test:Config{
     groups: ["userDefinedFunction"], 
-    dependsOn: ["test_createDatabase",  "test_createContainer",  "test_createUDF"]
+    dependsOn: ["test_createContainer",  "test_createUDF"]
 }
 function test_listAllUDF(){
     log:printInfo("ACTION : listAllUDF()");
@@ -804,7 +803,7 @@ function test_listAllUDF(){
 
 @test:Config{
     groups: ["userDefinedFunction"], 
-    dependsOn: ["test_createUDF",  "test_replaceUDF", "test_listAllUDF"]
+    dependsOn: ["test_replaceUDF", "test_listAllUDF"]
 }
 function test_deleteUDF(){
     log:printInfo("ACTION : deleteUDF()");
@@ -824,7 +823,7 @@ function test_deleteUDF(){
 
 @test:Config{
     groups: ["trigger"], 
-    dependsOn: ["test_createDatabase", "test_createContainer"]
+    dependsOn: ["test_createContainer"]
 }
 function test_createTrigger(){
     log:printInfo("ACTION : createTrigger()");
@@ -901,7 +900,7 @@ function test_listTriggers(){
 
 @test:Config{
     groups: ["trigger"], 
-    dependsOn: ["test_createTrigger", "test_replaceTrigger", "test_listTriggers"]
+    dependsOn: ["test_replaceTrigger", "test_listTriggers"]
 }
 function test_deleteTrigger(){
     log:printInfo("ACTION : deleteTrigger()");
@@ -941,8 +940,7 @@ function test_createUser(){
 
 @test:Config{
     groups: ["user"], 
-    dependsOn: ["test_createUser","test_getUser"],
-    enable: false
+    dependsOn: ["test_createUser","test_getUser"]
 }
 function test_replaceUserId(){
     log:printInfo("ACTION : replaceUserId()");
@@ -957,7 +955,7 @@ function test_replaceUserId(){
     if result is error {
         test:assertFail(msg = result.message());
     } else {
-        var output = "";
+        test_user = <@untainted>result;
     }  
 }
 
@@ -1002,17 +1000,9 @@ function test_listUsers(){
 @test:Config{
     groups: ["user"], 
     dependsOn: [
-        "test_createUser",  
-        "test_replaceUserId",  
-        "test_getUser",  
-        "test_listUsers", 
-        "test_createPermission", 
-        "test_replacePermission", 
-        "test_listPermissions", 
-        "test_getPermission", 
+        "test_replaceUserId", 
         "test_deletePermission"
-    ],
-    enable: false
+    ]
 }
 function test_deleteUser(){
     log:printInfo("ACTION : deleteUser()");
@@ -1128,8 +1118,7 @@ function test_getPermission(){
 
 @test:Config{
     groups: ["permission"], 
-    dependsOn: ["test_createPermission", "test_getPermission", "test_listPermissions", "test_replacePermission"],
-    enable: false
+    dependsOn: [ "test_getPermission", "test_listPermissions", "test_replacePermission"]
 }
 function test_deletePermission(){
     log:printInfo("ACTION : deletePermission()");
@@ -1222,7 +1211,8 @@ function test_queryOffer(){
 ///using resource token
 @test:Config{
     groups: ["permission"], 
-    dependsOn: ["test_createPermission"]
+    dependsOn: ["test_createPermission"],
+    enable: false
 }
 function test_getCollection_Resource_Token(){
     log:printInfo("ACTION : createCollection_Resource_Token()");
