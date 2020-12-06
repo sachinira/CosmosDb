@@ -29,6 +29,7 @@ public type RequestHeaderOptions record {|
     //returns all new changes to data within the collection <etag>: If set to a collection ETag, returns all 
     //changes made since that logical timestamp.only for GET
     string? partitionKeyRangeId = ();
+    boolean? enableCrossPartition = ();
     string? ifMatch = ();//Only for PUT and DELETE 
 |};
 
@@ -233,7 +234,7 @@ public type PartitionKey record {|
 
 public type PartitionKeyList record {|
     string _rid = "";
-    PartitionKeyRange[] PartitionKeyRanges = [];
+    PartitionKeyRange[] partitionKeyRanges = [];
     Headers reponseHeaders?;
     int _count = 0;
 |};

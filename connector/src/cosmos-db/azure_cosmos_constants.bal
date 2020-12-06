@@ -30,6 +30,7 @@ const string PARTITIONKEY_RANGE_HEADER = "x-ms-documentdb-partitionkeyrangeid";
 const string ISQUERY_HEADER = "x-ms-documentdb-isquery";
 const string PARTITION_KEY_HEADER = "x-ms-documentdb-partitionkey";
 const string EXPIRY_HEADER = "x-ms-documentdb-expiry-seconds";
+const string IS_ENABLE_CROSS_PARTITION_HEADER = "x-ms-documentdb-query-enablecrosspartition";
 
 const string CONTINUATION_HEADER = "x-ms-continuation";
 const string SESSION_TOKEN_HEADER = "x-ms-session-token";

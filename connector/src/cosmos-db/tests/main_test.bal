@@ -355,7 +355,8 @@ function test_getAllContainers(){
         "test_deleteOneStoredProcedure", 
         "test_listAllUDF", 
         "test_deleteUDF", 
-        "test_deleteTrigger"
+        "test_deleteTrigger",
+        "test_GetOneDocumentWithRequestOptions"
     ]
 }
 function test_deleteContainer(){
@@ -543,7 +544,13 @@ function test_getDocumentListWithRequestOptions(){
     };
     RequestHeaderOptions options = {
         isUpsertRequest: true,
-        indexingDirective : "Include"
+        indexingDirective : "Include",
+        maxItemCount : 4,
+        consistancyLevel : "Eventual",
+       // changeFeedOption : "Incremental feed",
+        sessionToken: "tag",
+        ifNoneMatch: "hhh",
+        partitionKeyRangeId:"0"
     };
     var result = AzureCosmosClient->getDocumentList(resourceProperty, options);
     if result is error {
@@ -578,7 +585,40 @@ function test_GetOneDocument(){
 
 @test:Config{
     groups: ["document"], 
-    dependsOn: ["test_createContainer", "test_createDocument", "test_GetOneDocument"]
+    dependsOn: ["test_createDocument"]
+}
+function test_GetOneDocumentWithRequestOptions(){
+    log:printInfo("ACTION : GetOneDocument()");
+
+    @tainted ResourceProperties resourceProperty = {
+        databaseId: database.id, 
+        containerId: container.id
+    };
+    @tainted Document getDoc =  {
+        id: document.id, 
+        partitionKey : 1234  
+    };
+    RequestHeaderOptions options = {
+        consistancyLevel : "Eventual",
+        sessionToken: "tag",
+        ifNoneMatch: "hhh",
+//these are not needed
+        isUpsertRequest: true,
+        indexingDirective : "Include",
+        maxItemCount : 4,
+        changeFeedOption : "Incremental feed"
+    };
+    var result = AzureCosmosClient->getDocument(resourceProperty, getDoc, options);
+    if result is error {
+        test:assertFail(msg = result.message());
+    } else {
+        var output = "";
+    }  
+}
+
+@test:Config{
+    groups: ["document"], 
+    dependsOn: ["test_createContainer", "test_createDocument", "test_GetOneDocument", "test_GetOneDocumentWithRequestOptions"]
 }
 function test_deleteDocument(){
     log:printInfo("ACTION : deleteDocument()");
@@ -616,6 +656,41 @@ function test_queryDocuments(){
         parameters: []
     };
     var result = AzureCosmosClient->queryDocuments(resourceProperty, partitionKey, sqlQuery);   
+    if result is error {
+        test:assertFail(msg = result.message());
+    } else {
+        var output = "";
+    }   
+}
+
+@test:Config{
+    groups: ["document"], 
+    dependsOn: ["test_createContainer"]
+}
+function test_queryDocumentsWithRequestOptions(){
+    log:printInfo("ACTION : queryDocuments()");
+
+    @tainted ResourceProperties resourceProperty = {
+        databaseId: database.id, 
+        containerId: container.id
+    };
+    int partitionKey = 1234;//get the pk from endpoint
+    Query sqlQuery = {
+        query: string `SELECT * FROM ${container.id.toString()} f WHERE f.Address.City = 'Seattle'`, 
+        parameters: []
+    };
+    RequestHeaderOptions options = {
+        maxItemCount : 4,
+        consistancyLevel : "Eventual",
+        sessionToken: "tag",
+        continuationToken: "token",
+
+        ifNoneMatch: "hhh",
+        isUpsertRequest: true,
+        indexingDirective : "Include",
+        changeFeedOption : "Incremental feed"
+    };
+    var result = AzureCosmosClient->queryDocuments(resourceProperty, partitionKey, sqlQuery, options);   
     if result is error {
         test:assertFail(msg = result.message());
     } else {
@@ -1049,6 +1124,7 @@ function test_createPermission(){
         test:assertFail(msg = result.message());
     }   
 }
+//expiry header when creating permission
 
 @test:Config{
     groups: ["permission"], 
@@ -1077,6 +1153,8 @@ function test_replacePermission(){
     }  
 }
 
+//expiry header when listing permission
+
 @test:Config{
     groups: ["permission"], 
     dependsOn: ["test_createPermission"]
@@ -1095,6 +1173,8 @@ function test_listPermissions(){
         var output = "";
     } 
 }
+
+////expiry header when getting permission
 
 @test:Config{
     groups: ["permission"], 
@@ -1189,6 +1269,7 @@ function test_replaceOffer(){
         var output = "";
     } 
 }
+//offertype optional in replacing
 
 @test:Config{
     groups: ["offer"], 

@@ -176,6 +176,9 @@ function setRequestOptions(http:Request request, RequestHeaderOptions requestOpt
     if requestOptions.ifMatch is string {
         request.setHeader(IF_MATCH_HEADER, requestOptions.ifMatch.toString());
     }
+    if requestOptions.enableCrossPartition is boolean {
+        request.setHeader(IS_ENABLE_CROSS_PARTITION_HEADER, requestOptions.enableCrossPartition.toString());
+    }
     return request;
 }
 

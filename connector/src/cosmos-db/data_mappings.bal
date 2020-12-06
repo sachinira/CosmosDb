@@ -121,7 +121,7 @@ function mapJsonToPartitionKeyType([json, Headers] jsonPayload) returns @tainted
     Headers headers;
     [payload,headers] = jsonPayload;
     pkl._rid = payload._rid != () ? payload._rid.toString(): EMPTY_STRING;
-    pkl.PartitionKeyRanges = convertToPartitionKeyRangeArray(<json[]>payload.PartitionKeyRanges);
+    pkl.partitionKeyRanges = convertToPartitionKeyRangeArray(<json[]>payload.PartitionKeyRanges);
     pkl.reponseHeaders = headers;
     pkl._count = convertToInt(payload._count);
     return pkl;
