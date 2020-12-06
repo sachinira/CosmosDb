@@ -118,12 +118,16 @@ function setThroughputOrAutopilotHeader(http:Request request, ThroughputProperti
 http:Request|error {
   if throughputProperties is ThroughputProperties {
         if throughputProperties.throughput is int &&  throughputProperties.maxThroughput is () {
-            request.setHeader(THROUGHPUT_HEADER, throughputProperties.maxThroughput.toString());
+            if <int>throughputProperties.throughput >= 400 {
+                request.setHeader(THROUGHPUT_HEADER, throughputProperties.maxThroughput.toString());
+            } else {
+                return prepareError("The minimum manual throughput is 400 RU/s");
+            }
         } else if throughputProperties.throughput is () &&  throughputProperties.maxThroughput != () {
             request.setHeader(AUTOPILET_THROUGHPUT_HEADER, throughputProperties.maxThroughput.toString());
         } else if throughputProperties.throughput is int &&  throughputProperties.maxThroughput != () {
             return 
-            prepareError("Cannot set both x-ms-offer-throughput and x-ms-cosmos-offer-autopilot-settings headers at once");
+            prepareError("Cannot set both throughput and maxThroughput headers at once");
         }
     }
     return request;

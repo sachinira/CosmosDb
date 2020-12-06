@@ -1,4 +1,4 @@
-//import ballerina/io;
+import ballerina/io;
 import ballerina/test;
 import ballerina/java;
 import ballerina/config;
@@ -23,6 +23,9 @@ AzureCosmosConfiguration config = {
 Client AzureCosmosClient = new(config);
 
 Database database = {};
+Database manual = {};
+Database auto = {};
+Database ifexist = {};
 DatabaseList databaseList = {};
 Container container = {};
 ContainerList containerList = {};
@@ -63,7 +66,8 @@ function test_createDatabaseIfNotExist(){
     if result is error {
         test:assertFail(msg = result.message());
     } else {
-        var output = "";
+        ifexist = <@untainted><Database> result;
+        io:println(result);
     }
 }
 
@@ -76,13 +80,13 @@ function test_createDatabaseWithManualThroughput(){
     var uuid = createRandomUUIDBallerina();
     string createDatabaseManualId = string `databasem_${uuid.toString()}`;
     ThroughputProperties manualThroughput = {
-        throughput: 600
+        throughput: 400
     };
     var result = AzureCosmosClient->createDatabase(createDatabaseManualId,  manualThroughput);
     if result is error {
         test:assertFail(msg = result.message());
     } else {
-        var output = "";
+        manual = <@untainted>result;
     }
 }
 
@@ -101,7 +105,7 @@ function test_createDBWithAutoscalingThroughput(){
     if result is error {
         test:assertFail(msg = result.message());
     } else {
-        var output = "";
+        auto = <@untainted> result;
     }
 }
 
@@ -184,9 +188,12 @@ function test_listOneDatabase(){
 function test_deleteDatabase(){
     log:printInfo("ACTION : deleteDatabase()");
 
-    var result = AzureCosmosClient->deleteDatabase(database.id);
-    if result is error {
-        test:assertFail(msg = result.message());
+    var result1 = AzureCosmosClient->deleteDatabase(database.id);
+    var result2 = AzureCosmosClient->deleteDatabase(manual.id);
+    var result3 = AzureCosmosClient->deleteDatabase(auto.id);
+    var result4 = AzureCosmosClient->deleteDatabase(ifexist.id);
+    if result3 is error {
+        test:assertFail(msg = result3.message());
     } else {
         var output = "";
     }
@@ -1300,7 +1307,30 @@ function test_replaceOffer(){
         var output = "";
     } 
 }
-//offertype optional in replacing
+
+@test:Config{
+    groups: ["offer"]
+}
+function test_replaceOfferWithOptionalParameter(){
+    log:printInfo("ACTION : replaceOfferWithOptionalParameter()");
+
+    Offer replaceOfferBody = {
+        offerVersion: "V2", 
+        content: {  
+            "offerThroughput": 600
+        },  
+        'resource: string `dbs/${database?._rid.toString()}/colls/${container?._rid.toString()}/`,  
+        offerResourceId: string `${container?._rid.toString()}`, 
+        id: offerList.offers[0].id, 
+        _rid: offerList.offers[0]["_rid"] 
+    };
+    var result = AzureCosmosClient->replaceOffer(replaceOfferBody);  
+    if result is error {
+        test:assertFail(msg = result.message());
+    } else {
+        var output = "";
+    } 
+}
 
 @test:Config{
     groups: ["offer"], 
@@ -1320,7 +1350,6 @@ function test_queryOffer(){
     }  
 }
 
-///using resource token
 @test:Config{
     groups: ["permission"], 
     dependsOn: ["test_createPermission"],
