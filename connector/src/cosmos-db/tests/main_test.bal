@@ -165,7 +165,6 @@ function test_listOneDatabase(){
         "test_createDatabase", 
         "test_getAllContainers", 
         "test_GetPartitionKeyRanges", 
-        "test_queryDocuments",
         "test_getDocumentListWithRequestOptions",
         "test_createDocumentWithRequestOptions",
         "test_getDocumentList",
@@ -178,7 +177,8 @@ function test_listOneDatabase(){
         "test_deleteTrigger", 
         "test_deleteUser",
         "test_createContainerIfNotExist",
-        "test_deleteContainer"
+        "test_deleteContainer",
+        "test_createPermissionWithTTL"
     ]
 }
 function test_deleteDatabase(){
@@ -350,7 +350,8 @@ function test_getAllContainers(){
         "test_GetPartitionKeyRanges", 
         "test_getDocumentList", 
         "test_deleteDocument", 
-        "test_queryDocuments", 
+        "test_queryDocuments",
+        "test_queryDocumentsWithRequestOptions", 
         "test_getAllStoredProcedures", 
         "test_deleteOneStoredProcedure", 
         "test_listAllUDF", 
@@ -440,7 +441,7 @@ function test_createDocument(){
         "IsRegistered": true, 
         "AccountNumber": 1234
         }, 
-        partitionKey : 1234  
+        partitionKey : [1234]  
     };
 
     var result = AzureCosmosClient->createDocument(resourceProperty,  createDoc);
@@ -502,7 +503,7 @@ function test_createDocumentWithRequestOptions(){
         "IsRegistered": true, 
         "AccountNumber": 1234
         }, 
-        partitionKey : 1234  
+        partitionKey : [1234]  
     };
     var result = AzureCosmosClient->createDocument(resourceProperty,  createDoc,  options);
     if result is Document {
@@ -573,7 +574,7 @@ function test_GetOneDocument(){
     };
     @tainted Document getDoc =  {
         id: document.id, 
-        partitionKey : 1234  
+        partitionKey : [1234]  
     };
     var result = AzureCosmosClient->getDocument(resourceProperty, getDoc);
     if result is error {
@@ -596,7 +597,7 @@ function test_GetOneDocumentWithRequestOptions(){
     };
     @tainted Document getDoc =  {
         id: document.id, 
-        partitionKey : 1234  
+        partitionKey : [1234]  
     };
     RequestHeaderOptions options = {
         consistancyLevel : "Eventual",
@@ -629,7 +630,7 @@ function test_deleteDocument(){
     };
     @tainted Document deleteDoc =  {
         id: document.id, 
-        partitionKey : 1234  
+        partitionKey : [1234]  
     };
     var result = AzureCosmosClient->deleteDocument(resourceProperty, deleteDoc);  
     if result is error {
@@ -650,7 +651,7 @@ function test_queryDocuments(){
         databaseId: database.id, 
         containerId: container.id
     };
-    int partitionKey = 1234;//get the pk from endpoint
+    int[] partitionKey = [1234];//get the pk from endpoint
     Query sqlQuery = {
         query: string `SELECT * FROM ${container.id.toString()} f WHERE f.Address.City = 'Seattle'`, 
         parameters: []
@@ -674,7 +675,7 @@ function test_queryDocumentsWithRequestOptions(){
         databaseId: database.id, 
         containerId: container.id
     };
-    int partitionKey = 1234;//get the pk from endpoint
+    int[] partitionKey = [1234];//get the pk from endpoint
     Query sqlQuery = {
         query: string `SELECT * FROM ${container.id.toString()} f WHERE f.Address.City = 'Seattle'`, 
         parameters: []
@@ -684,7 +685,8 @@ function test_queryDocumentsWithRequestOptions(){
         consistancyLevel : "Eventual",
         sessionToken: "tag",
         continuationToken: "token",
-
+        enableCrossPartition: true,
+//these are not needed
         ifNoneMatch: "hhh",
         isUpsertRequest: true,
         indexingDirective : "Include",
@@ -1076,7 +1078,8 @@ function test_listUsers(){
     groups: ["user"], 
     dependsOn: [
         "test_replaceUserId", 
-        "test_deletePermission"
+        "test_deletePermission",
+        "test_createPermissionWithTTL"
     ]
 }
 function test_deleteUser(){
@@ -1124,7 +1127,35 @@ function test_createPermission(){
         test:assertFail(msg = result.message());
     }   
 }
-//expiry header when creating permission
+
+@test:Config{
+    groups: ["permission"], 
+    dependsOn: ["test_createDatabase", "test_createUser"]
+}
+function test_createPermissionWithTTL(){
+    log:printInfo("ACTION : createPermission()");
+
+    var uuid = createRandomUUIDBallerina();
+    @tainted ResourceProperties resourceProperty = {
+        databaseId: database.id
+    };
+    string permissionUserId = test_user.id;
+    string permissionId = string `permission_${uuid.toString()}`;
+    string permissionMode = "All";
+    string permissionResource = string `dbs/${database?._rid.toString()}/colls/${container?._rid.toString()}`;
+    int validityPeriod = 9000;
+    Permission createPermission = {
+        id: permissionId, 
+        permissionMode: permissionMode, 
+        'resource: permissionResource
+    };
+    var result = AzureCosmosClient->createPermission(resourceProperty, permissionUserId, createPermission, validityPeriod);  
+    if result is Permission {
+        permission = <@untainted>result;
+    } else {
+        test:assertFail(msg = result.message());
+    }   
+}
 
 @test:Config{
     groups: ["permission"], 

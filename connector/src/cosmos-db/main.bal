@@ -225,7 +225,7 @@ public  client class Client {
         properties.containerId, RESOURCE_PATH_DOCUMENTS]);
         HeaderParameters header = mapParametersToHeaderType(POST, requestPath);
         request = check setHeaders(request, self.host, self.keyOrResourceToken, self.keyType, self.tokenVersion, header);
-        request = setPartitionKeyHeader(request, document.partitionKey);
+        request = check setPartitionKeyHeader(request, document.partitionKey);
         if requestOptions is RequestHeaderOptions {
             request = setRequestOptions(request, requestOptions);
         }
@@ -251,7 +251,7 @@ public  client class Client {
         properties.containerId, RESOURCE_PATH_DOCUMENTS, document.id]);
         HeaderParameters header = mapParametersToHeaderType(GET, requestPath);
         request = check setHeaders(request, self.host, self.keyOrResourceToken, self.keyType, self.tokenVersion, header);
-        request = setPartitionKeyHeader(request, document.partitionKey);
+        request = check setPartitionKeyHeader(request, document.partitionKey);
         if requestOptions is RequestHeaderOptions {
             request = setRequestOptions(request, requestOptions);
         }
@@ -293,7 +293,7 @@ public  client class Client {
         properties.containerId, RESOURCE_PATH_DOCUMENTS, document.id]);
         HeaderParameters header = mapParametersToHeaderType(PUT, requestPath);
         request = check setHeaders(request, self.host, self.keyOrResourceToken, self.keyType, self.tokenVersion, header);
-        request = setPartitionKeyHeader(request, document.partitionKey);
+        request = check setPartitionKeyHeader(request, document.partitionKey);
         if requestOptions is RequestHeaderOptions{
             request = setRequestOptions(request, requestOptions);
         }
@@ -318,7 +318,7 @@ public  client class Client {
         properties.containerId, RESOURCE_PATH_DOCUMENTS, document.id]);//error
         HeaderParameters header = mapParametersToHeaderType(DELETE, requestPath);
         request = check setHeaders(request, self.host, self.keyOrResourceToken, self.keyType, self.tokenVersion, header);
-        request = setPartitionKeyHeader(request, document.partitionKey);
+        request = check setPartitionKeyHeader(request, document.partitionKey);
         var response = self.azureCosmosClient->delete(requestPath, request);
         return check getDeleteResponse(response);
     }
@@ -329,14 +329,14 @@ public  client class Client {
     # + requestOptions - object of type RequestOptions
     # + partitionKey - the value provided for the partition key specified in the document
     # + return - If successful, returns a json. Else returns error. 
-    public remote function queryDocuments(@tainted ResourceProperties properties, any partitionKey, Query cqlQuery, 
+    public remote function queryDocuments(@tainted ResourceProperties properties, any[] partitionKey, Query cqlQuery, 
     RequestHeaderOptions? requestOptions = ()) returns @tainted json|error {
         http:Request request = new;
         string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES, properties.databaseId, RESOURCE_PATH_COLLECTIONS, 
         properties.containerId, RESOURCE_PATH_DOCUMENTS]);
         HeaderParameters header = mapParametersToHeaderType(POST, requestPath);
         request = check setHeaders(request, self.host, self.keyOrResourceToken, self.keyType, self.tokenVersion, header);
-        request = setPartitionKeyHeader(request, partitionKey);
+        request = check setPartitionKeyHeader(request, partitionKey);
         request.setPayload(<json>cqlQuery.cloneWithType(json));
         request = check setHeadersForQuery(request);
         var response = self.azureCosmosClient->post(requestPath, request);
@@ -671,7 +671,7 @@ public  client class Client {
         HeaderParameters header = mapParametersToHeaderType(POST, requestPath);
         request = check setHeaders(request, self.host, self.keyOrResourceToken, self.keyType, self.tokenVersion, header);
         if validityPeriod is int {
-            request= setExpiryHeader(request,validityPeriod);
+            request = check setExpiryHeader(request,validityPeriod);
         }
         request.setJsonPayload(<@untainted><json>permission.cloneWithType(json));
         var response = self.azureCosmosClient->post(requestPath, request);
@@ -696,7 +696,7 @@ public  client class Client {
         HeaderParameters header = mapParametersToHeaderType(PUT, requestPath);
         request = check setHeaders(request, self.host, self.keyOrResourceToken, self.keyType, self.tokenVersion, header);
         if validityPeriod is int {
-            request= setExpiryHeader(request,validityPeriod);
+            request = check setExpiryHeader(request,validityPeriod);
         }
         request.setJsonPayload(<@untainted><json>permission.cloneWithType(json));
         var response = self.azureCosmosClient->put(requestPath, request);

@@ -129,13 +129,11 @@ http:Request|error {
     return request;
 }
 
-function setPartitionKeyHeader(http:Request request, any partitionKey) returns http:Request {
-    request.setHeader(PARTITION_KEY_HEADER, string `[${partitionKey.toString()}]`);
-    return request;
-}
-
-function enableCrossPartitionKeyHeader(http:Request request, boolean isIgnore) returns http:Request|error {
-    request.setHeader("x-ms-documentdb-query-enablecrosspartition", isIgnore.toString());
+function setPartitionKeyHeader(http:Request request, any[]? partitionKey) returns http:Request|error {
+    if partitionKey is () {
+        return prepareError("Partition key values are null");
+    }
+    request.setHeader(PARTITION_KEY_HEADER, string `${partitionKey.toString()}`);
     return request;
 }
 
@@ -182,9 +180,13 @@ function setRequestOptions(http:Request request, RequestHeaderOptions requestOpt
     return request;
 }
 
-function setExpiryHeader(http:Request request, int validationPeriod) returns http:Request {
-    request.setHeader(EXPIRY_HEADER, validationPeriod.toString());
-    return request;
+function setExpiryHeader(http:Request request, int validationPeriod) returns http:Request|error {
+    if validationPeriod >= 3600 && validationPeriod <= 18000 {
+        request.setHeader(EXPIRY_HEADER, validationPeriod.toString());
+        return request;
+    }else {
+        return prepareError("Resource token validity period must be between 3600 and 18000");
+    }
 }
  
 function setHeaders(http:Request request, string host, string keyToken, string tokenType, string tokenVersion,
@@ -234,7 +236,8 @@ string tokenVersion, string date) returns string?|error {
         authorization = 
         check encoding:encodeUriComponent(string `type=${tokenType}&ver=${tokenVersion}&sig=${signature}`, "UTF-8");   
         return authorization;
-    } else {     
+    } else {   
+        //error  
     }
 }
 

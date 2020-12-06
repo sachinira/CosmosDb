@@ -85,7 +85,7 @@ public type Document record {|
     string? _self?;
     json? documentBody = {};
     string? documentId?;
-    any? partitionKey = ();
+    any[]? partitionKey = [];
     Headers?...;
 |};
 
