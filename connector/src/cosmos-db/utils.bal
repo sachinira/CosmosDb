@@ -165,7 +165,11 @@ function setRequestOptions(http:Request request, RequestHeaderOptions requestOpt
         request.setHeader(CONTINUATION_HEADER, requestOptions.continuationToken.toString());
     }
     if requestOptions.consistancyLevel is string {
-        request.setHeader(CONSISTANCY_LEVEL_HEADER, requestOptions.consistancyLevel.toString());
+        if requestOptions.consistancyLevel == "Strong" || requestOptions.consistancyLevel == "Bounded" || requestOptions.consistancyLevel == "Session" || requestOptions.consistancyLevel == "Eventual" {
+            request.setHeader(CONSISTANCY_LEVEL_HEADER, requestOptions.consistancyLevel.toString());
+        } else {
+            return prepareError("Consistacy level should be one of Strong, Bounded, Session, or Eventual");
+        }
     }
     if requestOptions.sessionToken is string {
         request.setHeader(SESSION_TOKEN_HEADER, requestOptions.sessionToken.toString());
@@ -182,7 +186,7 @@ function setRequestOptions(http:Request request, RequestHeaderOptions requestOpt
     if requestOptions.ifMatch is string {
         request.setHeader(IF_MATCH_HEADER, requestOptions.ifMatch.toString());
     }
-    if requestOptions.enableCrossPartition is boolean {
+    if requestOptions.enableCrossPartition == true {
         request.setHeader(IS_ENABLE_CROSS_PARTITION_HEADER, requestOptions.enableCrossPartition.toString());
     }
     return request;
@@ -207,7 +211,8 @@ HeaderParameters params) returns http:Request|error {
     if date is string {
         string? signature = ();
         if tokenType.toLowerAscii() == TOKEN_TYPE_MASTER {
-            signature = check generateMasterTokenSignature(params.verb, params.resourceType, params.resourceId, keyToken, tokenType, tokenVersion,date);
+            signature = check generateMasterTokenSignature(params.verb, params.resourceType, params.resourceId, keyToken,
+            tokenType, tokenVersion,date);
         } else if tokenType.toLowerAscii() == TOKEN_TYPE_RESOURCE {
             signature = check encoding:encodeUriComponent(keyToken, "UTF-8"); 
         } else {

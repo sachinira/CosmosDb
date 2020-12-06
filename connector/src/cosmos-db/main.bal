@@ -57,7 +57,7 @@ public  client class Client {
             return prepareError("Enter a valid master key and token type should be master key");
         }
         var result = self->getDatabase(databaseId);
-        if result is error{
+        if result is error {
             return self->createDatabase(databaseId, throughputProperties);
         }
         return ();  

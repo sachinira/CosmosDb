@@ -54,6 +54,22 @@ function test_createDatabase(){
 }
 
 @test:Config{
+    groups: ["database"]
+}
+function test_createDatabaseUsingInvalidId(){
+    log:printInfo("ACTION : createDatabaseUsingInvalidId()");
+
+    var uuid = createRandomUUIDBallerina();
+    string createDatabaseId = "";
+    var result = AzureCosmosClient->createDatabase(createDatabaseId);
+    if result is Database {
+        test:assertFail(msg = "Database created with  '' id value");
+    } else {
+        var output = "";
+    }
+}
+
+@test:Config{
     groups: ["database"], 
     dependsOn: ["test_createDatabase"]
 }
@@ -67,6 +83,23 @@ function test_createDatabaseIfNotExist(){
         test:assertFail(msg = result.message());
     } else {
         ifexist = <@untainted><Database> result;
+    }
+}
+
+@test:Config{
+    groups: ["database"], 
+    dependsOn: ["test_createDatabase"]
+}
+function test_createDatabaseIfExist(){
+    log:printInfo("ACTION : createDatabaseIfExist()");
+
+    var uuid = createRandomUUIDBallerina();
+    string createDatabaseId = database.id;
+    var result = AzureCosmosClient->createDatabaseIfNotExist(createDatabaseId);
+    if result is Database {
+        test:assertFail(msg = "Database with non unique id is created");
+    } else {
+        var output = "";
     }
 }
 
@@ -86,6 +119,25 @@ function test_createDatabaseWithManualThroughput(){
         test:assertFail(msg = result.message());
     } else {
         manual = <@untainted>result;
+    }
+}
+
+@test:Config{
+    groups: ["database"]
+}
+function test_createDatabaseWithInvalidManualThroughput(){
+    log:printInfo("ACTION : createDatabaseWithInvalidManualThroughput()");
+
+    var uuid = createRandomUUIDBallerina();
+    string createDatabaseManualId = string `databasem_${uuid.toString()}`;
+    ThroughputProperties manualThroughput = {
+        throughput: 40
+    };
+    var result = AzureCosmosClient->createDatabase(createDatabaseManualId,  manualThroughput);
+    if result is Database {
+        test:assertFail(msg = "Database created without validating user input");
+    } else {
+        var output = "";
     }
 }
 
@@ -121,10 +173,10 @@ function test_createDatabaseWithBothHeaders(){
         throughput: 600
     };
     var result = AzureCosmosClient->createDatabase(createDatabaseBothId,  tp);
-    if result is error {
-        var output = "";
-    } else {
+    if result is Database {
         test:assertFail(msg = "Created database with both throughput values!!");
+    } else {
+        var output = "";
     }
 }
 
@@ -144,12 +196,12 @@ function test_listAllDatabases(){
 
 @test:Config{
     groups: ["database"], 
-    dependsOn: ["test_listAllDatabases"]
+    dependsOn: ["test_createDatabase"]
 }
 function test_listOneDatabase(){
     log:printInfo("ACTION : listOneDatabase()");
 
-    var result = AzureCosmosClient->getDatabase(databaseList.databases[0].id);
+    var result = AzureCosmosClient->getDatabase(database.id);
     if result is error {
         test:assertFail(msg = result.message());
     } else {
@@ -164,7 +216,7 @@ function test_listOneDatabase(){
         "test_createDatabaseIfNotExist",
         "test_createDBWithAutoscalingThroughput",
         "test_createDatabaseWithBothHeaders",
-        "test_listAllDatabases",
+        "test_listOneDatabase",
         "test_createDatabase", 
         "test_getAllContainers", 
         "test_GetPartitionKeyRanges", 
@@ -288,32 +340,6 @@ function test_createContainerIfNotExist(){
         test:assertFail(msg = result.message());
     }
 }
-
-// @test:Config{
-//     groups: ["container"], 
-//     dependsOn: ["test_createDatabase",  "test_getOneContainer"]
-// }
-// function test_createContainerIfNotExist(){
-//     log:printInfo("ACTION : createContainerIfNotExist()");
-
-//     Client AzureCosmosClient = new(config);
-//     var uuid = createRandomUUIDBallerina();
-//     @tainted ResourceProperties propertiesNewCollectionIfNotExist = {
-//             databaseId: database.id, 
-//             containerId: string `containere_${uuid.toString()}`
-//     };
-//     PartitionKey pk = {
-//         paths: ["/AccountNumber"], 
-//         kind :"Hash", 
-//         'version: 2
-//     };
-//     var result = AzureCosmosClient->createContainerIfNotExist(propertiesNewCollectionIfNotExist, pk);
-//     if result is Container? {
-//         io:println(result);
-//     } else {
-//         test:assertFail(msg = result.message());
-//     }
-// }
 
 @test:Config{
     groups: ["container"], 
@@ -472,7 +498,14 @@ function test_createDocumentWithRequestOptions(){
     };
     RequestHeaderOptions options = {
         isUpsertRequest: true,
-        indexingDirective : "Include"
+        indexingDirective : "Include",
+        //sessionToken: "tag", - error handled in azure
+        //no need
+        maxItemCount : 4,
+        consistancyLevel : "Eventual",
+        //changeFeedOption : "Incremental feed",
+        ifNoneMatch: "hhh"
+        //partitionKeyRangeId:"0"- error handled in azure
     };
     Document createDoc = {
         id: string `document_${uuid.toString()}`, 
@@ -657,7 +690,7 @@ function test_queryDocuments(){
         databaseId: database.id, 
         containerId: container.id
     };
-    int[] partitionKey = [1234];//get the pk from endpoint
+    int[] partitionKey = [1234];
     Query sqlQuery = {
         query: string `SELECT * FROM ${container.id.toString()} f WHERE f.Address.City = 'Seattle'`, 
         parameters: []
@@ -681,7 +714,7 @@ function test_queryDocumentsWithRequestOptions(){
         databaseId: database.id, 
         containerId: container.id
     };
-    int[] partitionKey = [1234];//get the pk from endpoint
+    int[] partitionKey = [1234];
     Query sqlQuery = {
         query: string `SELECT * FROM ${container.id.toString()} f WHERE f.Address.City = 'Seattle'`, 
         parameters: []
@@ -918,8 +951,8 @@ function test_createTrigger(){
     };
     string triggerId = string `trigger_${uuid.toString()}`;
     string createTriggerBody = "function tax(income) {\r\n    if(income == undefined) \r\n        throw 'no input';\r\n    if (income < 1000) \r\n        return income * 0.1;\r\n    else if (income < 10000) \r\n        return income * 0.2;\r\n    else\r\n        return income * 0.4;\r\n}";
-    string createTriggerOperation = "All"; // All,  Create,  Replace,  and Delete.
-    string createTriggerType = "Post"; // he acceptable values are: Pre and Post. 
+    string createTriggerOperation = "All"; 
+    string createTriggerType = "Post"; 
     Trigger createTrigger = {
         id:triggerId, 
         body:createTriggerBody, 
@@ -946,8 +979,8 @@ function test_replaceTrigger(){
         containerId: container.id
     };
     string replaceTriggerBody = "function updateMetadata() {\r\n var context = getContext();\r\n var collection = context.getCollection();\r\n var response = context.getResponse();\r\n var createdDocument = response.getBody();\r\n\r\n // query for metadata document\r\n var filterQuery = 'SELECT * FROM root r WHERE r.id = \"_metadata\"';\r\n var accept = collection.queryDocuments(collection.getSelfLink(),  filterQuery, \r\n updateMetadataCallback);\r\n if(!accept) throw \"Unable to update metadata,  abort\";\r\n\r\n function updateMetadataCallback(err,  documents,  responseOptions) {\r\n if(err) throw new Error(\"Error\" + err.message);\r\n if(documents.length != 1) throw 'Unable to find metadata document';\r\n var metadataDocument = documents[0];\r\n\r\n // update metadata\r\n metadataDocument.createdDocuments += 1;\r\n metadataDocument.createdNames += \" \" + createdDocument.id;\r\n var accept = collection.replaceDocument(metadataDocument._self, \r\n metadataDocument,  function(err,  docReplaced) {\r\n if(err) throw \"Unable to update metadata,  abort\";\r\n });\r\n if(!accept) throw \"Unable to update metadata,  abort\";\r\n return; \r\n }";
-    string replaceTriggerOperation = "All"; // All,  Create,  Replace,  and Delete.
-    string replaceTriggerType = "Post"; // he acceptable values are: Pre and Post. 
+    string replaceTriggerOperation = "All"; 
+    string replaceTriggerType = "Post";
     Trigger replaceTrigger = {
         id: trigger.id, 
         body:replaceTriggerBody, 
@@ -1103,7 +1136,6 @@ function test_deleteUser(){
     } 
 }
 
-//different permissions cannot be created for same resource,  already existing permissions can be replaced"
 @test:Config{
     groups: ["permission"], 
     dependsOn: ["test_createDatabase", "test_createUser"]
@@ -1119,7 +1151,6 @@ function test_createPermission(){
     string permissionId = string `permission_${uuid.toString()}`;
     string permissionMode = "All";
     string permissionResource = string `dbs/${database?._rid.toString()}/colls/${container?._rid.toString()}`;
-    //string permissionResource = string `dbs/${database._rid.toString()}/`;
     Permission createPermission = {
         id: permissionId, 
         permissionMode: permissionMode, 
@@ -1190,8 +1221,6 @@ function test_replacePermission(){
     }  
 }
 
-//expiry header when listing permission
-
 @test:Config{
     groups: ["permission"], 
     dependsOn: ["test_createPermission"]
@@ -1210,8 +1239,6 @@ function test_listPermissions(){
         var output = "";
     } 
 }
-
-////expiry header when getting permission
 
 @test:Config{
     groups: ["permission"], 
