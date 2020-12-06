@@ -233,7 +233,10 @@ function test_listOneDatabase(){
         "test_deleteUser",
         "test_createContainerIfNotExist",
         "test_deleteContainer",
-        "test_createPermissionWithTTL"
+        "test_createPermissionWithTTL",
+        "test_getOffer",
+        "test_replaceOffer",
+        "test_replaceOfferWithOptionalParameter"
     ]
 }
 function test_deleteDatabase(){
@@ -611,11 +614,7 @@ function test_GetOneDocument(){
         databaseId: database.id, 
         containerId: container.id
     };
-    @tainted Document getDoc =  {
-        id: document.id, 
-        partitionKey : [1234]  
-    };
-    var result = AzureCosmosClient->getDocument(resourceProperty, getDoc);
+    var result = AzureCosmosClient->getDocument(resourceProperty, document.id,[1234]);
     if result is error {
         test:assertFail(msg = result.message());
     } else {
@@ -648,7 +647,7 @@ function test_GetOneDocumentWithRequestOptions(){
         maxItemCount : 4,
         changeFeedOption : "Incremental feed"
     };
-    var result = AzureCosmosClient->getDocument(resourceProperty, getDoc, options);
+    var result = AzureCosmosClient->getDocument(resourceProperty, document.id, [1234], options);
     if result is error {
         test:assertFail(msg = result.message());
     } else {
@@ -667,11 +666,7 @@ function test_deleteDocument(){
         databaseId: database.id, 
         containerId: container.id
     };
-    @tainted Document deleteDoc =  {
-        id: document.id, 
-        partitionKey : [1234]  
-    };
-    var result = AzureCosmosClient->deleteDocument(resourceProperty, deleteDoc);  
+    var result = AzureCosmosClient->deleteDocument(resourceProperty, document.id, [1234]);  
     if result is error {
         test:assertFail(msg = result.message());
     } else {

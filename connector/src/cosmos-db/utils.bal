@@ -149,7 +149,7 @@ function setHeadersForQuery(http:Request request) returns http:Request|error {
 
 function setRequestOptions(http:Request request, RequestHeaderOptions requestOptions) returns http:Request|error {
     if requestOptions.indexingDirective is string {
-        if requestOptions.indexingDirective == "Include" || requestOptions.indexingDirective == "Exclude" {
+        if requestOptions.indexingDirective == INDEXING_TYPE_INCLUDE || requestOptions.indexingDirective == INDEXING_TYPE_EXCLUDE {
             request.setHeader(INDEXING_DIRECTIVE_HEADER, requestOptions.indexingDirective.toString());
         } else {
             return prepareError("Indexing directive should be either Exclude or Include");
@@ -165,7 +165,9 @@ function setRequestOptions(http:Request request, RequestHeaderOptions requestOpt
         request.setHeader(CONTINUATION_HEADER, requestOptions.continuationToken.toString());
     }
     if requestOptions.consistancyLevel is string {
-        if requestOptions.consistancyLevel == "Strong" || requestOptions.consistancyLevel == "Bounded" || requestOptions.consistancyLevel == "Session" || requestOptions.consistancyLevel == "Eventual" {
+        if requestOptions.consistancyLevel == CONSISTANCY_LEVEL_STRONG || requestOptions.consistancyLevel == 
+        CONSISTANCY_LEVEL_BOUNDED || requestOptions.consistancyLevel == CONSISTANCY_LEVEL_SESSION || 
+        requestOptions.consistancyLevel == CONSISTANCY_LEVEL_EVENTUAL {
             request.setHeader(CONSISTANCY_LEVEL_HEADER, requestOptions.consistancyLevel.toString());
         } else {
             return prepareError("Consistacy level should be one of Strong, Bounded, Session, or Eventual");
@@ -250,7 +252,7 @@ string tokenVersion, string date) returns string?|error {
         check encoding:encodeUriComponent(string `type=${tokenType}&ver=${tokenVersion}&sig=${signature}`, "UTF-8");   
         return authorization;
     } else {   
-        //error  
+        return prepareError("Base64 Decoding error");
     }
 }
 

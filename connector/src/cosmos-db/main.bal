@@ -111,8 +111,8 @@ public  client class Client {
 
     # To create a collection inside a database
     # + properties - object of type ResourceProperties
-    # + partitionKey - 
-    # + indexingPolicy -
+    # + partitionKey - required object of type PartitionKey
+    # + indexingPolicy - optional object of type IndexingPolicy
     # + throughputProperties - Optional throughput parameter which will set 'x-ms-offer-throughput' header 
     # + return - If successful, returns Container. Else returns error.  
     public remote function createContainer(@tainted ResourceProperties properties, PartitionKey partitionKey, 
@@ -135,8 +135,8 @@ public  client class Client {
 
     # To create a database inside a resource
     # + properties -  object of type ResourceProperties
-    # + partitionKey - 
-    # + indexingPolicy -
+    # + partitionKey - required object of type PartitionKey
+    # + indexingPolicy - optional object of type IndexingPolicy
     # + throughputProperties - Optional throughput parameter which will set 'x-ms-offer-throughput' header 
     # + return - If successful, returns Database. Else returns error.  
     public remote function createContainerIfNotExist(@tainted ResourceProperties properties, PartitionKey partitionKey, 
@@ -241,17 +241,18 @@ public  client class Client {
 
     # To list one document inside a collection
     # + properties - object of type ResourceProperties
-    # + document - object of type Document 
+    # + documentId - id of  Document,
+    # + partitionKey - array containing value of parition key field.
     # + requestOptions - object of type RequestHeaderOptions
     # + return - If successful, returns Document. Else returns error.  
-    public remote function getDocument(@tainted ResourceProperties properties, @tainted Document document, 
+    public remote function getDocument(@tainted ResourceProperties properties, string documentId, any[] partitionKey, 
     RequestHeaderOptions? requestOptions = ()) returns @tainted Document|error {
         http:Request request = new;
         string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES, properties.databaseId, RESOURCE_PATH_COLLECTIONS, 
-        properties.containerId, RESOURCE_PATH_DOCUMENTS, document.id]);
+        properties.containerId, RESOURCE_PATH_DOCUMENTS, documentId]);
         HeaderParameters header = mapParametersToHeaderType(GET, requestPath);
         request = check setHeaders(request, self.host, self.keyOrResourceToken, self.keyType, self.tokenVersion, header);
-        request = check setPartitionKeyHeader(request, document.partitionKey);
+        request = check setPartitionKeyHeader(request, partitionKey);
         if requestOptions is RequestHeaderOptions {
             request = check setRequestOptions(request, requestOptions);
         }
@@ -309,16 +310,17 @@ public  client class Client {
 
     # To delete a document inside a collection
     # + properties - object of type ResourceProperties
-    # + document - object of type Document 
+    # + documentId - id of the Document 
+    # + partitionKey - array containing value of parition key field.
     # + return - If successful, returns boolean specifying 'true' if delete is sucessful. Else returns error. 
-    public remote function deleteDocument(@tainted ResourceProperties properties, @tainted Document document) returns 
-    @tainted boolean|error {  
+    public remote function deleteDocument(@tainted ResourceProperties properties, string documentId, any[] partitionKey) 
+    returns @tainted boolean|error {  
         http:Request request = new;
         string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES, properties.databaseId, RESOURCE_PATH_COLLECTIONS, 
-        properties.containerId, RESOURCE_PATH_DOCUMENTS, document.id]);//error
+        properties.containerId, RESOURCE_PATH_DOCUMENTS, documentId]);
         HeaderParameters header = mapParametersToHeaderType(DELETE, requestPath);
         request = check setHeaders(request, self.host, self.keyOrResourceToken, self.keyType, self.tokenVersion, header);
-        request = check setPartitionKeyHeader(request, document.partitionKey);
+        request = check setPartitionKeyHeader(request, partitionKey);
         var response = self.azureCosmosClient->delete(requestPath, request);
         return check getDeleteResponse(response);
     }

@@ -1,4 +1,4 @@
-The Mongo DB connector allows you to connect to a Azure Cosmos DB resourece from Ballerina and perform various operations such as  `find`, `create`, `read`, `update`, and `delete` operations of `Databases`, `Containers`, `User Defined Functions`, `Tiggers`, `Stored Procedures`, `Users`, `Permissions` and `Offers`.
+The Cosmos DB connector allows you to connect to a Azure Cosmos DB resource from Ballerina and perform various operations such as  `find`, `create`, `read`, `update`, and `delete` operations of `Databases`, `Containers`, `User Defined Functions`, `Tiggers`, `Stored Procedures`, `Users`, `Permissions` and `Offers`.
 
 ## Compatibility
 
@@ -9,33 +9,30 @@ The Mongo DB connector allows you to connect to a Azure Cosmos DB resourece from
 
 ## CosmosDB Clients
 
-There are 3 clients provided by Ballerina to interact with MongoDB.
+There is only one client provided by Ballerina to interact with CosmosDB.
 
-1. **mongodb:Client** - This connects to the running MongoDB node and lists the database names as well as gets a client for a specific database.
-
-    ```ballerina
-    ClientConfig mongoConfig = {
-            host: "localhost",
-            options: {sslEnabled: false, serverSelectionTimeout: 5000}
-        };
-    Client mongoClient = check new (mongoConfig);
-    ```
-
-2. **mongodb:Database** - This connects to a specific MongoDB database and lists the collection names as well as gets a client for a specific collection.
+1. **cosmosdb:Client** - This connects to the running MongoDB node and lists the database names as well as gets a client for a specific database.
 
     ```ballerina
-    Database mongoDatabase = check mongoClient->getDatabase("moviecollection");
+    AzureCosmosConfiguration azureConfig = {
+    baseUrl : <BASE_URL>, 
+    keyOrResourceToken : <"KEY_OR_RESOURCE_TOKEN">, 
+    host : <"HOST">, 
+    tokenType : <"TOKEN_TYPE">, 
+    tokenVersion : <"TOKEN_VERSION">, 
+    secureSocketConfig :{
+                            trustStore: {
+                            path: <BALLERINA_TRUSTSTORE>, 
+                            password: <"SSL_PASSWORD">
+                            }
+                        }
+    };
+    Client azureClient = check new (azureConfig);
     ```
-
-3. **mongodb:Collection** - This connects to a specific collection and performs various operations such as `count`, `listIndexes`, `insert`, `find`, `update`, and `delete`.
-
-    ```ballerina
-    Collection mongoCollection = check mongoDatabase->getCollection("moviedetails");
-    ```
-
+  
 ## Sample
 
-First, import the `ballerinax/mongodb` module into the Ballerina project.
+First, import the `ballerinax/cosmosdb` module into the Ballerina project.
 
 ```ballerina
 import ballerina/log;
@@ -43,63 +40,67 @@ import ballerinax/mongodb;
 
 public function main() {
 
-    mongodb:ClientConfig mongoConfig = {
-        host: "localhost",
-        port: 27017,
-        username: "admin",
-        password: "admin",
-        options: {sslEnabled: false, serverSelectionTimeout: 5000}
+    AzureCosmosConfiguration config = {
+    baseUrl : "https://cosmosconnector.documents.azure.com:443/", 
+    keyOrResourceToken : "mytokenABCD==", 
+    host : "cosmosconnector.documents.azure.com:443", 
+    tokenType : "master", 
+    tokenVersion :1.0, 
+    secureSocketConfig :{
+                            trustStore: {
+                            path: getConfigValue("b7a_home") + "/truststore/path/trutstore.p12", 
+                            password: "mypwd"
+                            }
+                        }
     };
 
-    mongodb:Client mongoClient = checkpanic new (mongoConfig);
-    mongodb:Database mongoDatabase = checkpanic mongoClient->getDatabase("Ballerina");
-    mongodb:Collection mongoCollection = checkpanic mongoDatabase->getCollection("projects");
+    cosmosdb:Client azureCosmosClient = new(config);
 
-    map<json> doc1 = { "name": "ballerina", "type": "src" };
-    map<json> doc2 = { "name": "connectors", "type": "artifacts" };
-    map<json> doc3 = { "name": "docerina", "type": "src" };
-    map<json> doc4 = { "name": "test", "type": "artifacts" };
+    Database database1 = azureCosmosClient->createDatabase("mydatabase");
 
-    log:printInfo("------------------ Inserting Data -------------------");
-    checkpanic mongoCollection->insert(doc1);
-    checkpanic mongoCollection->insert(doc2);
-    checkpanic mongoCollection->insert(doc3);
-    checkpanic mongoCollection->insert(doc4);
+    @tainted ResourceProperties propertiesNewCollection = {
+            databaseId: database1.id, 
+            containerId: "mycontainer"
+    };
+    PartitionKey pk = {
+        paths: ["/AccountNumber"], 
+        kind :"Hash", 
+        'version: 2
+    };
+    Container container1 = azureCosmosClient->createContainer(propertiesNewCollection,pk);
+
+    @tainted ResourceProperties properties = {
+            databaseId: database1.id, 
+            containerId: container1.id
+    };
+    Document document1 = { id: "documentid1", documentBody :{ "LastName": "Sheldon", "AccountNumber": 1234 }, partitionKey : [1234] };
+    Document document2 = { id: "documentid2", documentBody :{ "LastName": "West", "AccountNumber": 7805 }, partitionKey : [7805] };
+    Document document3 = { id: "documentid3", documentBody :{ "LastName": "Moore", "AccountNumber": 5678 }, partitionKey : [5678] };
+    Document document4 = { id: "documentid4", documentBody :{ "LastName": "Hope", "AccountNumber": 2343 }, partitionKey : [2343] };
+
+    log:printInfo("------------------ Inserting Documents -------------------");
+    azureCosmosClient->createDocument(properties, document1);
+    azureCosmosClient->createDocument(properties, document2);
+    azureCosmosClient->createDocument(properties, document3);
+    azureCosmosClient->createDocument(properties, document4);
   
-    log:printInfo("------------------ Counting Data -------------------");
-    int count = checkpanic mongoCollection->countDocuments(());
-    log:printInfo("Count of the documents '" + count.toString() + "'.");
+    log:printInfo("------------------ List Documents -------------------");
+    DocumentList documentList = azureCosmosClient->getDocumentList(properties)
+
+    log:printInfo("------------------ Get One Document -------------------");
+    Document document = azureCosmosClient->getDocument(properties, document1.id, [1234])
+
+    log:printInfo("------------------ Query Documents -------------------");
+    Query cqlQuery = {
+        query: string `SELECT * FROM ${container.id.toString()} f WHERE f.Address.City = 'Seattle'`, 
+        parameters: []
+    };
+    var result = AzureCosmosClient->queryDocuments(properties, [1234], cqlQuery);     
+    log:printInfo("Returned Filtered documents '" + result.toString() + "'.");
 
 
-    log:printInfo("------------------ Querying Data -------------------");
-    map<json>[] jsonRet = checkpanic mongoCollection->find(());
-    log:printInfo("Returned documents '" + jsonRet.toString() + "'.");
+    log:printInfo("------------------ Delete Document -------------------");
+    var result = AzureCosmosClient->deleteDocument(properties, document.id, [1234]);  
 
-    map<json> queryString = {name: "connectors" };
-    jsonRet = checkpanic mongoCollection->find(queryString);
-    log:printInfo("Returned Filtered documents '" + jsonRet.toString() + "'.");
-
-
-    log:printInfo("------------------ Updating Data -------------------");
-    map<json> replaceFilter = { "type": "artifacts" };
-    map<json> replaceDoc = { "name": "main", "type": "artifacts" };
-
-    int response = checkpanic mongoCollection->update(replaceDoc, replaceFilter, true);
-    if (response > 0 ) {
-        log:printInfo("Modified count: '" + response.toString() + "'.") ;
-    } else {
-        log:printInfo("Error in replacing data");
-    }
-
-   log:printInfo("------------------ Deleting Data -------------------");
-   map<json> deleteFilter = { "name": "ballerina" };
-   var deleteRet = checkpanic mongoCollection->delete(deleteFilter, true);
-    if (response > 0 ) {
-        log:printInfo("Delete count: '" + response.toString() + "'.") ;
-    } else {
-        log:printInfo("Error in deleting data");
-    }
-
-     mongoClient->close();
 }
 ```

@@ -10,6 +10,24 @@ public const string TOKEN_TYPE_MASTER = "master";
 # Represents Token type for a resource token
 public const string TOKEN_TYPE_RESOURCE = "resource";
 
+# Whether to include indexing directive
+public const string INDEXING_TYPE_INCLUDE = "Include";
+
+# Whether to exclude indexing directive
+public const string INDEXING_TYPE_EXCLUDE = "Exclude";
+
+# Strong consistancy level
+public const string CONSISTANCY_LEVEL_STRONG = "Strong";
+
+# Bounded consistancy level
+public const string CONSISTANCY_LEVEL_BOUNDED = "Bounded";
+
+# Session consistancy level
+public const string CONSISTANCY_LEVEL_SESSION = "Session";
+
+# Eventual consistancy level
+public const string CONSISTANCY_LEVEL_EVENTUAL = "Eventual";
+
 const string CONTENT_TYPE_HEADER = "Content-Type";
 const string API_VERSION_HEADER = "x-ms-version";
 const string HOST_HEADER = "Host";
