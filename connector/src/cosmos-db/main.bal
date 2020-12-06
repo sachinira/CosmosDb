@@ -227,7 +227,7 @@ public  client class Client {
         request = check setHeaders(request, self.host, self.keyOrResourceToken, self.keyType, self.tokenVersion, header);
         request = check setPartitionKeyHeader(request, document.partitionKey);
         if requestOptions is RequestHeaderOptions {
-            request = setRequestOptions(request, requestOptions);
+            request = check setRequestOptions(request, requestOptions);
         }
         json requestBodyId = {
             id: document.id
@@ -253,7 +253,7 @@ public  client class Client {
         request = check setHeaders(request, self.host, self.keyOrResourceToken, self.keyType, self.tokenVersion, header);
         request = check setPartitionKeyHeader(request, document.partitionKey);
         if requestOptions is RequestHeaderOptions {
-            request = setRequestOptions(request, requestOptions);
+            request = check setRequestOptions(request, requestOptions);
         }
         var response = self.azureCosmosClient->get(requestPath, request);
         [json, Headers] jsonreponse = check mapResponseToTuple(response);
@@ -272,7 +272,7 @@ public  client class Client {
         HeaderParameters header = mapParametersToHeaderType(GET, requestPath);
         request = check setHeaders(request, self.host, self.keyOrResourceToken, self.keyType, self.tokenVersion, header);
         if requestOptions is RequestHeaderOptions{
-            request = setRequestOptions(request, requestOptions);
+            request = check setRequestOptions(request, requestOptions);
         }
         var response = self.azureCosmosClient->get(requestPath, request);
         [json, Headers] jsonreponse = check mapResponseToTuple(response);
@@ -295,7 +295,7 @@ public  client class Client {
         request = check setHeaders(request, self.host, self.keyOrResourceToken, self.keyType, self.tokenVersion, header);
         request = check setPartitionKeyHeader(request, document.partitionKey);
         if requestOptions is RequestHeaderOptions{
-            request = setRequestOptions(request, requestOptions);
+            request = check setRequestOptions(request, requestOptions);
         }
         json requestBodyId = {
             id: document.id

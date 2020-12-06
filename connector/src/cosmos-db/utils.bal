@@ -147,9 +147,13 @@ function setHeadersForQuery(http:Request request) returns http:Request|error {
     return request;
 }
 
-function setRequestOptions(http:Request request, RequestHeaderOptions requestOptions) returns http:Request {
+function setRequestOptions(http:Request request, RequestHeaderOptions requestOptions) returns http:Request|error {
     if requestOptions.indexingDirective is string {
-        request.setHeader(INDEXING_DIRECTIVE_HEADER, requestOptions.indexingDirective.toString());
+        if requestOptions.indexingDirective == "Include" || requestOptions.indexingDirective == "Exclude" {
+            request.setHeader(INDEXING_DIRECTIVE_HEADER, requestOptions.indexingDirective.toString());
+        } else {
+            return prepareError("Indexing directive should be either Exclude or Include");
+        }
     }
     if requestOptions.isUpsertRequest == true {
         request.setHeader(IS_UPSERT_HEADER, requestOptions.isUpsertRequest.toString());

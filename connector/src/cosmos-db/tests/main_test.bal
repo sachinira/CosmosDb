@@ -1,4 +1,4 @@
-import ballerina/io;
+//import ballerina/io;
 import ballerina/test;
 import ballerina/java;
 import ballerina/config;
@@ -67,7 +67,6 @@ function test_createDatabaseIfNotExist(){
         test:assertFail(msg = result.message());
     } else {
         ifexist = <@untainted><Database> result;
-        io:println(result);
     }
 }
 
