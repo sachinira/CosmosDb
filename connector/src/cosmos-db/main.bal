@@ -91,7 +91,7 @@ public  client class Client {
         request = check setHeaders(request, self.host, self.keyOrResourceToken, self.keyType, self.tokenVersion, header);
         var response = self.azureCosmosClient->get(requestPath, request);
         [json, Headers] jsonresponse = check mapResponseToTuple(response);
-        return mapJsonToDatabaseList(jsonresponse); 
+        return mapJsonToDatabaseListType(jsonresponse); 
     }
 
     # To delete a given database inside a resource
@@ -210,7 +210,7 @@ public  client class Client {
         request = check setHeaders(request, self.host, self.keyOrResourceToken, self.keyType, self.tokenVersion, header);
         var response = self.azureCosmosClient->get(requestPath, request);
         [json, Headers] jsonreponse = check mapResponseToTuple(response);
-        return mapJsonToPartitionKeyType(jsonreponse);
+        return mapJsonToPartitionKeyListType(jsonreponse);
     }
 
     # To create a Document inside a collection

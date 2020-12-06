@@ -38,7 +38,7 @@ function mapJsonToDatabaseType([json, Headers?] jsonPayload) returns Database {
     return db;
 }
 
-function mapJsonToDatabaseList([json, Headers] jsonPayload) returns @tainted DatabaseList {
+function mapJsonToDatabaseListType([json, Headers] jsonPayload) returns @tainted DatabaseList {
     json payload;
     Headers headers;
     [payload,headers] = jsonPayload;
@@ -114,7 +114,7 @@ function mapJsonToContainerListType([json, Headers] jsonPayload) returns @tainte
     return cll;
 }
 
-function mapJsonToPartitionKeyType([json, Headers] jsonPayload) returns @tainted PartitionKeyList {
+function mapJsonToPartitionKeyListType([json, Headers] jsonPayload) returns @tainted PartitionKeyList {
     PartitionKeyList pkl = {};
     PartitionKeyRange pkr = {};
     json payload;
