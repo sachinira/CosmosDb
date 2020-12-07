@@ -1,1 +1,1 @@
-{"sachini/cosmos-db:0.1.0:Permission":{"_rid":"string?","id":"string","permissionMode":"string","resource":"string","ttl":"int"}}
+{"sachini/cosmos-db:0.1.0:Permission":{"_rid":"string?","id":"string","permissionMode":"string","resource":"string","validityPeriod":"int","_token":"string?"}}

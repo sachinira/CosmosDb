@@ -38,7 +38,7 @@ function mapJsonToDatabaseType([json, Headers?] jsonPayload) returns Database {
     return db;
 }
 
-function mapJsonToDatabaseList([json, Headers] jsonPayload) returns @tainted DatabaseList {
+function mapJsonToDatabaseListType([json, Headers] jsonPayload) returns @tainted DatabaseList {
     json payload;
     Headers headers;
     [payload,headers] = jsonPayload;
@@ -66,7 +66,6 @@ function mapJsonToContainerType([json, Headers?] jsonPayload) returns @tainted C
     return coll;
 }
 
-//
 function mapJsonToIndexingPolicy(json jsonPayload) returns @tainted IndexingPolicy {
     IndexingPolicy indp = {};
     indp.indexingMode = jsonPayload.indexingMode != ()? jsonPayload.indexingMode.toString() : EMPTY_STRING;
@@ -76,7 +75,6 @@ function mapJsonToIndexingPolicy(json jsonPayload) returns @tainted IndexingPoli
     return indp;
 }
 
-//
 function mapJsonToIncludedPathsType(json jsonPayload) returns @tainted IncludedPath {
     IncludedPath ip = {};
     ip.path = jsonPayload.path.toString();
@@ -88,7 +86,6 @@ function mapJsonToIncludedPathsType(json jsonPayload) returns @tainted IncludedP
     return ip;
 }
 
-//
 function mapJsonToIndexType(json jsonPayload) returns Index {
     Index ind = {};
     ind.kind = jsonPayload.kind != () ? jsonPayload.kind.toString(): EMPTY_STRING;
@@ -97,7 +94,6 @@ function mapJsonToIndexType(json jsonPayload) returns Index {
     return ind; 
 }
 
-//
 function convertJsonToPartitionKey(json jsonPayload) returns @tainted PartitionKey {
     PartitionKey pk = {};
     pk.paths = convertToStringArray(<json[]>jsonPayload.paths);
@@ -106,7 +102,6 @@ function convertJsonToPartitionKey(json jsonPayload) returns @tainted PartitionK
     return pk;
 }
 
-//
 function mapJsonToContainerListType([json, Headers] jsonPayload) returns @tainted ContainerList {
     ContainerList cll = {};
     json payload;
@@ -119,21 +114,19 @@ function mapJsonToContainerListType([json, Headers] jsonPayload) returns @tainte
     return cll;
 }
 
-//
-function mapJsonToPartitionKeyType([json, Headers] jsonPayload) returns @tainted PartitionKeyList {
+function mapJsonToPartitionKeyListType([json, Headers] jsonPayload) returns @tainted PartitionKeyList {
     PartitionKeyList pkl = {};
     PartitionKeyRange pkr = {};
     json payload;
     Headers headers;
     [payload,headers] = jsonPayload;
     pkl._rid = payload._rid != () ? payload._rid.toString(): EMPTY_STRING;
-    pkl.PartitionKeyRanges = convertToPartitionKeyRangeArray(<json[]>payload.PartitionKeyRanges);
+    pkl.partitionKeyRanges = convertToPartitionKeyRangeArray(<json[]>payload.PartitionKeyRanges);
     pkl.reponseHeaders = headers;
     pkl._count = convertToInt(payload._count);
     return pkl;
 }
 
-//
 function mapJsonToPartitionKeyRange([json, Headers] jsonPayload) returns @tainted PartitionKeyRange {
     PartitionKeyRange pkr = {};
     json payload;
@@ -147,7 +140,7 @@ function mapJsonToPartitionKeyRange([json, Headers] jsonPayload) returns @tainte
     return pkr;
 }
 
-function mapJsonToDocument([json, Headers?] jsonPayload) returns @tainted Document {  
+function mapJsonToDocumentType([json, Headers?] jsonPayload) returns @tainted Document {  
     Document doc = {};
     json payload;
     Headers? headers;
@@ -165,7 +158,7 @@ function mapJsonToDocument([json, Headers?] jsonPayload) returns @tainted Docume
     return doc;
 }
 
-function mapJsonToDocumentList([json, Headers] jsonPayload) returns @tainted DocumentList|error {
+function mapJsonToDocumentListType([json, Headers] jsonPayload) returns @tainted DocumentList|error {
     DocumentList documentlist = {};
     json payload;
     Headers headers;
@@ -177,7 +170,7 @@ function mapJsonToDocumentList([json, Headers] jsonPayload) returns @tainted Doc
     return documentlist;
 } 
 
-function mapJsonToStoredProcedure([json, Headers?] jsonPayload) returns @tainted StoredProcedure {
+function mapJsonToStoredProcedureType([json, Headers?] jsonPayload) returns @tainted StoredProcedure {
     StoredProcedure sproc = {};
     json payload;
     Headers? headers;
@@ -191,7 +184,7 @@ function mapJsonToStoredProcedure([json, Headers?] jsonPayload) returns @tainted
     return sproc;
 }
 
-function mapJsonToStoredProcedureList([json, Headers] jsonPayload) returns @tainted StoredProcedureList {
+function mapJsonToStoredProcedureListType([json, Headers] jsonPayload) returns @tainted StoredProcedureList {
     StoredProcedureList sproclist = {};
     json payload;
     Headers headers;
@@ -203,7 +196,7 @@ function mapJsonToStoredProcedureList([json, Headers] jsonPayload) returns @tain
     return sproclist;
 }
 
-function mapJsonToUserDefinedFunction([json, Headers?] jsonPayload) returns @tainted UserDefinedFunction {
+function mapJsonToUserDefinedFunctionType([json, Headers?] jsonPayload) returns @tainted UserDefinedFunction {
     UserDefinedFunction udf = {};
     json payload;
     Headers? headers;
@@ -217,7 +210,7 @@ function mapJsonToUserDefinedFunction([json, Headers?] jsonPayload) returns @tai
     return udf;
 }
 
-function mapJsonToUserDefinedFunctionList([json, Headers] jsonPayload) returns @tainted UserDefinedFunctionList|error {
+function mapJsonToUserDefinedFunctionListType([json, Headers] jsonPayload) returns @tainted UserDefinedFunctionList|error {
     UserDefinedFunctionList udflist = {};
     json payload;
     Headers headers;
@@ -229,7 +222,7 @@ function mapJsonToUserDefinedFunctionList([json, Headers] jsonPayload) returns @
     return udflist;
 }
 
-function mapJsonToTrigger([json, Headers?] jsonPayload) returns @tainted Trigger {
+function mapJsonToTriggerType([json, Headers?] jsonPayload) returns @tainted Trigger {
     Trigger trigger = {};
     json payload;
     Headers? headers;
@@ -245,7 +238,7 @@ function mapJsonToTrigger([json, Headers?] jsonPayload) returns @tainted Trigger
     return trigger;
 }
 
-function mapJsonToTriggerList([json, Headers] jsonPayload) returns @tainted TriggerList|error {
+function mapJsonToTriggerListType([json, Headers] jsonPayload) returns @tainted TriggerList|error {
     TriggerList triggerlist = {};
     json payload;
     Headers headers;
@@ -257,7 +250,7 @@ function mapJsonToTriggerList([json, Headers] jsonPayload) returns @tainted Trig
     return triggerlist;
 }
 
-function mapJsonToUser([json, Headers?] jsonPayload) returns @tainted User {
+function mapJsonToUserType([json, Headers?] jsonPayload) returns @tainted User {
     User user = {};
     json payload;
     Headers? headers;
@@ -270,7 +263,7 @@ function mapJsonToUser([json, Headers?] jsonPayload) returns @tainted User {
     return user;
 }
 
-function mapJsonToUserList([json, Headers?] jsonPayload) returns @tainted UserList {
+function mapJsonToUserListType([json, Headers?] jsonPayload) returns @tainted UserList {
     UserList userlist = {};
     json payload;
     Headers? headers;
@@ -282,7 +275,7 @@ function mapJsonToUserList([json, Headers?] jsonPayload) returns @tainted UserLi
     return userlist;
 }
 
-function mapJsonToPermission([json, Headers?] jsonPayload) returns @tainted Permission {
+function mapJsonToPermissionType([json, Headers?] jsonPayload) returns @tainted Permission {
     Permission permission = {};
     json payload;
     Headers? headers;
@@ -290,6 +283,7 @@ function mapJsonToPermission([json, Headers?] jsonPayload) returns @tainted Perm
     permission.id = payload.id != () ? payload.id.toString() : EMPTY_STRING;
     permission._rid = payload._rid != () ? payload._rid.toString() : EMPTY_STRING;
     permission.permissionMode = payload.permissionMode != () ? payload.permissionMode.toString() : EMPTY_STRING;
+    permission._token = payload._token != () ? payload._token.toString() : EMPTY_STRING;
     permission.'resource = payload.'resource != () ? payload.'resource.toString() : EMPTY_STRING;
     if headers is Headers {
         permission["reponseHeaders"] = headers;
@@ -297,7 +291,7 @@ function mapJsonToPermission([json, Headers?] jsonPayload) returns @tainted Perm
     return permission;
 }
 
-function mapJsonToPermissionList([json, Headers?] jsonPayload) returns @tainted PermissionList {
+function mapJsonToPermissionListType([json, Headers?] jsonPayload) returns @tainted PermissionList {
     PermissionList permissionList = {};
     json payload;
     Headers? headers;
@@ -309,7 +303,7 @@ function mapJsonToPermissionList([json, Headers?] jsonPayload) returns @tainted 
     return permissionList;
 }
 
-function mapJsonToOffer([json, Headers?] jsonPayload) returns @tainted Offer {
+function mapJsonToOfferType([json, Headers?] jsonPayload) returns @tainted Offer {
     Offer offer = {};
     json payload;
     Headers? headers;
@@ -327,7 +321,7 @@ function mapJsonToOffer([json, Headers?] jsonPayload) returns @tainted Offer {
     return offer;
 }
 
-function mapJsonToOfferList([json, Headers?] jsonPayload) returns @tainted OfferList {
+function mapJsonToOfferListType([json, Headers?] jsonPayload) returns @tainted OfferList {
     OfferList offerList = {};
     json payload;
     Headers? headers;
@@ -407,7 +401,7 @@ function convertToDocumentArray(json[] sourceDocumentArrayJsonObject) returns @t
     Document[] documents = [];
     int i = 0;
     foreach json document in sourceDocumentArrayJsonObject { 
-        documents[i] = mapJsonToDocument([document,()]);
+        documents[i] = mapJsonToDocumentType([document,()]);
         i = i + 1;
     }
     return documents;
@@ -417,7 +411,7 @@ function convertToStoredProcedureArray(json[] sourceSprocArrayJsonObject) return
     StoredProcedure[] sprocs = [];
     int i = 0;
     foreach json storedProcedure in sourceSprocArrayJsonObject { 
-        sprocs[i] = mapJsonToStoredProcedure([storedProcedure,()]);
+        sprocs[i] = mapJsonToStoredProcedureType([storedProcedure,()]);
         i = i + 1;
     }
     return sprocs;
@@ -427,7 +421,7 @@ function userDefinedFunctionArray(json[] sourceUdfArrayJsonObject) returns @tain
     UserDefinedFunction[] udfs = [];
     int i = 0;
     foreach json userDefinedFunction in sourceUdfArrayJsonObject { 
-        udfs[i] = mapJsonToUserDefinedFunction([userDefinedFunction,()]);
+        udfs[i] = mapJsonToUserDefinedFunctionType([userDefinedFunction,()]);
         i = i + 1;
     }
     return udfs;
@@ -437,7 +431,7 @@ function ConvertToTriggerArray(json[] sourceTriggerArrayJsonObject) returns @tai
     Trigger[] triggers = [];
     int i = 0;
     foreach json trigger in sourceTriggerArrayJsonObject { 
-        triggers[i] = mapJsonToTrigger([trigger,()]);
+        triggers[i] = mapJsonToTriggerType([trigger,()]);
         i = i + 1;
     }
     return triggers;
@@ -447,7 +441,7 @@ function ConvertToUserArray(json[] sourceTriggerArrayJsonObject) returns @tainte
     User[] users = [];
     int i = 0;
     foreach json user in sourceTriggerArrayJsonObject { 
-        users[i] = mapJsonToUser([user,()]);
+        users[i] = mapJsonToUserType([user,()]);
         i = i + 1;
     }
     return users;
@@ -457,7 +451,7 @@ function ConvertToPermissionArray(json[] sourcePermissionArrayJsonObject) return
     Permission[] permissions = [];
     int i = 0;
     foreach json permission in sourcePermissionArrayJsonObject { 
-        permissions[i] = mapJsonToPermission([permission,()]);
+        permissions[i] = mapJsonToPermissionType([permission,()]);
         i = i + 1;
     }
     return permissions;
@@ -467,7 +461,7 @@ function ConvertToOfferArray(json[] sourceOfferArrayJsonObject) returns @tainted
     Offer[] offers = [];
     int i = 0;
     foreach json offer in sourceOfferArrayJsonObject { 
-        offers[i] = mapJsonToOffer([offer,()]);
+        offers[i] = mapJsonToOfferType([offer,()]);
         i = i + 1;
     }
     return offers;

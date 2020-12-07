@@ -2,7 +2,7 @@ import ballerina/http;
 
 public type AzureCosmosConfiguration record {|
     string baseUrl;    
-    string masterKey;
+    string keyOrResourceToken;
     string host;
     string tokenType;
     string tokenVersion;
@@ -28,7 +28,8 @@ public type RequestHeaderOptions record {|
     string? ifNoneMatch = (); //No header: returns all changes from the beginning (collection creation)//"*": 
     //returns all new changes to data within the collection <etag>: If set to a collection ETag, returns all 
     //changes made since that logical timestamp.only for GET
-    string? PartitionKeyRangeId = ();
+    string? partitionKeyRangeId = ();
+    boolean? enableCrossPartition = ();
     string? ifMatch = ();//Only for PUT and DELETE 
 |};
 
@@ -39,17 +40,17 @@ public type ResourceProperties record {|
 
 public type Headers record {|
     string? continuationHeader?;
-    string? sessionTokenHeader = ();
-    string? requestChargeHeader = ();
-    string? resourceUsageHeader = ();
+    string? sessionTokenHeader?;
+    string? requestChargeHeader?;
+    string? resourceUsageHeader?;
     string? itemCountHeader?;
-    string? etagHeader = ();
-    string? dateHeader = ();
+    string? etagHeader?;
+    string? dateHeader?;
 |};
 
 public type Database record {|
     string id = "";
-    string? _rid = ();
+    string _rid?;
     string _self?;
     Headers?...;
 |};
@@ -63,8 +64,8 @@ public type DatabaseList record {
 //conflict resolution policy must be included
 public type Container record {|
     string id = "";
-    string? _rid = ();
-    string? _self = ();
+    string _rid?;
+    string _self?;
     boolean allowMaterializedViews?;
     IndexingPolicy indexingPolicy?;
     PartitionKey partitionKey?;
@@ -75,7 +76,7 @@ public type ContainerList record {|
     string _rid = "";
     Container[] containers = [];
     Headers reponseHeaders?;
-    int _count = 0;
+    int _count?;
 |};
 
 public type Document record {|
@@ -84,14 +85,14 @@ public type Document record {|
     string? _self?;
     json? documentBody = {};
     string? documentId?;
-    any? partitionKey = ();
+    any[]? partitionKey = [];
     Headers?...;
 |};
 
 public type DocumentList record {|
     string _rid = "";
     Document[] documents = [];
-    int _count = 0;
+    int _count?;
     Headers reponseHeaders?;
 |};
 
@@ -153,7 +154,7 @@ public type User  record {|
 public type UserList  record {|
     string _rid = "";
     User[] users = [];
-    int _count = 0;
+    int _count?;
     Headers? reponseHeaders = ();
 |};
 
@@ -162,7 +163,8 @@ public type Permission record {|
     string id = "";
     string permissionMode = "";
     string 'resource = "";
-    int ttl?;
+    int validityPeriod?;
+    string? _token?;
     Headers?...;
 |};
 
@@ -175,9 +177,9 @@ public type PermissionList  record {|
 
 public type Offer record {|
     string id = "";
-    string _rid = "";
+    string? _rid?;
     string offerVersion = "";//It can be V1 for the legacy S1, S2, and S3 levels and V2 for user-defined throughput levels (recommended).
-    string? offerType = ();  //This property is only applicable in the V1 offer version. Set it to S1, S2, or S3 for V1 offer types. 
+    string? offerType?;  //This property is only applicable in the V1 offer version. Set it to S1, S2, or S3 for V1 offer types. 
     //It is invalid for user-defined performance levels or provisioned throughput based model.
     json content = {};
     string 'resource = "";
@@ -227,12 +229,12 @@ public type Index record {|
 public type PartitionKey record {|
     string[] paths = [];
     string kind = "";
-    int? 'version = ();
+    int? 'version?;
 |};
 
 public type PartitionKeyList record {|
     string _rid = "";
-    PartitionKeyRange[] PartitionKeyRanges = [];
+    PartitionKeyRange[] partitionKeyRanges = [];
     Headers reponseHeaders?;
     int _count = 0;
 |};
