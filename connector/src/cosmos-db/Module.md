@@ -5,13 +5,13 @@ The Cosmos DB connector allows you to connect to a Azure Cosmos DB resource from
 |                             |       Version               |
 |:---------------------------:|:---------------------------:|
 | Ballerina Language          | Swan Lake Preview4          |
-| Cosmos DB                    | V4.2.0                      |
+| Cosmos DB API Version       | 2018-12-31                  |
 
 ## CosmosDB Clients
 
 There is only one client provided by Ballerina to interact with CosmosDB.
 
-1. **cosmosdb:Client** - This connects to the running MongoDB node and lists the database names as well as gets a client for a specific database.
+1. **azure_cosmosdb:Client** - This connects to the running CosmosDB resource and perform different actions
 
     ```ballerina
     AzureCosmosConfiguration azureConfig = {
@@ -32,11 +32,11 @@ There is only one client provided by Ballerina to interact with CosmosDB.
   
 ## Sample
 
-First, import the `ballerinax/cosmosdb` module into the Ballerina project.
+First, import the `ballerinax/azure_cosmosdb` module into the Ballerina project.
 
 ```ballerina
 import ballerina/log;
-import ballerinax/mongodb;
+import ballerinax/azure_cosmosdb;
 
 public function main() {
 
@@ -54,7 +54,7 @@ public function main() {
                         }
     };
 
-    cosmosdb:Client azureCosmosClient = new(config);
+    azure_cosmosdb:Client azureCosmosClient = new(config);
 
     Database database1 = azureCosmosClient->createDatabase("mydatabase");
 
@@ -92,12 +92,11 @@ public function main() {
 
     log:printInfo("------------------ Query Documents -------------------");
     Query cqlQuery = {
-        query: string `SELECT * FROM ${container.id.toString()} f WHERE f.Address.City = 'Seattle'`, 
+        query: string `SELECT * FROM ${container1.id.toString()} f WHERE f.Address.City = 'Seattle'`, 
         parameters: []
     };
     var result = AzureCosmosClient->queryDocuments(properties, [1234], cqlQuery);     
     log:printInfo("Returned Filtered documents '" + result.toString() + "'.");
-
 
     log:printInfo("------------------ Delete Document -------------------");
     var result = AzureCosmosClient->deleteDocument(properties, document.id, [1234]);  
