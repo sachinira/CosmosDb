@@ -1,1 +1,1 @@
-{"sachini/cosmos-db:0.1.0:PermissionList":{"_rid":"string","permissions":"sachini/cosmos-db:0.1.0:Permission[]","_count":"int","reponseHeaders":"sachini/cosmos-db:0.1.0:Headers?"}}
+{"sachini/cosmos-db:0.1.0:PermissionList":{"permissions":"sachini/cosmos-db:0.1.0:Permission[]","count":"int","reponseHeaders":"sachini/cosmos-db:0.1.0:Headers?"}}

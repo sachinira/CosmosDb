@@ -1,7 +1,7 @@
 import ballerina/http;
 
 public type AzureCosmosConfiguration record {|
-    string baseUrl;    
+    string baseUrl;
     string keyOrResourceToken;
     string host;
     string tokenType;
@@ -9,7 +9,7 @@ public type AzureCosmosConfiguration record {|
     http:ClientSecureSocket? secureSocketConfig;
 |};
 
-public type HeaderParameters record {|
+type HeaderParameters record {|
     string verb = "";
     string apiVersion = API_VERSION;
     string resourceType = "";
@@ -39,33 +39,47 @@ public type ResourceProperties record {|
 |};
 
 public type Headers record {|
-    string? continuationHeader?;
-    string? sessionTokenHeader?;
-    string? requestChargeHeader?;
-    string? resourceUsageHeader?;
-    string? itemCountHeader?;
-    string? etagHeader?;
-    string? dateHeader?;
+    string continuationHeader?;
+    string sessionTokenHeader?;
+    string requestChargeHeader?;
+    string resourceUsageHeader?;
+    string itemCountHeader?;
+    string etagHeader?;
+    string dateHeader?;
+|};
+
+public type Common record {|
+    string resourceId?;
+    string selfReference?;
+    string timeStamp?;
+    string eTag?;
 |};
 
 public type Database record {|
     string id = "";
-    string _rid?;
-    string _self?;
+    *Common;
+    string collections?;
+    string users?;
     Headers?...;
 |};
 
 public type DatabaseList record {
-    string _rid = "";
+    *Common;
     Database[] databases = [];
     Headers? reponseHeaders = ();
+    int count?;
 };
+
 
 //conflict resolution policy must be included
 public type Container record {|
     string id = "";
-    string _rid?;
-    string _self?;
+    *Common;
+    string collections?;
+    string storedProcedures?;
+    string triggers?;
+    string userDefinedFunctions?;
+    string conflicts?;
     boolean allowMaterializedViews?;
     IndexingPolicy indexingPolicy?;
     PartitionKey partitionKey?;
@@ -73,26 +87,26 @@ public type Container record {|
 |};
 
 public type ContainerList record {|
-    string _rid = "";
+    *Common;
     Container[] containers = [];
     Headers reponseHeaders?;
-    int _count?;
+    int count?;
 |};
 
 public type Document record {|
     string id = "";
-    string? _rid?;
-    string? _self?;
-    json? documentBody = {};
+    *Common;
+    string attachments?;
+    json? documentBody =     {};
     string? documentId?;
     any[]? partitionKey = [];
     Headers?...;
 |};
 
 public type DocumentList record {|
-    string _rid = "";
+    *Common;
     Document[] documents = [];
-    int _count?;
+    int count?;
     Headers reponseHeaders?;
 |};
 
@@ -107,16 +121,16 @@ public type QueryParameter record {|
 |};
 
 public type StoredProcedure record {|
-    string? _rid?;
     string id = "";
+    *Common;
     string body = "";
     Headers?...;
 |};
 
 public type StoredProcedureList record {|
-    string _rid = "";
+    *Common;
     StoredProcedure[] storedProcedures = [];
-    int _count = 0;
+    int count = 0;
     Headers?...;
 |};
 
@@ -126,9 +140,9 @@ public type UserDefinedFunction record {|
 |};
 
 public type UserDefinedFunctionList record {|
-    string _rid = "";
+    *Common;
     UserDefinedFunction[] UserDefinedFunctions = [];
-    int _count = 0;
+    int count = 0;
     Headers?...;
 |};
 
@@ -140,57 +154,58 @@ public type Trigger record {|
 |};
 
 public type TriggerList record {|
-    string _rid = "";
+    *Common;
     Trigger[] triggers = [];
-    int _count = 0;
+    int count = 0;
     Headers?...;
 |};
 
-public type User  record {|
+public type User record {|
     *Database;
+    string permissions?;
     Headers?...;
 |};
 
-public type UserList  record {|
-    string _rid = "";
+public type UserList record {|
+    *Common;
     User[] users = [];
-    int _count?;
+    int count?;
     Headers? reponseHeaders = ();
 |};
 
 public type Permission record {|
-    string? _rid?;
     string id = "";
+    *Common;
     string permissionMode = "";
-    string 'resource = "";
+    string resourcePath = "";
     int validityPeriod?;
-    string? _token?;
+    string? token?;
     Headers?...;
 |};
 
-public type PermissionList  record {|
-    string _rid = "";
+public type PermissionList record {|
+    *Common;
     Permission[] permissions = [];
-    int _count = 0;
+    int count = 0;
     Headers? reponseHeaders = ();
 |};
 
 public type Offer record {|
     string id = "";
-    string? _rid?;
+    *Common;
     string offerVersion = "";//It can be V1 for the legacy S1, S2, and S3 levels and V2 for user-defined throughput levels (recommended).
     string? offerType?;  //This property is only applicable in the V1 offer version. Set it to S1, S2, or S3 for V1 offer types. 
     //It is invalid for user-defined performance levels or provisioned throughput based model.
     json content = {};
-    string 'resource = "";
     string offerResourceId = "";
+    string resourceSelfLink = "";
     Headers?...;
 |};
 
 public type OfferList record {|
-    string _rid = "";
+    *Common;
     Offer[] offers = [];
-    int _count = 0;
+    int count = 0;
     Headers?...;
 |};
 
@@ -229,14 +244,14 @@ public type Index record {|
 public type PartitionKey record {|
     string[] paths = [];
     string kind = "";
-    int? 'version?;
+    int? keyVersion?;
 |};
 
 public type PartitionKeyList record {|
-    string _rid = "";
+    string resourceId = "";
     PartitionKeyRange[] partitionKeyRanges = [];
     Headers reponseHeaders?;
-    int _count = 0;
+    int count = 0;
 |};
 
 public type PartitionKeyRange record {|
@@ -255,6 +270,6 @@ public type ConflictResolutionPolicyType record {|
     string conflictResolutionProcedure = "";
 |};
 
-public type AzureError  distinct  error;
+public type AzureError distinct error;
 
-type JsonMap map<json>;
+type JsonMap  map<json>;

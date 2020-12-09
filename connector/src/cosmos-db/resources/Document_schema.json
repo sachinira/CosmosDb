@@ -1,1 +1,1 @@
-{"sachini/cosmos-db:0.1.0:Document":{"id":"string","_rid":"string?","_self":"string?","documentBody":"json?","documentId":"string?","partitionKey":"any[]?"}}
+{"sachini/cosmos-db:0.1.0:Document":{"id":"string","attachments":"string","documentBody":"json?","documentId":"string?","partitionKey":"any[]?"}}

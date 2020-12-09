@@ -1,4 +1,5 @@
 import ballerina/http;
+import ballerina/io;
 
 # Azure Cosmos DB Client object.
 public  client class Client {
@@ -120,15 +121,24 @@ public  client class Client {
         http:Request request = new;
         string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES, properties.databaseId, RESOURCE_PATH_COLLECTIONS]);
         HeaderParameters header = mapParametersToHeaderType(POST, requestPath);
-        json body = {
+        json jsonPayload = {
             "id": properties.containerId, 
-            "partitionKey": <json>partitionKey.cloneWithType(json)
+            "partitionKey": {
+                paths: <json>partitionKey.paths.cloneWithType(json),
+                kind : partitionKey.kind,
+                Version: partitionKey?.keyVersion
+            }
         };
-        json finalc = check body.mergeJson(<json>indexingPolicy.cloneWithType(json));
+        if (indexingPolicy != ()) {
+            jsonPayload = check jsonPayload.mergeJson({"indexingPolicy": <json>indexingPolicy.cloneWithType(json)});
+        }
         request = check setHeaders(request, self.host, self.keyOrResourceToken, self.keyType, self.tokenVersion, header);
         request = check setThroughputOrAutopilotHeader(request, throughputProperties);
-        request.setJsonPayload(<@untainted>finalc);
+        request.setJsonPayload(<@untainted>jsonPayload);
         var response = self.azureCosmosClient->post(requestPath, request);
+        if response is http:Response{
+            io:println(response.getJsonPayload());
+        }
         [json, Headers] jsonreponse = check mapResponseToTuple(response);
         return mapJsonToContainerType(jsonreponse);
     }
@@ -142,7 +152,7 @@ public  client class Client {
     public remote function createContainerIfNotExist(@tainted ResourceProperties properties, PartitionKey partitionKey, 
     IndexingPolicy? indexingPolicy = (), ThroughputProperties? throughputProperties = ()) returns @tainted Container?|error {
         var result = self->getContainer(properties);
-        if result is error{
+        if result is error {
             return self->createContainer(properties, partitionKey);
         } else {
             return prepareError("The collection with specific id alrady exist");
@@ -229,11 +239,11 @@ public  client class Client {
         if requestOptions is RequestHeaderOptions {
             request = check setRequestOptions(request, requestOptions);
         }
-        json requestBodyId = {
+        json jsonPayload = {
             id: document.id
         };  
-        json Final = check requestBodyId.mergeJson(document.documentBody);     
-        request.setJsonPayload(Final);
+        jsonPayload = check jsonPayload.mergeJson(document.documentBody);     
+        request.setJsonPayload(jsonPayload);
         var response = self.azureCosmosClient->post(requestPath, request);
         [json, Headers] jsonreponse = check mapResponseToTuple(response);
         return mapJsonToDocumentType(jsonreponse);
@@ -298,11 +308,11 @@ public  client class Client {
         if requestOptions is RequestHeaderOptions{
             request = check setRequestOptions(request, requestOptions);
         }
-        json requestBodyId = {
+        json jsonPayload = {
             id: document.id
         };  
-        json Final = check requestBodyId.mergeJson(document.documentBody); 
-        request.setJsonPayload(<@untainted>Final);
+        jsonPayload = check jsonPayload.mergeJson(document.documentBody); 
+        request.setJsonPayload(<@untainted>jsonPayload);
         var response = self.azureCosmosClient->put(requestPath, request);
         [json, Headers] jsonreponse = check mapResponseToTuple(response);
         return mapJsonToDocumentType(jsonreponse);
@@ -327,11 +337,11 @@ public  client class Client {
 
     # To query documents inside a collection
     # + properties - object of type ResourceProperties
-    # + cqlQuery - json object of type Query containing the CQL query
+    # + sqlQuery - json object of type Query containing the SQL query
     # + requestOptions - object of type RequestOptions
     # + partitionKey - the value provided for the partition key specified in the document
     # + return - If successful, returns a json. Else returns error. 
-    public remote function queryDocuments(@tainted ResourceProperties properties, any[] partitionKey, Query cqlQuery, 
+    public remote function queryDocuments(@tainted ResourceProperties properties, any[] partitionKey, Query sqlQuery, 
     RequestHeaderOptions? requestOptions = ()) returns @tainted json|error {
         http:Request request = new;
         string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES, properties.databaseId, RESOURCE_PATH_COLLECTIONS, 
@@ -339,7 +349,7 @@ public  client class Client {
         HeaderParameters header = mapParametersToHeaderType(POST, requestPath);
         request = check setHeaders(request, self.host, self.keyOrResourceToken, self.keyType, self.tokenVersion, header);
         request = check setPartitionKeyHeader(request, partitionKey);
-        request.setPayload(<json>cqlQuery.cloneWithType(json));
+        request.setPayload(<json>sqlQuery.cloneWithType(json));
         request = check setHeadersForQuery(request);
         var response = self.azureCosmosClient->post(requestPath, request);
         json jsonresponse = check mapResponseToJson(response);
@@ -574,10 +584,10 @@ public  client class Client {
         string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES, properties.databaseId, RESOURCE_PATH_USER]);       
         HeaderParameters header = mapParametersToHeaderType(POST, requestPath);
         request = check setHeaders(request, self.host, self.keyOrResourceToken, self.keyType, self.tokenVersion, header);
-        json reqBody = {
+        json jsonPayload = {
             id:userId
         };
-        request.setJsonPayload(reqBody);
+        request.setJsonPayload(jsonPayload);
         var response = self.azureCosmosClient->post(requestPath, request);
         [json, Headers] jsonResponse = check mapResponseToTuple(response);
         return mapJsonToUserType(jsonResponse);     
@@ -597,10 +607,10 @@ public  client class Client {
         string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES, properties.databaseId, RESOURCE_PATH_USER, userId]);       
         HeaderParameters header = mapParametersToHeaderType(PUT, requestPath);
         request = check setHeaders(request, self.host, self.keyOrResourceToken, self.keyType, self.tokenVersion, header);
-        json reqBody = {
+        json jsonPayload = {
             id:newUserId
         };
-        request.setJsonPayload(reqBody);
+        request.setJsonPayload(jsonPayload);
         var response = self.azureCosmosClient->put(requestPath, request);
         [json, Headers] jsonResponse = check mapResponseToTuple(response);
         return mapJsonToUserType(jsonResponse); 
@@ -675,7 +685,12 @@ public  client class Client {
         if validityPeriod is int {
             request = check setExpiryHeader(request,validityPeriod);
         }
-        request.setJsonPayload(<@untainted><json>permission.cloneWithType(json));
+        json jsonPayload = {
+            "id" : permission.id,
+            "permissionMode" : permission.permissionMode,
+            "resource": permission.resourcePath
+        };
+        request.setJsonPayload(jsonPayload);
         var response = self.azureCosmosClient->post(requestPath, request);
         [json, Headers] jsonResponse = check mapResponseToTuple(response);
         return mapJsonToPermissionType(jsonResponse);
@@ -700,7 +715,12 @@ public  client class Client {
         if validityPeriod is int {
             request = check setExpiryHeader(request,validityPeriod);
         }
-        request.setJsonPayload(<@untainted><json>permission.cloneWithType(json));
+        json jsonPayload = {
+            "id" : permission.id,
+            "permissionMode" : permission.permissionMode,
+            "resource": permission.resourcePath
+        };
+        request.setJsonPayload(<@untainted>jsonPayload);
         var response = self.azureCosmosClient->put(requestPath, request);
         [json, Headers] jsonResponse = check mapResponseToTuple(response);
         return mapJsonToPermissionType(jsonResponse);
@@ -792,28 +812,43 @@ public  client class Client {
     }
 
     # To replace an existing offer
-    # + offer - an object of type Offer
+    # + offer - an object of type Offer.
+    # + offerType - 
     # + return - If successful, returns a Offer. Else returns error.
-    public remote function replaceOffer(Offer offer) returns @tainted Offer|error {
+    public remote function replaceOffer(Offer offer, string? offerType = ()) returns @tainted Offer|error {
         http:Request request = new;
         string requestPath =  prepareUrl([RESOURCE_PATH_OFFER, offer.id]);       
         HeaderParameters header = mapOfferHeaderType(PUT, requestPath);
         request = check setHeaders(request, self.host, self.keyOrResourceToken, self.keyType, self.tokenVersion, header);
-        request.setJsonPayload(offer);
+        json jsonPaylod = {
+            "offerVersion": offer.offerVersion,
+            "content": offer.content,
+            "resource": offer.resourceSelfLink,
+            "offerResourceId": offer.offerResourceId,
+            "id": offer.id,
+            "_rid": offer?.resourceId
+        };
+        if (offerType is string && offer.offerVersion ==  "V1") {
+            json selectedType = {
+                "offerType": offerType
+            };
+            jsonPaylod = check jsonPaylod.mergeJson(selectedType);
+        }
+        request.setJsonPayload(jsonPaylod);
         var response = self.azureCosmosClient->put(requestPath, request);
         [json, Headers] jsonResponse = check mapResponseToTuple(response);
         return mapJsonToOfferType(jsonResponse);
     }
 
     # To get information of a user from a database
-    # + cqlQuery - the CQL query to execute
+    # + sqlQuery - the SQL query to execute
     # + return - If successful, returns a json. Else returns error.
-    public remote function queryOffer(Query cqlQuery) returns @tainted json|error {
+    public remote function queryOffer(Query sqlQuery) returns @tainted json|error {
         http:Request request = new;
         string requestPath =  prepareUrl([RESOURCE_PATH_OFFER]);
         HeaderParameters header = mapParametersToHeaderType(POST, requestPath);
         request = check setHeaders(request, self.host, self.keyOrResourceToken, self.keyType, self.tokenVersion, header);
-        request.setJsonPayload(<json>cqlQuery.cloneWithType(json));
+        request.setJsonPayload(<json>sqlQuery.cloneWithType(json));
         request = check setHeadersForQuery(request);
         var response = self.azureCosmosClient->post(requestPath, request);
         json jsonresponse = check mapResponseToJson(response);

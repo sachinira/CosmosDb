@@ -1,1 +1,1 @@
-{"sachini/cosmos-db:0.1.0:Offer":{"id":"string","_rid":"string?","offerVersion":"string","offerType":"string?","content":"json","resource":"string","offerResourceId":"string"}}
+{"sachini/cosmos-db:0.1.0:Offer":{"id":"string","offerVersion":"string","offerType":"string?","content":"json","offerResourceId":"string","resourceSelfLink":"string"}}

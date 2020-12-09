@@ -73,11 +73,11 @@ function mapResponseHeadersToObject(http:Response|http:ClientError httpResponse)
     }
 }
 
-function getHeaderIfExist(http:Response httpResponse, string headername) returns @tainted string? {
+function getHeaderIfExist(http:Response httpResponse, string headername) returns @tainted string {
     if httpResponse.hasHeader(headername) {
         return httpResponse.getHeader(headername);
     } else {
-        return ();
+        return "";
     }
 }
 

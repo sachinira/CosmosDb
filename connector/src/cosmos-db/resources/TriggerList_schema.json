@@ -1,1 +1,1 @@
-{"sachini/cosmos-db:0.1.0:TriggerList":{"_rid":"string","triggers":"sachini/cosmos-db:0.1.0:Trigger[]","_count":"int"}}
+{"sachini/cosmos-db:0.1.0:TriggerList":{"triggers":"sachini/cosmos-db:0.1.0:Trigger[]","count":"int"}}

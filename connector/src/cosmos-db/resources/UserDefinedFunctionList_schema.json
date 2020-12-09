@@ -1,1 +1,1 @@
-{"sachini/cosmos-db:0.1.0:UserDefinedFunctionList":{"_rid":"string","UserDefinedFunctions":"sachini/cosmos-db:0.1.0:UserDefinedFunction[]","_count":"int"}}
+{"sachini/cosmos-db:0.1.0:UserDefinedFunctionList":{"UserDefinedFunctions":"sachini/cosmos-db:0.1.0:UserDefinedFunction[]","count":"int"}}

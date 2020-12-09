@@ -1,1 +1,1 @@
-{"sachini/cosmos-db:0.1.0:PartitionKeyList":{"_rid":"string","partitionKeyRanges":"sachini/cosmos-db:0.1.0:PartitionKeyRange[]","reponseHeaders":"sachini/cosmos-db:0.1.0:Headers","_count":"int"}}
+{"sachini/cosmos-db:0.1.0:PartitionKeyList":{"resourceId":"string","partitionKeyRanges":"sachini/cosmos-db:0.1.0:PartitionKeyRange[]","reponseHeaders":"sachini/cosmos-db:0.1.0:Headers","count":"int"}}

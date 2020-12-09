@@ -1,4 +1,4 @@
-//import ballerina/io;
+import ballerina/io;
 import ballerina/test;
 import ballerina/java;
 import ballerina/config;
@@ -50,6 +50,7 @@ function test_createDatabase(){
         test:assertFail(msg = result.message());
     } else {
         database = <@untainted>result;
+        io:println(result);
     }
 }
 
@@ -66,6 +67,7 @@ function test_createDatabaseUsingInvalidId(){
         test:assertFail(msg = "Database created with  '' id value");
     } else {
         var output = "";
+        io:println(result);
     }
 }
 
@@ -83,6 +85,7 @@ function test_createDatabaseIfNotExist(){
         test:assertFail(msg = result.message());
     } else {
         ifexist = <@untainted><Database> result;
+        io:println(result);
     }
 }
 
@@ -100,6 +103,7 @@ function test_createDatabaseIfExist(){
         test:assertFail(msg = "Database with non unique id is created");
     } else {
         var output = "";
+        io:println(result);
     }
 }
 
@@ -119,6 +123,7 @@ function test_createDatabaseWithManualThroughput(){
         test:assertFail(msg = result.message());
     } else {
         manual = <@untainted>result;
+        io:println(result);
     }
 }
 
@@ -138,6 +143,7 @@ function test_createDatabaseWithInvalidManualThroughput(){
         test:assertFail(msg = "Database created without validating user input");
     } else {
         var output = "";
+        io:println(result);
     }
 }
 
@@ -157,6 +163,7 @@ function test_createDBWithAutoscalingThroughput(){
         test:assertFail(msg = result.message());
     } else {
         auto = <@untainted> result;
+        io:println(result);
     }
 }
 
@@ -177,6 +184,7 @@ function test_createDatabaseWithBothHeaders(){
         test:assertFail(msg = "Created database with both throughput values!!");
     } else {
         var output = "";
+        io:println(result);
     }
 }
 
@@ -189,6 +197,7 @@ function test_listAllDatabases(){
     var result = AzureCosmosClient->getAllDatabases();
     if result is DatabaseList {
         databaseList = <@untainted>result;
+        io:println(result);
     } else {
         test:assertFail(msg = result.message());
     }
@@ -206,6 +215,7 @@ function test_listOneDatabase(){
         test:assertFail(msg = result.message());
     } else {
         var output = "";
+        io:println(result);
     }
 }
 
@@ -236,7 +246,8 @@ function test_listOneDatabase(){
         "test_createPermissionWithTTL",
         "test_getOffer",
         "test_replaceOffer",
-        "test_replaceOfferWithOptionalParameter"
+        "test_replaceOfferWithOptionalParameter",
+        "test_getCollection_Resource_Token"
     ]
 }
 function test_deleteDatabase(){
@@ -246,10 +257,11 @@ function test_deleteDatabase(){
     var result2 = AzureCosmosClient->deleteDatabase(manual.id);
     var result3 = AzureCosmosClient->deleteDatabase(auto.id);
     var result4 = AzureCosmosClient->deleteDatabase(ifexist.id);
-    if result3 is error {
-        test:assertFail(msg = result3.message());
+    if result1 is error {
+        test:assertFail(msg = result1.message());
     } else {
         var output = "";
+        io:println(result1);
     }
 }
 
@@ -268,11 +280,12 @@ function test_createContainer(){
     PartitionKey pk = {
         paths: ["/AccountNumber"], 
         kind :"Hash", 
-        'version: 2
+        keyVersion: 2
     };
     var result = AzureCosmosClient->createContainer(propertiesNewCollection, pk);
     if (result is Container) {
         container = <@untainted>result;
+        io:println(result);
     } else {
         test:assertFail(msg = result.message());
     } 
@@ -286,10 +299,10 @@ function test_createCollectionWithManualThroughputAndIndexingPolicy(){
     log:printInfo("ACTION : createCollectionWithManualThroughputAndIndexingPolicy()");
     
     IndexingPolicy ip = {
-        indexingMode : "Consistent",
+        indexingMode : "consistent",
         automatic : true,
         includedPaths : [{
-            path : "*/",
+            path : "/*",
             indexes : [{
                 dataType: "String",  
                 precision: -1,  
@@ -304,7 +317,7 @@ function test_createCollectionWithManualThroughputAndIndexingPolicy(){
     PartitionKey pk = {
         paths: ["/AccountNumber"],
         kind : "Hash",
-        'version : 2
+        keyVersion : 2
     };
     var uuid = createRandomUUIDBallerina();
     @tainted ResourceProperties getCollection = {
@@ -314,6 +327,7 @@ function test_createCollectionWithManualThroughputAndIndexingPolicy(){
     var result = AzureCosmosClient->createContainer(getCollection, pk, ip, tp);
     if result is Container {
         var output = "";
+        io:println(result);
     } else {
         test:assertFail(msg = result.message());
     } 
@@ -334,11 +348,12 @@ function test_createContainerIfNotExist(){
     PartitionKey pk = {
         paths: ["/AccountNumber"], 
         kind :"Hash", 
-        'version: 2
+        keyVersion: 2
     };
     var result = AzureCosmosClient->createContainerIfNotExist(propertiesNewCollectionIfNotExist, pk);
     if (result is Container?) {
-        var output = "";    
+        var output = "";
+        io:println(result);    
     } else {
         test:assertFail(msg = result.message());
     }
@@ -360,6 +375,7 @@ function test_getOneContainer(){
         test:assertFail(msg = result.message());
     } else {
         var output = "";
+        io:println(result);
     }
 }
 
@@ -373,6 +389,7 @@ function test_getAllContainers(){
     var result = AzureCosmosClient->getAllContainers(database.id);
     if (result is ContainerList) {
         containerList = <@untainted>result;
+        io:println(result);
     } else {
         test:assertFail(msg = result.message());
     }
@@ -392,7 +409,10 @@ function test_getAllContainers(){
         "test_listAllUDF", 
         "test_deleteUDF", 
         "test_deleteTrigger",
-        "test_GetOneDocumentWithRequestOptions"
+        "test_GetOneDocumentWithRequestOptions",
+        "test_createDocumentWithRequestOptions",
+        "test_getDocumentListWithRequestOptions",
+        "test_getCollection_Resource_Token"
     ]
 }
 function test_deleteContainer(){
@@ -407,6 +427,7 @@ function test_deleteContainer(){
         test:assertFail(msg = result.message());
     } else {
         var output = "";
+        io:println(result);
     }
 }
 
@@ -426,6 +447,7 @@ function test_GetPartitionKeyRanges(){
         test:assertFail(msg = result.message());
     } else {
         var output = "";
+        io:println(result);
     }   
 }
 
@@ -482,6 +504,7 @@ function test_createDocument(){
     var result = AzureCosmosClient->createDocument(resourceProperty,  createDoc);
     if result is Document {
         document = <@untainted>result;
+        io:println(result);
     } else {
         test:assertFail(msg = result.message());
     }   
@@ -550,6 +573,7 @@ function test_createDocumentWithRequestOptions(){
     var result = AzureCosmosClient->createDocument(resourceProperty,  createDoc,  options);
     if result is Document {
         document = <@untainted>result;
+        io:println(result);
     } else {
         test:assertFail(msg = result.message());
     }   
@@ -571,6 +595,7 @@ function test_getDocumentList(){
         test:assertFail(msg = result.message());
     } else {
         var output = "";
+        io:println(result);
     }
 }
 
@@ -600,6 +625,7 @@ function test_getDocumentListWithRequestOptions(){
         test:assertFail(msg = result.message());
     } else {
         var output = "";
+        io:println(result);
     }
 }
 
@@ -619,6 +645,7 @@ function test_GetOneDocument(){
         test:assertFail(msg = result.message());
     } else {
         var output = "";
+        io:println(result);
     }  
 }
 
@@ -652,6 +679,7 @@ function test_GetOneDocumentWithRequestOptions(){
         test:assertFail(msg = result.message());
     } else {
         var output = "";
+        io:println(result);
     }  
 }
 
@@ -671,6 +699,7 @@ function test_deleteDocument(){
         test:assertFail(msg = result.message());
     } else {
         var output = "";
+        io:println(result);
     }  
 }
 
@@ -695,6 +724,7 @@ function test_queryDocuments(){
         test:assertFail(msg = result.message());
     } else {
         var output = "";
+        io:println(result);
     }   
 }
 
@@ -731,6 +761,7 @@ function test_queryDocumentsWithRequestOptions(){
         test:assertFail(msg = result.message());
     } else {
         var output = "";
+        io:println(result);
     }   
 }
 
@@ -754,6 +785,7 @@ function test_createStoredProcedure(){
     var result = AzureCosmosClient->createStoredProcedure(resourceProperty, sp);  
     if result is StoredProcedure {
         storedPrcedure = <@untainted> result;
+        io:println(result);
     } else {
         test:assertFail(msg = result.message());
     }   
@@ -780,6 +812,7 @@ function test_replaceStoredProcedure(){
         test:assertFail(msg = result.message());
     } else {
         var output = "";
+        io:println(result);
     }   
 }
 
@@ -799,6 +832,7 @@ function test_getAllStoredProcedures(){
         test:assertFail(msg = result.message());
     } else {
         var output = "";
+        io:println(result);
     }  
 }
 
@@ -820,6 +854,7 @@ function test_executeOneStoredProcedure(){
         test:assertFail(msg = result.message());
     } else {
         var output = "";
+        io:println(result);
     }        
 }
 
@@ -840,6 +875,7 @@ function test_deleteOneStoredProcedure(){
         test:assertFail(msg = result.message());
     } else {
         var output = "";
+        io:println(result);
     }   
 }
 
@@ -864,6 +900,7 @@ function test_createUDF(){
     var result = AzureCosmosClient->createUserDefinedFunction(resourceProperty, createUdf);  
     if result is UserDefinedFunction {
         udf = <@untainted> result;
+        io:println(result);
     } else {
         test:assertFail(msg = result.message());
     }   
@@ -890,6 +927,7 @@ function test_replaceUDF(){
         test:assertFail(msg = result.message());
     } else {
         var output = "";
+        io:println(result);
     }   
 }
 
@@ -909,6 +947,7 @@ function test_listAllUDF(){
         test:assertFail(msg = result.message());
     } else {
         var output = "";
+        io:println(result);
     }  
 }
 
@@ -929,6 +968,7 @@ function test_deleteUDF(){
         test:assertFail(msg = result.message());
     } else {
         var output = "";
+        io:println(result);
     }
 }
 
@@ -957,6 +997,7 @@ function test_createTrigger(){
     var result = AzureCosmosClient->createTrigger(resourceProperty, createTrigger);  
     if result is Trigger {
         trigger = <@untainted>result;
+        io:println(result);
     } else {
         test:assertFail(msg = result.message());
     }   
@@ -987,6 +1028,7 @@ function test_replaceTrigger(){
         test:assertFail(msg = result.message());
     } else {
         var output = "";
+        io:println(result);
     }   
 }
 
@@ -1006,6 +1048,7 @@ function test_listTriggers(){
         test:assertFail(msg = result.message());
     } else {
         var output = "";
+        io:println(result);
     } 
 }
 
@@ -1026,6 +1069,7 @@ function test_deleteTrigger(){
         test:assertFail(msg = result.message());
     } else {
         var output = "";
+        io:println(result);
     } 
 }
 
@@ -1044,6 +1088,7 @@ function test_createUser(){
     var result = AzureCosmosClient->createUser(resourceProperty, userId);  
     if result is User {
         test_user = <@untainted>result;
+        io:println(result);
     } else {
         test:assertFail(msg = result.message());
     }   
@@ -1067,6 +1112,7 @@ function test_replaceUserId(){
         test:assertFail(msg = result.message());
     } else {
         test_user = <@untainted>result;
+        io:println(result);
     }  
 }
 
@@ -1087,6 +1133,7 @@ function test_getUser(){
         test:assertFail(msg = result.message());
     } else {
         var output = "";
+        io:println(result);
     }  
 }
 
@@ -1105,6 +1152,7 @@ function test_listUsers(){
         test:assertFail(msg = result.message());
     } else {
         var output = "";
+        io:println(result);
     } 
 }
 
@@ -1113,7 +1161,8 @@ function test_listUsers(){
     dependsOn: [
         "test_replaceUserId", 
         "test_deletePermission",
-        "test_createPermissionWithTTL"
+        "test_createPermissionWithTTL",
+        "test_getCollection_Resource_Token"
     ]
 }
 function test_deleteUser(){
@@ -1128,6 +1177,7 @@ function test_deleteUser(){
         test:assertFail(msg = result.message());
     } else {
         var output = "";
+        io:println(result);
     } 
 }
 
@@ -1145,16 +1195,17 @@ function test_createPermission(){
     string permissionUserId = test_user.id;
     string permissionId = string `permission_${uuid.toString()}`;
     string permissionMode = "All";
-    string permissionResource = string `dbs/${database?._rid.toString()}/colls/${container?._rid.toString()}`;
+    string permissionResource = string `dbs/${database?.resourceId.toString()}/colls/${container?.resourceId.toString()}`;
     Permission createPermission = {
         id: permissionId, 
         permissionMode: permissionMode, 
-        'resource: permissionResource
+        resourcePath: permissionResource
     };
 
     var result = AzureCosmosClient->createPermission(resourceProperty, permissionUserId, createPermission);  
     if result is Permission {
         permission = <@untainted>result;
+        io:println(result);
     } else {
         test:assertFail(msg = result.message());
     }   
@@ -1174,16 +1225,17 @@ function test_createPermissionWithTTL(){
     string permissionUserId = test_user.id;
     string permissionId = string `permission_${uuid.toString()}`;
     string permissionMode = "All";
-    string permissionResource = string `dbs/${database?._rid.toString()}/colls/${container?._rid.toString()}`;
+    string permissionResource = string `dbs/${database?.resourceId.toString()}/colls/${container?.resourceId.toString()}`;
     int validityPeriod = 9000;
     Permission createPermission = {
         id: permissionId, 
         permissionMode: permissionMode, 
-        'resource: permissionResource
+        resourcePath: permissionResource
     };
     var result = AzureCosmosClient->createPermission(resourceProperty, permissionUserId, createPermission, validityPeriod);  
     if result is Permission {
         permission = <@untainted>result;
+        io:println(result);
     } else {
         test:assertFail(msg = result.message());
     }   
@@ -1204,15 +1256,16 @@ function test_replacePermission(){
     string permissionMode = "All";
     string permissionResource = string `dbs/${database.id}/colls/${container.id}`;
     Permission replacePermission = {
-        id:permissionId, 
-        permissionMode:permissionMode, 
-        'resource:permissionResource
+        id: permissionId, 
+        permissionMode: permissionMode, 
+        resourcePath: permissionResource
     };
     var result = AzureCosmosClient->replacePermission(resourceProperty, permissionUserId, replacePermission);  
     if result is error {
         test:assertFail(msg = result.message());
     } else {
         var output = "";
+        io:println(result);
     }  
 }
 
@@ -1232,6 +1285,7 @@ function test_listPermissions(){
         test:assertFail(msg = result.message());
     } else {
         var output = "";
+        io:println(result);
     } 
 }
 
@@ -1252,6 +1306,7 @@ function test_getPermission(){
         test:assertFail(msg = result.message());
     } else {
         var output = "";
+        io:println(result);
     }
 }
 
@@ -1272,6 +1327,7 @@ function test_deletePermission(){
         test:assertFail(msg = result.message());
     } else {
         var output = "";
+        io:println(result);
     } 
 }
 
@@ -1284,6 +1340,7 @@ function test_listOffers(){
     var result = AzureCosmosClient->listOffers();  
     if result is OfferList {
         offerList = <@untainted>result;
+        io:println(result);
     } else {
         test:assertFail(msg = result.message());
     }   
@@ -1301,6 +1358,7 @@ function test_getOffer(){
         test:assertFail(msg = result.message());
     } else {
         var output = "";
+        io:println(result);
     }  
 }
 
@@ -1316,16 +1374,17 @@ function test_replaceOffer(){
         content: {  
             "offerThroughput": 600
         },  
-        'resource: string `dbs/${database?._rid.toString()}/colls/${container?._rid.toString()}/`,  
-        offerResourceId: string `${container?._rid.toString()}`, 
+        resourceSelfLink: string `dbs/${database?.resourceId.toString()}/colls/${container?.resourceId.toString()}/`,  
+        offerResourceId: string `${container?.resourceId.toString()}`, 
         id: offerList.offers[0].id, 
-        _rid: offerList.offers[0]["_rid"] 
+        resourceId: <string>offerList.offers[0]?.resourceId
     };
     var result = AzureCosmosClient->replaceOffer(replaceOfferBody);  
     if result is error {
         test:assertFail(msg = result.message());
     } else {
         var output = "";
+        io:println(result);
     } 
 }
 
@@ -1340,16 +1399,17 @@ function test_replaceOfferWithOptionalParameter(){
         content: {  
             "offerThroughput": 600
         },  
-        'resource: string `dbs/${database?._rid.toString()}/colls/${container?._rid.toString()}/`,  
-        offerResourceId: string `${container?._rid.toString()}`, 
+        resourceSelfLink: string `dbs/${database?.resourceId.toString()}/colls/${container?.resourceId.toString()}/`,  
+        offerResourceId: string `${container?.resourceId.toString()}`, 
         id: offerList.offers[0].id, 
-        _rid: offerList.offers[0]["_rid"] 
+        resourceId: <string>offerList.offers[0]?.resourceId 
     };
     var result = AzureCosmosClient->replaceOffer(replaceOfferBody);  
     if result is error {
         test:assertFail(msg = result.message());
     } else {
         var output = "";
+        io:println(result);
     } 
 }
 
@@ -1361,20 +1421,20 @@ function test_queryOffer(){
     log:printInfo("ACTION : queryOffer()");
 
     Query offerQuery = {
-    query: string `SELECT * FROM ${container.id} f WHERE (f["_self"]) = "${container?._self.toString()}"`
+    query: string `SELECT * FROM ${container.id} f WHERE (f["_self"]) = "${container?.selfReference.toString()}"`
     };
     var result = AzureCosmosClient->queryOffer(offerQuery);   
     if result is error {
         test:assertFail(msg = result.message());
     } else {
         var output = "";
+        io:println(result);
     }  
 }
 
 @test:Config{
     groups: ["permission"], 
-    dependsOn: ["test_createPermission"],
-    enable: false
+    dependsOn: ["test_createPermission"]
 }
 function test_getCollection_Resource_Token(){
     log:printInfo("ACTION : createCollection_Resource_Token()");
@@ -1388,10 +1448,10 @@ function test_getCollection_Resource_Token(){
     if result is error {
         test:assertFail(msg = result.message());
     } else {
-        if result?._token is string {
+        if result?.token is string {
             AzureCosmosConfiguration configdb = {
                 baseUrl : getConfigValue("BASE_URL"), 
-                keyOrResourceToken : result?._token.toString(), 
+                keyOrResourceToken : result?.token.toString(), 
                 host : getConfigValue("HOST"), 
                 tokenType : "resource", 
                 tokenVersion : getConfigValue("TOKEN_VERSION"), 
@@ -1414,6 +1474,7 @@ function test_getCollection_Resource_Token(){
                 test:assertFail(msg = resultdb.message());
             } else {
                 var output = "";
+                io:println(result);
             }
         }
     }
@@ -1432,6 +1493,7 @@ function createRandomUUIDBallerina() returns string {
         return "";
     }
 }
+
 function createRandomUUID() returns handle = @java:Method {
     name : "randomUUID", 
     'class : "java.util.UUID"
