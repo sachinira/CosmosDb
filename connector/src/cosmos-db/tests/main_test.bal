@@ -660,7 +660,7 @@ function test_GetOneDocumentWithRequestOptions(){
         databaseId: database.id, 
         containerId: container.id
     };
-    @tainted Document getDoc =  {
+    @tainted Document getDoc = {
         id: document.id, 
         partitionKey : [1234]  
     };

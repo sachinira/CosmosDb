@@ -22,10 +22,10 @@ function mapResponseToJson(http:Response|http:ClientError httpResponse) returns 
             }
             return jsonResponse;
         } else {
-            return prepareError("Error occurred while accessing the JSON payload of the response");
+            return prepareError(JSON_PAYLOAD_ACCESS_ERROR);
         }
     } else {
-        return prepareError("Error occurred while invoking the REST API");
+        return prepareError(REST_API_INVOKING_ERROR);
     }
 }
  
@@ -38,11 +38,11 @@ function getDeleteResponse(http:Response|http:ClientError httpResponse) returns 
             if(jsonResponse is json) {
                 return createResponseFailMessage(httpResponse,jsonResponse);
             } else {
-                return prepareError("Error occurred while accessing the JSON payload of the response");
+                return prepareError(JSON_PAYLOAD_ACCESS_ERROR);
             }
         }
     } else {
-        return prepareError("Error occurred while invoking the REST API");
+        return prepareError(REST_API_INVOKING_ERROR);
     }
 }
 
@@ -69,7 +69,7 @@ function mapResponseHeadersToObject(http:Response|http:ClientError httpResponse)
         return responseHeaders;
 
     } else {
-        return prepareError("Error occurred while invoking the REST API");
+        return prepareError(REST_API_INVOKING_ERROR);
     }
 }
 
@@ -118,24 +118,25 @@ function setThroughputOrAutopilotHeader(http:Request request, ThroughputProperti
 http:Request|error {
   if(throughputProperties is ThroughputProperties) {
         if(throughputProperties.throughput is int &&  throughputProperties.maxThroughput is ()) {
-            if(<int>throughputProperties.throughput >= 400) {
+            if(<int>throughputProperties.throughput >= MIN_REQUEST_UNITS) {
                 request.setHeader(THROUGHPUT_HEADER, throughputProperties.maxThroughput.toString());
             } else {
-                return prepareError("The minimum manual throughput is 400 RU/s");
+                return prepareError(MINIMUM_MANUAL_THROUGHPUT_ERROR);
             }
         } else if(throughputProperties.throughput is () &&  throughputProperties.maxThroughput != ()) {
             request.setHeader(AUTOPILET_THROUGHPUT_HEADER, throughputProperties.maxThroughput.toString());
         } else if(throughputProperties.throughput is int &&  throughputProperties.maxThroughput != ()) {
             return 
-            prepareError("Cannot set both throughput and maxThroughput headers at once");
+            prepareError(SETTING_BOTH_VALUES_ERROR);
         }
     }
     return request;
 }
 
+//this is different in other one***********************Please check
 function setPartitionKeyHeader(http:Request request, any[]? partitionKey) returns http:Request|error {
     if(partitionKey is ()) {
-        return prepareError("Partition key values are null");
+        return prepareError(NULL_PARTITIONKEY_VALUE_ERROR);
     }
     request.setHeader(PARTITION_KEY_HEADER, string `${partitionKey.toString()}`);
     return request;
@@ -152,7 +153,7 @@ function setRequestOptions(http:Request request, RequestHeaderOptions requestOpt
         if(requestOptions.indexingDirective == INDEXING_TYPE_INCLUDE || requestOptions.indexingDirective == INDEXING_TYPE_EXCLUDE) {
             request.setHeader(INDEXING_DIRECTIVE_HEADER, requestOptions.indexingDirective.toString());
         } else {
-            return prepareError("Indexing directive should be either Exclude or Include");
+            return prepareError(INDEXING_DIRECTIVE_ERROR);
         }
     }
     if(requestOptions.isUpsertRequest == true) {
@@ -170,7 +171,7 @@ function setRequestOptions(http:Request request, RequestHeaderOptions requestOpt
         requestOptions.consistancyLevel == CONSISTANCY_LEVEL_EVENTUAL) {
             request.setHeader(CONSISTANCY_LEVEL_HEADER, requestOptions.consistancyLevel.toString());
         } else {
-            return prepareError("Consistacy level should be one of Strong, Bounded, Session, or Eventual");
+            return prepareError(CONSISTANCY_LEVEL_ERROR);
         }
     }
     if(requestOptions.sessionToken is string) {
@@ -195,11 +196,11 @@ function setRequestOptions(http:Request request, RequestHeaderOptions requestOpt
 }
 
 function setExpiryHeader(http:Request request, int validationPeriod) returns http:Request|error {
-    if(validationPeriod >= 3600 && validationPeriod <= 18000) {
+    if(validationPeriod >= MIN_TIME_TO_LIVE && validationPeriod <= MAX_TIME_TO_LIVE) {
         request.setHeader(EXPIRY_HEADER, validationPeriod.toString());
         return request;
     }else {
-        return prepareError("Resource token validity period must be between 3600 and 18000");
+        return prepareError(VALIDITY_PERIOD_ERROR);
     }
 }
  
@@ -208,7 +209,7 @@ HeaderParameters params) returns http:Request|error {
     request.setHeader(API_VERSION_HEADER,params.apiVersion);
     request.setHeader(HOST_HEADER,host);
     request.setHeader(ACCEPT_HEADER,"*/*");
-    request.setHeader(CONNECTION_HEADER,"keep-alive");
+    request.setHeader(CONNECTION_HEADER, CONNECTION_VALUE);
     string?|error date = getTime();
     if(date is string) {
         string? signature = ();
@@ -216,18 +217,18 @@ HeaderParameters params) returns http:Request|error {
             signature = check generateMasterTokenSignature(params.verb, params.resourceType, params.resourceId, keyToken,
             tokenType, tokenVersion,date);
         } else if(tokenType.toLowerAscii() == TOKEN_TYPE_RESOURCE) {
-            signature = check encoding:encodeUriComponent(keyToken, "UTF-8"); 
+            signature = check encoding:encodeUriComponent(keyToken, UTF8_URL_ENCODING); 
         } else {
-            return prepareError("ResourceType is incorrect/null");
+            return prepareError(NULL_RESOURCE_TYPE_ERROR);
         }
         request.setHeader(DATE_HEADER,date);
         if(signature is string) {
             request.setHeader(AUTHORIZATION_HEADER,signature);
         } else {
-            return prepareError("Authorization token is null");
+            return prepareError(NULL_AUTHORIZATION_SIGNATURE_ERROR);
         }
     } else {
-        return prepareError("Date is invalid/null");
+        return prepareError(NULL_DATE_ERROR);
     }
     return request;
 }
@@ -252,7 +253,7 @@ string tokenVersion, string date) returns string?|error {
         check encoding:encodeUriComponent(string `type=${tokenType}&ver=${tokenVersion}&sig=${signature}`, "UTF-8");   
         return authorization;
     } else {   
-        return prepareError("Base64 Decoding error");
+        return prepareError(DECODING_ERROR);
     }
 }
 
@@ -263,7 +264,7 @@ function getTime() returns string?|error {
     if(timeString is string) {
         return timeString;
     } else {
-        return prepareError("Time string is not correct");
+        return prepareError(TIME_STRING_ERROR);
     }
 }
 

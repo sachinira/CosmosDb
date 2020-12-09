@@ -44,7 +44,7 @@ function mapJsonToDatabaseListType([json, Headers] jsonPayload) returns @tainted
     [payload,headers] = jsonPayload;
     DatabaseList databaseList = {};
     databaseList.resourceId = payload._rid != ()? payload._rid.toString() : EMPTY_STRING;
-    databaseList.databases =  convertToDatabaseArray(<json[]>payload.Databases);
+    databaseList.databases = convertToDatabaseArray(<json[]>payload.Databases);
     databaseList.reponseHeaders = headers;
     return databaseList;
 }
@@ -70,8 +70,8 @@ function mapJsonToIndexingPolicy(json jsonPayload) returns @tainted IndexingPoli
     IndexingPolicy indexingPolicy = {};
     indexingPolicy.indexingMode = jsonPayload.indexingMode != ()? jsonPayload.indexingMode.toString() : EMPTY_STRING;
     indexingPolicy.automatic = convertToBoolean(jsonPayload.automatic);
-    indexingPolicy.includedPaths =  convertToIncludedPathsArray(<json[]>jsonPayload.includedPaths);
-    indexingPolicy.excludedPaths =  convertToIncludedPathsArray(<json[]>jsonPayload.excludedPaths);
+    indexingPolicy.includedPaths = convertToIncludedPathsArray(<json[]>jsonPayload.includedPaths);
+    indexingPolicy.excludedPaths = convertToIncludedPathsArray(<json[]>jsonPayload.excludedPaths);
     return indexingPolicy;
 }
 
