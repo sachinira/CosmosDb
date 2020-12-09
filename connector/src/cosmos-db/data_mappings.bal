@@ -1,5 +1,3 @@
-import ballerina/io;
-
 function mapParametersToHeaderType(string httpVerb, string url) returns HeaderParameters {
     HeaderParameters params = {};
     params.verb = httpVerb;
@@ -30,135 +28,134 @@ function mapJsonToDatabaseType([json, Headers?] jsonPayload) returns Database {
     json payload;
     Headers? headers;
     [payload,headers] = jsonPayload;
-    Database db = {};
-    db.id = payload.id != ()? payload.id.toString() : EMPTY_STRING;
-    db.resourceId = payload._rid != ()? payload._rid.toString() : EMPTY_STRING;
-    db.selfReference = payload._self != ()? payload._self.toString() : EMPTY_STRING;
+    Database database = {};
+    database.id = payload.id != ()? payload.id.toString() : EMPTY_STRING;
+    database.resourceId = payload._rid != ()? payload._rid.toString() : EMPTY_STRING;
+    database.selfReference = payload._self != ()? payload._self.toString() : EMPTY_STRING;
     if headers is Headers {
-        db["reponseHeaders"] = headers;
+        database["reponseHeaders"] = headers;
     }    
-    return db;
+    return database;
 }
 
 function mapJsonToDatabaseListType([json, Headers] jsonPayload) returns @tainted DatabaseList {
     json payload;
     Headers headers;
     [payload,headers] = jsonPayload;
-    DatabaseList dbl = {};
-    dbl.resourceId = payload._rid != ()? payload._rid.toString() : EMPTY_STRING;
-    dbl.databases =  convertToDatabaseArray(<json[]>payload.Databases);
-    dbl.reponseHeaders = headers;
-    return dbl;
+    DatabaseList databaseList = {};
+    databaseList.resourceId = payload._rid != ()? payload._rid.toString() : EMPTY_STRING;
+    databaseList.databases =  convertToDatabaseArray(<json[]>payload.Databases);
+    databaseList.reponseHeaders = headers;
+    return databaseList;
 }
 
 function mapJsonToContainerType([json, Headers?] jsonPayload) returns @tainted Container {
     json payload;
     Headers? headers;
     [payload,headers] = jsonPayload;
-    Container coll = {};
-    coll.id = payload.id.toString();
-    coll.resourceId = payload._rid != ()? payload._rid.toString() : EMPTY_STRING;
-    coll.selfReference = payload._self != ()? payload._self.toString() : EMPTY_STRING;
-    coll.allowMaterializedViews = convertToBoolean(payload.allowMaterializedViews);
-    io:println(<json>payload.indexingPolicy);
-    coll.indexingPolicy = mapJsonToIndexingPolicy(<json>payload.indexingPolicy);
-    coll.partitionKey = convertJsonToPartitionKey(<json>payload.partitionKey);
+    Container container = {};
+    container.id = payload.id.toString();
+    container.resourceId = payload._rid != ()? payload._rid.toString() : EMPTY_STRING;
+    container.selfReference = payload._self != ()? payload._self.toString() : EMPTY_STRING;
+    container.allowMaterializedViews = convertToBoolean(payload.allowMaterializedViews);
+    container.indexingPolicy = mapJsonToIndexingPolicy(<json>payload.indexingPolicy);
+    container.partitionKey = convertJsonToPartitionKey(<json>payload.partitionKey);
     if headers is Headers {
-        coll["reponseHeaders"] = headers;
+        container["reponseHeaders"] = headers;
     }
-    return coll;
+    return container;
 }
 
 function mapJsonToIndexingPolicy(json jsonPayload) returns @tainted IndexingPolicy {
-    IndexingPolicy indp = {};
-    indp.indexingMode = jsonPayload.indexingMode != ()? jsonPayload.indexingMode.toString() : EMPTY_STRING;
-    indp.automatic = convertToBoolean(jsonPayload.automatic);
-    indp.includedPaths =  convertToIncludedPathsArray(<json[]>jsonPayload.includedPaths);
-    indp.excludedPaths =  convertToIncludedPathsArray(<json[]>jsonPayload.excludedPaths);
-    return indp;
+    IndexingPolicy indexingPolicy = {};
+    indexingPolicy.indexingMode = jsonPayload.indexingMode != ()? jsonPayload.indexingMode.toString() : EMPTY_STRING;
+    indexingPolicy.automatic = convertToBoolean(jsonPayload.automatic);
+    indexingPolicy.includedPaths =  convertToIncludedPathsArray(<json[]>jsonPayload.includedPaths);
+    indexingPolicy.excludedPaths =  convertToIncludedPathsArray(<json[]>jsonPayload.excludedPaths);
+    return indexingPolicy;
 }
 
 function mapJsonToIncludedPathsType(json jsonPayload) returns @tainted IncludedPath {
-    IncludedPath ip = {};
-    ip.path = jsonPayload.path.toString();
+    IncludedPath includedPath = {};
+    includedPath.path = jsonPayload.path.toString();
     if jsonPayload.indexes is error {
-        return ip;
+        return includedPath;
     } else {
-        ip.indexes = convertToIndexArray(<json[]>jsonPayload.indexes);
+        includedPath.indexes = convertToIndexArray(<json[]>jsonPayload.indexes);
     }
-    return ip;
+    return includedPath;
 }
 
 function mapJsonToIndexType(json jsonPayload) returns Index {
-    Index ind = {};
-    ind.kind = jsonPayload.kind != () ? jsonPayload.kind.toString(): EMPTY_STRING;
-    ind.dataType = jsonPayload.dataType.toString();
-    ind.precision = convertToInt(jsonPayload.precision);
-    return ind; 
+    Index index = {};
+    index.kind = jsonPayload.kind != () ? jsonPayload.kind.toString(): EMPTY_STRING;
+    index.dataType = jsonPayload.dataType.toString();
+    index.precision = convertToInt(jsonPayload.precision);
+    return index; 
 }
 
 function convertJsonToPartitionKey(json jsonPayload) returns @tainted PartitionKey {
-    PartitionKey pk = {};
-    pk.paths = convertToStringArray(<json[]>jsonPayload.paths);
-    pk.kind = jsonPayload.kind != () ? jsonPayload.kind.toString(): EMPTY_STRING;
-    pk.keyVersion = convertToInt(jsonPayload.'version);
-    return pk;
+    PartitionKey partitionKey = {};
+    partitionKey.paths = convertToStringArray(<json[]>jsonPayload.paths);
+    partitionKey.kind = jsonPayload.kind != () ? jsonPayload.kind.toString(): EMPTY_STRING;
+    partitionKey.keyVersion = convertToInt(jsonPayload.'version);
+    return partitionKey;
 }
 
 function mapJsonToContainerListType([json, Headers] jsonPayload) returns @tainted ContainerList {
-    ContainerList cll = {};
+    ContainerList containerList = {};
     json payload;
     Headers headers;
     [payload,headers] = jsonPayload;
-    cll.resourceId = payload._rid != () ? payload._rid.toString(): EMPTY_STRING;
-    cll.count = convertToInt(payload._count);
-    cll.containers = convertToContainerArray(<json[]>payload.DocumentCollections);
-    cll.reponseHeaders = headers;
-    return cll;
+    containerList.resourceId = payload._rid != () ? payload._rid.toString(): EMPTY_STRING;
+    containerList.count = convertToInt(payload._count);
+    containerList.containers = convertToContainerArray(<json[]>payload.DocumentCollections);
+    containerList.reponseHeaders = headers;
+    return containerList;
 }
 
 function mapJsonToPartitionKeyListType([json, Headers] jsonPayload) returns @tainted PartitionKeyList {
-    PartitionKeyList pkl = {};
+    PartitionKeyList partitionKeyList = {};
     PartitionKeyRange pkr = {};
     json payload;
     Headers headers;
     [payload,headers] = jsonPayload;
-    pkl.resourceId = payload._rid != () ? payload._rid.toString(): EMPTY_STRING;
-    pkl.partitionKeyRanges = convertToPartitionKeyRangeArray(<json[]>payload.PartitionKeyRanges);
-    pkl.reponseHeaders = headers;
-    pkl.count = convertToInt(payload._count);
-    return pkl;
+    partitionKeyList.resourceId = payload._rid != () ? payload._rid.toString(): EMPTY_STRING;
+    partitionKeyList.partitionKeyRanges = convertToPartitionKeyRangeArray(<json[]>payload.PartitionKeyRanges);
+    partitionKeyList.reponseHeaders = headers;
+    partitionKeyList.count = convertToInt(payload._count);
+    return partitionKeyList;
 }
 
 function mapJsonToPartitionKeyRange([json, Headers] jsonPayload) returns @tainted PartitionKeyRange {
-    PartitionKeyRange pkr = {};
+    PartitionKeyRange partitionKeyRange = {};
     json payload;
     Headers headers;
     [payload,headers] = jsonPayload;
-    pkr.id = payload.id.toString();
-    pkr.minInclusive = payload.minInclusive.toString();
-    pkr.maxExclusive = payload.maxExclusive.toString();
-    pkr.status = payload.status.toString();
-    pkr.reponseHeaders = headers;
-    return pkr;
+    partitionKeyRange.id = payload.id.toString();
+    partitionKeyRange.minInclusive = payload.minInclusive.toString();
+    partitionKeyRange.maxExclusive = payload.maxExclusive.toString();
+    partitionKeyRange.status = payload.status.toString();
+    partitionKeyRange.reponseHeaders = headers;
+    return partitionKeyRange;
 }
 
 function mapJsonToDocumentType([json, Headers?] jsonPayload) returns @tainted Document {  
-    Document doc = {};
+    Document document = {};
     json payload;
     Headers? headers;
     [payload,headers] = jsonPayload;
-    doc.id = payload.id != () ? payload.id.toString(): EMPTY_STRING;
-    doc.resourceId = payload._rid != () ? payload._rid.toString(): EMPTY_STRING;
-    doc.selfReference = payload._self != () ? payload._self.toString(): EMPTY_STRING;
-    JsonMap|error document = payload.cloneWithType(JsonMap);
-    if document is JsonMap {
-        doc.documentBody = mapJsonToDocumentBody(document);
+    document.id = payload.id != () ? payload.id.toString(): EMPTY_STRING;
+    document.resourceId = payload._rid != () ? payload._rid.toString(): EMPTY_STRING;
+    document.selfReference = payload._self != () ? payload._self.toString(): EMPTY_STRING;
+    JsonMap|error documentBodyJson = payload.cloneWithType(JsonMap);
+    if documentBodyJson is JsonMap {
+        document.documentBody = mapJsonToDocumentBody(documentBodyJson);
     }
     if headers is Headers {
-        doc["reponseHeaders"] = headers;
+        document["reponseHeaders"] = headers;
     }
-    return doc;
+    return document;
 }
 
 function mapJsonToDocumentListType([json, Headers] jsonPayload) returns @tainted DocumentList|error {
@@ -174,55 +171,55 @@ function mapJsonToDocumentListType([json, Headers] jsonPayload) returns @tainted
 } 
 
 function mapJsonToStoredProcedureType([json, Headers?] jsonPayload) returns @tainted StoredProcedure {
-    StoredProcedure sproc = {};
+    StoredProcedure storedProcedure = {};
     json payload;
     Headers? headers;
     [payload,headers] = jsonPayload;
-    sproc.resourceId = payload._rid != ()? payload._rid.toString() : EMPTY_STRING;
-    sproc.id = payload.id != () ? payload.id.toString(): EMPTY_STRING;
-    sproc.body = payload.body !=() ? payload.body.toString(): EMPTY_STRING;
+    storedProcedure.resourceId = payload._rid != ()? payload._rid.toString() : EMPTY_STRING;
+    storedProcedure.id = payload.id != () ? payload.id.toString(): EMPTY_STRING;
+    storedProcedure.body = payload.body !=() ? payload.body.toString(): EMPTY_STRING;
     if headers is Headers {
-        sproc["reponseHeaders"] = headers;
+        storedProcedure["reponseHeaders"] = headers;
     }
-    return sproc;
+    return storedProcedure;
 }
 
 function mapJsonToStoredProcedureListType([json, Headers] jsonPayload) returns @tainted StoredProcedureList {
-    StoredProcedureList sproclist = {};
+    StoredProcedureList storedProcedurelist = {};
     json payload;
     Headers headers;
     [payload,headers] = jsonPayload;
-    sproclist.resourceId = payload._rid != () ? payload._rid.toString(): EMPTY_STRING;
-    sproclist.storedProcedures = convertToStoredProcedureArray(<json[]>payload.StoredProcedures);
-    sproclist.count = convertToInt(payload._count);
-    sproclist["reponseHeaders"] = headers;
-    return sproclist;
+    storedProcedurelist.resourceId = payload._rid != () ? payload._rid.toString(): EMPTY_STRING;
+    storedProcedurelist.storedProcedures = convertToStoredProcedureArray(<json[]>payload.StoredProcedures);
+    storedProcedurelist.count = convertToInt(payload._count);
+    storedProcedurelist["reponseHeaders"] = headers;
+    return storedProcedurelist;
 }
 
 function mapJsonToUserDefinedFunctionType([json, Headers?] jsonPayload) returns @tainted UserDefinedFunction {
-    UserDefinedFunction udf = {};
+    UserDefinedFunction userDefinedFunction = {};
     json payload;
     Headers? headers;
     [payload,headers] = jsonPayload;
-    udf.resourceId = payload._rid != () ? payload._rid.toString() : EMPTY_STRING;
-    udf.id = payload.id != () ? payload.id.toString() : EMPTY_STRING;
-    udf.body = payload.body != () ? payload.body.toString() : EMPTY_STRING;
+    userDefinedFunction.resourceId = payload._rid != () ? payload._rid.toString() : EMPTY_STRING;
+    userDefinedFunction.id = payload.id != () ? payload.id.toString() : EMPTY_STRING;
+    userDefinedFunction.body = payload.body != () ? payload.body.toString() : EMPTY_STRING;
     if headers is Headers {
-        udf["reponseHeaders"] = headers;
+        userDefinedFunction["reponseHeaders"] = headers;
     }
-    return udf;
+    return userDefinedFunction;
 }
 
 function mapJsonToUserDefinedFunctionListType([json, Headers] jsonPayload) returns @tainted UserDefinedFunctionList|error {
-    UserDefinedFunctionList udflist = {};
+    UserDefinedFunctionList userDefinedFunctionList = {};
     json payload;
     Headers headers;
     [payload,headers] = jsonPayload;
-    udflist.resourceId = payload._rid != () ? payload._rid.toString() : EMPTY_STRING;
-    udflist.UserDefinedFunctions = userDefinedFunctionArray(<json[]>payload.UserDefinedFunctions);
-    udflist.count = convertToInt(payload._count);
-    udflist["reponseHeaders"] = headers;
-    return udflist;
+    userDefinedFunctionList.resourceId = payload._rid != () ? payload._rid.toString() : EMPTY_STRING;
+    userDefinedFunctionList.UserDefinedFunctions = userDefinedFunctionArray(<json[]>payload.UserDefinedFunctions);
+    userDefinedFunctionList.count = convertToInt(payload._count);
+    userDefinedFunctionList["reponseHeaders"] = headers;
+    return userDefinedFunctionList;
 }
 
 function mapJsonToTriggerType([json, Headers?] jsonPayload) returns @tainted Trigger {
@@ -242,15 +239,15 @@ function mapJsonToTriggerType([json, Headers?] jsonPayload) returns @tainted Tri
 }
 
 function mapJsonToTriggerListType([json, Headers] jsonPayload) returns @tainted TriggerList|error {
-    TriggerList triggerlist = {};
+    TriggerList triggerList = {};
     json payload;
     Headers headers;
     [payload,headers] = jsonPayload;
-    triggerlist.resourceId = payload._rid != () ? payload._rid.toString() : EMPTY_STRING;
-    triggerlist.triggers = ConvertToTriggerArray(<json[]>payload.Triggers);
-    triggerlist.count = convertToInt(payload._count);
-    triggerlist["reponseHeaders"] = headers;
-    return triggerlist;
+    triggerList.resourceId = payload._rid != () ? payload._rid.toString() : EMPTY_STRING;
+    triggerList.triggers = ConvertToTriggerArray(<json[]>payload.Triggers);
+    triggerList.count = convertToInt(payload._count);
+    triggerList["reponseHeaders"] = headers;
+    return triggerList;
 }
 
 function mapJsonToUserType([json, Headers?] jsonPayload) returns @tainted User {
@@ -267,15 +264,15 @@ function mapJsonToUserType([json, Headers?] jsonPayload) returns @tainted User {
 }
 
 function mapJsonToUserListType([json, Headers?] jsonPayload) returns @tainted UserList {
-    UserList userlist = {};
+    UserList userList = {};
     json payload;
     Headers? headers;
     [payload,headers] = jsonPayload;
-    userlist.resourceId = payload._rid != () ? payload._rid.toString() : EMPTY_STRING;
-    userlist.users = ConvertToUserArray(<json[]>payload.Users);
-    userlist.count = convertToInt(payload._count);
-    userlist["reponseHeaders"] = headers;
-    return userlist;
+    userList.resourceId = payload._rid != () ? payload._rid.toString() : EMPTY_STRING;
+    userList.users = ConvertToUserArray(<json[]>payload.Users);
+    userList.count = convertToInt(payload._count);
+    userList["reponseHeaders"] = headers;
+    return userList;
 }
 
 function mapJsonToPermissionType([json, Headers?] jsonPayload) returns @tainted Permission {
@@ -347,13 +344,13 @@ function convertToDatabaseArray(json[] sourceDatabaseArrayJsonObject) returns @t
 }
 
 function convertToIncludedPathsArray(json[] sourcePathArrayJsonObject) returns @tainted IncludedPath[] { 
-    IncludedPath[] includedpaths = [];
+    IncludedPath[] includedPaths = [];
     int i = 0;
     foreach json jsonPath in sourcePathArrayJsonObject {
-        includedpaths[i] = <IncludedPath>mapJsonToIncludedPathsType(jsonPath);
+        includedPaths[i] = <IncludedPath>mapJsonToIncludedPathsType(jsonPath);
         i = i + 1;
     }
-    return includedpaths;
+    return includedPaths;
 }
 
 function convertToIndexArray(json[] sourcePathArrayJsonObject) returns @tainted Index[] {
@@ -388,16 +385,16 @@ function convertToContainerArray(json[] sourceCollectionArrayJsonObject) returns
 
 //
 function convertToPartitionKeyRangeArray(json[] sourcePrtitionKeyArrayJsonObject) returns @tainted PartitionKeyRange[] { 
-    PartitionKeyRange[] pkranges = [];
+    PartitionKeyRange[] partitionKeyranges = [];
     int i = 0;
     foreach json jsonPartitionKey in sourcePrtitionKeyArrayJsonObject {
-        pkranges[i].id = jsonPartitionKey.id.toString();
-        pkranges[i].minInclusive = jsonPartitionKey.minInclusive.toString();
-        pkranges[i].maxExclusive = jsonPartitionKey.maxExclusive.toString();
-        pkranges[i].status = jsonPartitionKey.status.toString();
+        partitionKeyranges[i].id = jsonPartitionKey.id.toString();
+        partitionKeyranges[i].minInclusive = jsonPartitionKey.minInclusive.toString();
+        partitionKeyranges[i].maxExclusive = jsonPartitionKey.maxExclusive.toString();
+        partitionKeyranges[i].status = jsonPartitionKey.status.toString();
         i = i + 1;
     }
-    return pkranges;
+    return partitionKeyranges;
 }
 
 function convertToDocumentArray(json[] sourceDocumentArrayJsonObject) returns @tainted Document[]|error { 
@@ -411,13 +408,13 @@ function convertToDocumentArray(json[] sourceDocumentArrayJsonObject) returns @t
 }
 
 function convertToStoredProcedureArray(json[] sourceSprocArrayJsonObject) returns @tainted StoredProcedure[] { 
-    StoredProcedure[] sprocs = [];
+    StoredProcedure[] storedProcedures = [];
     int i = 0;
     foreach json storedProcedure in sourceSprocArrayJsonObject { 
-        sprocs[i] = mapJsonToStoredProcedureType([storedProcedure,()]);
+        storedProcedures[i] = mapJsonToStoredProcedureType([storedProcedure,()]);
         i = i + 1;
     }
-    return sprocs;
+    return storedProcedures;
 }
 
 function userDefinedFunctionArray(json[] sourceUdfArrayJsonObject) returns @tainted UserDefinedFunction[] { 
@@ -471,7 +468,7 @@ function ConvertToOfferArray(json[] sourceOfferArrayJsonObject) returns @tainted
 }
 
 function mapJsonToDocumentBody(map<json> reponsePayload) returns json {
-    var deleteKeys = ["id","_rid","_self","_etag","_ts","_attachments"];
+    var deleteKeys = ["id", "_rid", "_self", "_etag", "_ts", "_attachments"];
     foreach var 'key in deleteKeys {
         if reponsePayload.hasKey('key) {
             var removedValue = reponsePayload.remove('key);
