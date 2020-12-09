@@ -46,7 +46,7 @@ function test_createDatabase(){
     var uuid = createRandomUUIDBallerina();
     string createDatabaseId = string `database_${uuid.toString()}`;
     var result = AzureCosmosClient->createDatabase(createDatabaseId);
-    if result is error {
+    if(result is error) {
         test:assertFail(msg = result.message());
     } else {
         database = <@untainted>result;
@@ -63,7 +63,7 @@ function test_createDatabaseUsingInvalidId(){
     var uuid = createRandomUUIDBallerina();
     string createDatabaseId = "";
     var result = AzureCosmosClient->createDatabase(createDatabaseId);
-    if result is Database {
+    if(result is Database) {
         test:assertFail(msg = "Database created with  '' id value");
     } else {
         var output = "";
@@ -81,7 +81,7 @@ function test_createDatabaseIfNotExist(){
     var uuid = createRandomUUIDBallerina();
     string createDatabaseId = string `databasee_${uuid.toString()}`;
     var result = AzureCosmosClient->createDatabaseIfNotExist(createDatabaseId);
-    if result is error {
+    if(result is error) {
         test:assertFail(msg = result.message());
     } else {
         ifexist = <@untainted><Database> result;
@@ -99,7 +99,7 @@ function test_createDatabaseIfExist(){
     var uuid = createRandomUUIDBallerina();
     string createDatabaseId = database.id;
     var result = AzureCosmosClient->createDatabaseIfNotExist(createDatabaseId);
-    if result is Database {
+    if(result is Database) {
         test:assertFail(msg = "Database with non unique id is created");
     } else {
         var output = "";
@@ -119,7 +119,7 @@ function test_createDatabaseWithManualThroughput(){
         throughput: 400
     };
     var result = AzureCosmosClient->createDatabase(createDatabaseManualId,  manualThroughput);
-    if result is error {
+    if(result is error) {
         test:assertFail(msg = result.message());
     } else {
         manual = <@untainted>result;
@@ -139,7 +139,7 @@ function test_createDatabaseWithInvalidManualThroughput(){
         throughput: 40
     };
     var result = AzureCosmosClient->createDatabase(createDatabaseManualId,  manualThroughput);
-    if result is Database {
+    if(result is Database) {
         test:assertFail(msg = "Database created without validating user input");
     } else {
         var output = "";
@@ -159,7 +159,7 @@ function test_createDBWithAutoscalingThroughput(){
         maxThroughput: {"maxThroughput": 4000}
     };
     var result = AzureCosmosClient->createDatabase(createDatabaseAutoId,  tp);
-    if result is error {
+    if(result is error) {
         test:assertFail(msg = result.message());
     } else {
         auto = <@untainted> result;
@@ -180,7 +180,7 @@ function test_createDatabaseWithBothHeaders(){
         throughput: 600
     };
     var result = AzureCosmosClient->createDatabase(createDatabaseBothId,  tp);
-    if result is Database {
+    if(result is Database) {
         test:assertFail(msg = "Created database with both throughput values!!");
     } else {
         var output = "";
@@ -195,7 +195,7 @@ function test_listAllDatabases(){
     log:printInfo("ACTION : listAllDatabases()");
 
     var result = AzureCosmosClient->getAllDatabases();
-    if result is DatabaseList {
+    if(result is DatabaseList) {
         databaseList = <@untainted>result;
         io:println(result);
     } else {
@@ -211,7 +211,7 @@ function test_listOneDatabase(){
     log:printInfo("ACTION : listOneDatabase()");
 
     var result = AzureCosmosClient->getDatabase(database.id);
-    if result is error {
+    if(result is error) {
         test:assertFail(msg = result.message());
     } else {
         var output = "";
@@ -257,7 +257,7 @@ function test_deleteDatabase(){
     var result2 = AzureCosmosClient->deleteDatabase(manual.id);
     var result3 = AzureCosmosClient->deleteDatabase(auto.id);
     var result4 = AzureCosmosClient->deleteDatabase(ifexist.id);
-    if result1 is error {
+    if(result1 is error) {
         test:assertFail(msg = result1.message());
     } else {
         var output = "";
@@ -283,7 +283,7 @@ function test_createContainer(){
         keyVersion: 2
     };
     var result = AzureCosmosClient->createContainer(propertiesNewCollection, pk);
-    if (result is Container) {
+    if(result is Container) {
         container = <@untainted>result;
         io:println(result);
     } else {
@@ -325,7 +325,7 @@ function test_createCollectionWithManualThroughputAndIndexingPolicy(){
         containerId: string `container_${uuid.toString()}`
     };
     var result = AzureCosmosClient->createContainer(getCollection, pk, ip, tp);
-    if result is Container {
+    if(result is Container) {
         var output = "";
         io:println(result);
     } else {
@@ -351,7 +351,7 @@ function test_createContainerIfNotExist(){
         keyVersion: 2
     };
     var result = AzureCosmosClient->createContainerIfNotExist(propertiesNewCollectionIfNotExist, pk);
-    if (result is Container?) {
+    if(result is Container?) {
         var output = "";
         io:println(result);    
     } else {
@@ -371,7 +371,7 @@ function test_getOneContainer(){
         containerId: container.id
     };
     var result = AzureCosmosClient->getContainer(getCollection);
-    if result is error {
+    if(result is error) {
         test:assertFail(msg = result.message());
     } else {
         var output = "";
@@ -387,7 +387,7 @@ function test_getAllContainers(){
     log:printInfo("ACTION : getAllContainers()");
 
     var result = AzureCosmosClient->getAllContainers(database.id);
-    if (result is ContainerList) {
+    if(result is ContainerList) {
         containerList = <@untainted>result;
         io:println(result);
     } else {
@@ -423,7 +423,7 @@ function test_deleteContainer(){
             containerId: container.id
     };
     var result = AzureCosmosClient->deleteContainer(deleteCollectionData);
-    if result is error {
+    if(result is error) {
         test:assertFail(msg = result.message());
     } else {
         var output = "";
@@ -443,7 +443,7 @@ function test_GetPartitionKeyRanges(){
             containerId: container.id
     };
     var result = AzureCosmosClient->getPartitionKeyRanges(resourceProperties);
-    if result is error {
+    if(result is error) {
         test:assertFail(msg = result.message());
     } else {
         var output = "";
@@ -502,7 +502,7 @@ function test_createDocument(){
     };
 
     var result = AzureCosmosClient->createDocument(resourceProperty,  createDoc);
-    if result is Document {
+    if(result is Document) {
         document = <@untainted>result;
         io:println(result);
     } else {
@@ -571,7 +571,7 @@ function test_createDocumentWithRequestOptions(){
         partitionKey : [1234]  
     };
     var result = AzureCosmosClient->createDocument(resourceProperty,  createDoc,  options);
-    if result is Document {
+    if(result is Document) {
         document = <@untainted>result;
         io:println(result);
     } else {
@@ -591,7 +591,7 @@ function test_getDocumentList(){
         containerId: container.id
     };
     var result = AzureCosmosClient->getDocumentList(resourceProperty);
-    if result is error {
+    if(result is error) {
         test:assertFail(msg = result.message());
     } else {
         var output = "";
@@ -621,7 +621,7 @@ function test_getDocumentListWithRequestOptions(){
         partitionKeyRangeId:"0"
     };
     var result = AzureCosmosClient->getDocumentList(resourceProperty, options);
-    if result is error {
+    if(result is error) {
         test:assertFail(msg = result.message());
     } else {
         var output = "";
@@ -641,7 +641,7 @@ function test_GetOneDocument(){
         containerId: container.id
     };
     var result = AzureCosmosClient->getDocument(resourceProperty, document.id,[1234]);
-    if result is error {
+    if(result is error) {
         test:assertFail(msg = result.message());
     } else {
         var output = "";
@@ -675,7 +675,7 @@ function test_GetOneDocumentWithRequestOptions(){
         changeFeedOption : "Incremental feed"
     };
     var result = AzureCosmosClient->getDocument(resourceProperty, document.id, [1234], options);
-    if result is error {
+    if(result is error) {
         test:assertFail(msg = result.message());
     } else {
         var output = "";
@@ -695,7 +695,7 @@ function test_deleteDocument(){
         containerId: container.id
     };
     var result = AzureCosmosClient->deleteDocument(resourceProperty, document.id, [1234]);  
-    if result is error {
+    if(result is error) {
         test:assertFail(msg = result.message());
     } else {
         var output = "";
@@ -720,7 +720,7 @@ function test_queryDocuments(){
         parameters: []
     };
     var result = AzureCosmosClient->queryDocuments(resourceProperty, partitionKey, sqlQuery);   
-    if result is error {
+    if(result is error) {
         test:assertFail(msg = result.message());
     } else {
         var output = "";
@@ -757,7 +757,7 @@ function test_queryDocumentsWithRequestOptions(){
         changeFeedOption : "Incremental feed"
     };
     var result = AzureCosmosClient->queryDocuments(resourceProperty, partitionKey, sqlQuery, options);   
-    if result is error {
+    if(result is error) {
         test:assertFail(msg = result.message());
     } else {
         var output = "";
@@ -783,7 +783,7 @@ function test_createStoredProcedure(){
         body:createSprocBody
     };
     var result = AzureCosmosClient->createStoredProcedure(resourceProperty, sp);  
-    if result is StoredProcedure {
+    if(result is StoredProcedure) {
         storedPrcedure = <@untainted> result;
         io:println(result);
     } else {
@@ -808,7 +808,7 @@ function test_replaceStoredProcedure(){
         body: replaceSprocBody
     }; 
     var result = AzureCosmosClient->replaceStoredProcedure(resourceProperty, sp);  
-    if result is error {
+    if(result is error) {
         test:assertFail(msg = result.message());
     } else {
         var output = "";
@@ -828,7 +828,7 @@ function test_getAllStoredProcedures(){
         containerId: container.id
     };
     var result = AzureCosmosClient->listStoredProcedures(resourceProperty);   
-    if result is error {
+    if(result is error) {
         test:assertFail(msg = result.message());
     } else {
         var output = "";
@@ -850,7 +850,7 @@ function test_executeOneStoredProcedure(){
     string executeSprocId = storedPrcedure.id;
     string[] arrayofparameters = ["Sachi"];
     var result = AzureCosmosClient->executeStoredProcedure(resourceProperty, executeSprocId, arrayofparameters);   
-    if result is error {
+    if(result is error) {
         test:assertFail(msg = result.message());
     } else {
         var output = "";
@@ -871,7 +871,7 @@ function test_deleteOneStoredProcedure(){
     };
     string deleteSprocId = storedPrcedure.id;
     var result = AzureCosmosClient->deleteStoredProcedure(resourceProperty, deleteSprocId);   
-    if result is error {
+    if(result is error) {
         test:assertFail(msg = result.message());
     } else {
         var output = "";
@@ -892,13 +892,13 @@ function test_createUDF(){
         containerId: container.id
     };
     string udfId = string `udf_${uuid.toString()}`;
-    string createUDFBody = "function tax(income) {\r\n    if(income == undefined) \r\n        throw 'no input';\r\n    if (income < 1000) \r\n        return income * 0.1;\r\n    else if (income < 10000) \r\n        return income * 0.2;\r\n    else\r\n        return income * 0.4;\r\n}"; 
+    string createUDFBody = "function tax(income) {\r\n    if(income == undefined) \r\n        throw 'no input';\r\n    if((income < 1000) \r\n        return income * 0.1;\r\n    else if((income < 10000) \r\n        return income * 0.2;\r\n    else\r\n        return income * 0.4;\r\n}"; 
     UserDefinedFunction createUdf = {
         id: udfId, 
         body: createUDFBody
     };
     var result = AzureCosmosClient->createUserDefinedFunction(resourceProperty, createUdf);  
-    if result is UserDefinedFunction {
+    if(result is UserDefinedFunction) {
         udf = <@untainted> result;
         io:println(result);
     } else {
@@ -917,13 +917,13 @@ function test_replaceUDF(){
         databaseId: database.id, 
         containerId: container.id
     };
-    string replaceUDFBody = "function taxIncome(income) {\r\n if(income == undefined) \r\n throw 'no input';\r\n if (income < 1000) \r\n return income * 0.1;\r\n else if (income < 10000) \r\n return income * 0.2;\r\n else\r\n return income * 0.4;\r\n}"; 
+    string replaceUDFBody = "function taxIncome(income) {\r\n if(income == undefined) \r\n throw 'no input';\r\n if((income < 1000) \r\n return income * 0.1;\r\n else if((income < 10000) \r\n return income * 0.2;\r\n else\r\n return income * 0.4;\r\n}"; 
     UserDefinedFunction replacementUdf = {
         id: udf.id, 
         body:replaceUDFBody
     };
     var result = AzureCosmosClient->replaceUserDefinedFunction(resourceProperty, replacementUdf);  
-    if result is error {
+    if(result is error) {
         test:assertFail(msg = result.message());
     } else {
         var output = "";
@@ -943,7 +943,7 @@ function test_listAllUDF(){
         containerId: container.id
     };
     var result = AzureCosmosClient->listUserDefinedFunctions(resourceProperty);  
-    if result is error {
+    if(result is error) {
         test:assertFail(msg = result.message());
     } else {
         var output = "";
@@ -964,7 +964,7 @@ function test_deleteUDF(){
         containerId: container.id
     };
     var result = AzureCosmosClient->deleteUserDefinedFunction(resourceProperty, deleteUDFId);  
-    if result is error {
+    if(result is error) {
         test:assertFail(msg = result.message());
     } else {
         var output = "";
@@ -985,7 +985,7 @@ function test_createTrigger(){
         containerId: container.id
     };
     string triggerId = string `trigger_${uuid.toString()}`;
-    string createTriggerBody = "function tax(income) {\r\n    if(income == undefined) \r\n        throw 'no input';\r\n    if (income < 1000) \r\n        return income * 0.1;\r\n    else if (income < 10000) \r\n        return income * 0.2;\r\n    else\r\n        return income * 0.4;\r\n}";
+    string createTriggerBody = "function tax(income) {\r\n    if(income == undefined) \r\n        throw 'no input';\r\n    if((income < 1000) \r\n        return income * 0.1;\r\n    else if((income < 10000) \r\n        return income * 0.2;\r\n    else\r\n        return income * 0.4;\r\n}";
     string createTriggerOperation = "All"; 
     string createTriggerType = "Post"; 
     Trigger createTrigger = {
@@ -995,7 +995,7 @@ function test_createTrigger(){
         triggerType: createTriggerType
     };
     var result = AzureCosmosClient->createTrigger(resourceProperty, createTrigger);  
-    if result is Trigger {
+    if(result is Trigger) {
         trigger = <@untainted>result;
         io:println(result);
     } else {
@@ -1024,7 +1024,7 @@ function test_replaceTrigger(){
         triggerType: replaceTriggerType
     };
     var result = AzureCosmosClient->replaceTrigger(resourceProperty, replaceTrigger);  
-    if result is error {
+    if(result is error) {
         test:assertFail(msg = result.message());
     } else {
         var output = "";
@@ -1044,7 +1044,7 @@ function test_listTriggers(){
         containerId: container.id
     };
     var result = AzureCosmosClient->listTriggers(resourceProperty);  
-    if result is error {
+    if(result is error) {
         test:assertFail(msg = result.message());
     } else {
         var output = "";
@@ -1065,7 +1065,7 @@ function test_deleteTrigger(){
         containerId: container.id
     };
     var result = AzureCosmosClient->deleteTrigger(resourceProperty, deleteTriggerId);  
-    if result is error {
+    if(result is error) {
         test:assertFail(msg = result.message());
     } else {
         var output = "";
@@ -1086,7 +1086,7 @@ function test_createUser(){
     };
     string userId = string `user_${uuid.toString()}`;
     var result = AzureCosmosClient->createUser(resourceProperty, userId);  
-    if result is User {
+    if(result is User) {
         test_user = <@untainted>result;
         io:println(result);
     } else {
@@ -1108,7 +1108,7 @@ function test_replaceUserId(){
     };
     string replaceUser = test_user.id;
     var result = AzureCosmosClient->replaceUserId(resourceProperty, replaceUser, newReplaceId);  
-    if result is error {
+    if(result is error) {
         test:assertFail(msg = result.message());
     } else {
         test_user = <@untainted>result;
@@ -1129,7 +1129,7 @@ function test_getUser(){
     };
     string getUserId = test_user.id;
     var result = AzureCosmosClient->getUser(resourceProperty, getUserId);  
-    if result is error {
+    if(result is error) {
         test:assertFail(msg = result.message());
     } else {
         var output = "";
@@ -1148,7 +1148,7 @@ function test_listUsers(){
         databaseId: database.id
     };
     var result = AzureCosmosClient->listUsers(resourceProperty);  
-    if result is error {
+    if(result is error) {
         test:assertFail(msg = result.message());
     } else {
         var output = "";
@@ -1173,7 +1173,7 @@ function test_deleteUser(){
         databaseId: database.id
     };
     var result = AzureCosmosClient->deleteUser(resourceProperty, deleteUserId);  
-    if result is error {
+    if(result is error) {
         test:assertFail(msg = result.message());
     } else {
         var output = "";
@@ -1203,7 +1203,7 @@ function test_createPermission(){
     };
 
     var result = AzureCosmosClient->createPermission(resourceProperty, permissionUserId, createPermission);  
-    if result is Permission {
+    if(result is Permission) {
         permission = <@untainted>result;
         io:println(result);
     } else {
@@ -1233,7 +1233,7 @@ function test_createPermissionWithTTL(){
         resourcePath: permissionResource
     };
     var result = AzureCosmosClient->createPermission(resourceProperty, permissionUserId, createPermission, validityPeriod);  
-    if result is Permission {
+    if(result is Permission) {
         permission = <@untainted>result;
         io:println(result);
     } else {
@@ -1261,7 +1261,7 @@ function test_replacePermission(){
         resourcePath: permissionResource
     };
     var result = AzureCosmosClient->replacePermission(resourceProperty, permissionUserId, replacePermission);  
-    if result is error {
+    if(result is error) {
         test:assertFail(msg = result.message());
     } else {
         var output = "";
@@ -1281,7 +1281,7 @@ function test_listPermissions(){
     };
     string permissionUserId = test_user.id;
     var result = AzureCosmosClient->listPermissions(resourceProperty, permissionUserId);  
-    if result is error {
+    if(result is error) {
         test:assertFail(msg = result.message());
     } else {
         var output = "";
@@ -1302,7 +1302,7 @@ function test_getPermission(){
     string permissionUserId = test_user.id;
     string permissionId = permission.id;
     var result = AzureCosmosClient->getPermission(resourceProperty, permissionUserId, permissionId);  
-    if result is error {
+    if(result is error) {
         test:assertFail(msg = result.message());
     } else {
         var output = "";
@@ -1323,7 +1323,7 @@ function test_deletePermission(){
     string permissionUserId = test_user.id;
     string permissionId = permission.id;
     var result = AzureCosmosClient->deletePermission(resourceProperty, permissionUserId, permissionId);  
-    if result is error {
+    if(result is error) {
         test:assertFail(msg = result.message());
     } else {
         var output = "";
@@ -1338,7 +1338,7 @@ function test_listOffers(){
     log:printInfo("ACTION : listOffers()");
 
     var result = AzureCosmosClient->listOffers();  
-    if result is OfferList {
+    if(result is OfferList) {
         offerList = <@untainted>result;
         io:println(result);
     } else {
@@ -1354,7 +1354,7 @@ function test_getOffer(){
     log:printInfo("ACTION : getOffer()");
 
     var result = AzureCosmosClient->getOffer(offerList.offers[0].id);  
-    if result is error {
+    if(result is error) {
         test:assertFail(msg = result.message());
     } else {
         var output = "";
@@ -1380,7 +1380,7 @@ function test_replaceOffer(){
         resourceId: <string>offerList.offers[0]?.resourceId
     };
     var result = AzureCosmosClient->replaceOffer(replaceOfferBody);  
-    if result is error {
+    if(result is error) {
         test:assertFail(msg = result.message());
     } else {
         var output = "";
@@ -1405,7 +1405,7 @@ function test_replaceOfferWithOptionalParameter(){
         resourceId: <string>offerList.offers[0]?.resourceId 
     };
     var result = AzureCosmosClient->replaceOffer(replaceOfferBody);  
-    if result is error {
+    if(result is error) {
         test:assertFail(msg = result.message());
     } else {
         var output = "";
@@ -1424,7 +1424,7 @@ function test_queryOffer(){
     query: string `SELECT * FROM ${container.id} f WHERE (f["_self"]) = "${container?.selfReference.toString()}"`
     };
     var result = AzureCosmosClient->queryOffer(offerQuery);   
-    if result is error {
+    if(result is error) {
         test:assertFail(msg = result.message());
     } else {
         var output = "";
@@ -1445,10 +1445,10 @@ function test_getCollection_Resource_Token(){
     string permissionUserId = test_user.id;
     string permissionId = permission.id;
     var result = AzureCosmosClient->getPermission(resourceProperty, permissionUserId, permissionId);  
-    if result is error {
+    if(result is error) {
         test:assertFail(msg = result.message());
     } else {
-        if result?.token is string {
+        if(result?.token is string) {
             AzureCosmosConfiguration configdb = {
                 baseUrl : getConfigValue("BASE_URL"), 
                 keyOrResourceToken : result?.token.toString(), 
@@ -1470,7 +1470,7 @@ function test_getCollection_Resource_Token(){
                 containerId: container.id
             };
             var resultdb = AzureCosmosClientDatabase->getContainer(getCollection);
-            if resultdb is error {
+            if(resultdb is error) {
                 test:assertFail(msg = resultdb.message());
             } else {
                 var output = "";
@@ -1486,7 +1486,7 @@ function getConfigValue(string key) returns string {
 
 function createRandomUUIDBallerina() returns string {
     string? stringUUID = java:toString(createRandomUUID());
-    if stringUUID is string {
+    if(stringUUID is string) {
         stringUUID = stringutils:replace(stringUUID,"-","");
         return stringUUID;
     } else {

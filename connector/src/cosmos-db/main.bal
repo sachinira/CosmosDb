@@ -29,7 +29,7 @@ public  client class Client {
     # + return - If successful, returns Database. Else returns error.  
     public remote function createDatabase(string databaseId, ThroughputProperties? throughputProperties = ()) returns 
     @tainted Database|error {
-        if self.keyType == TOKEN_TYPE_RESOURCE {
+        if(self.keyType == TOKEN_TYPE_RESOURCE) {
             return prepareError("Enter a valid master key and token type should be master key");
         }
         json jsonPayload;
@@ -54,11 +54,11 @@ public  client class Client {
     # + return - If successful, returns Database. Else returns error.  
     public remote function createDatabaseIfNotExist(string databaseId, ThroughputProperties? throughputProperties = ()) 
     returns @tainted Database?|error {
-        if self.keyType == TOKEN_TYPE_RESOURCE {
+        if(self.keyType == TOKEN_TYPE_RESOURCE) {
             return prepareError("Enter a valid master key and token type should be master key");
         }
         var result = self->getDatabase(databaseId);
-        if result is error {
+        if(result is error) {
             return self->createDatabase(databaseId, throughputProperties);
         }
         return ();  
@@ -68,7 +68,7 @@ public  client class Client {
     # + databaseId -  id/name of the database 
     # + return - If successful, returns Database. Else returns error.  
     public remote function getDatabase(string databaseId) returns @tainted Database|error {
-        if self.keyType == TOKEN_TYPE_RESOURCE {
+        if(self.keyType == TOKEN_TYPE_RESOURCE) {
             return prepareError("Enter a valid master key and token type should be master key");
         }
         http:Request request = new;
@@ -83,7 +83,7 @@ public  client class Client {
     # To list all databases inside a resource
     # + return - If successful, returns DatabaseList. else returns error.  
     public remote function getAllDatabases() returns @tainted DatabaseList|error {
-        if self.keyType == TOKEN_TYPE_RESOURCE {
+        if(self.keyType == TOKEN_TYPE_RESOURCE) {
             return prepareError("Enter a valid master key and token type should be master key");
         }
         http:Request request = new;
@@ -99,7 +99,7 @@ public  client class Client {
     # + databaseId -  id/name of the database to retrieve
     # + return - If successful, returns boolean specifying 'true' if delete is sucessful. Else returns error. 
     public remote function deleteDatabase(string databaseId) returns @tainted boolean|error {
-        if self.keyType == TOKEN_TYPE_RESOURCE {
+        if(self.keyType == TOKEN_TYPE_RESOURCE) {
             return prepareError("Enter a valid master key and token type should be master key");
         }
         http:Request request = new;
@@ -129,14 +129,14 @@ public  client class Client {
                 Version: partitionKey?.keyVersion
             }
         };
-        if (indexingPolicy != ()) {
+        if(indexingPolicy != ()) {
             jsonPayload = check jsonPayload.mergeJson({"indexingPolicy": <json>indexingPolicy.cloneWithType(json)});
         }
         request = check setHeaders(request, self.host, self.keyOrResourceToken, self.keyType, self.tokenVersion, header);
         request = check setThroughputOrAutopilotHeader(request, throughputProperties);
         request.setJsonPayload(<@untainted>jsonPayload);
         var response = self.azureCosmosClient->post(requestPath, request);
-        if response is http:Response{
+        if(response is http:Response) {
             io:println(response.getJsonPayload());
         }
         [json, Headers] jsonreponse = check mapResponseToTuple(response);
@@ -152,7 +152,7 @@ public  client class Client {
     public remote function createContainerIfNotExist(@tainted ResourceProperties properties, PartitionKey partitionKey, 
     IndexingPolicy? indexingPolicy = (), ThroughputProperties? throughputProperties = ()) returns @tainted Container?|error {
         var result = self->getContainer(properties);
-        if result is error {
+        if(result is error) {
             return self->createContainer(properties, partitionKey);
         } else {
             return prepareError("The collection with specific id alrady exist");
@@ -236,7 +236,7 @@ public  client class Client {
         HeaderParameters header = mapParametersToHeaderType(POST, requestPath);
         request = check setHeaders(request, self.host, self.keyOrResourceToken, self.keyType, self.tokenVersion, header);
         request = check setPartitionKeyHeader(request, document.partitionKey);
-        if requestOptions is RequestHeaderOptions {
+        if(requestOptions is RequestHeaderOptions) {
             request = check setRequestOptions(request, requestOptions);
         }
         json jsonPayload = {
@@ -263,7 +263,7 @@ public  client class Client {
         HeaderParameters header = mapParametersToHeaderType(GET, requestPath);
         request = check setHeaders(request, self.host, self.keyOrResourceToken, self.keyType, self.tokenVersion, header);
         request = check setPartitionKeyHeader(request, partitionKey);
-        if requestOptions is RequestHeaderOptions {
+        if(requestOptions is RequestHeaderOptions) {
             request = check setRequestOptions(request, requestOptions);
         }
         var response = self.azureCosmosClient->get(requestPath, request);
@@ -282,7 +282,7 @@ public  client class Client {
         properties.containerId, RESOURCE_PATH_DOCUMENTS]);
         HeaderParameters header = mapParametersToHeaderType(GET, requestPath);
         request = check setHeaders(request, self.host, self.keyOrResourceToken, self.keyType, self.tokenVersion, header);
-        if requestOptions is RequestHeaderOptions{
+        if(requestOptions is RequestHeaderOptions) {
             request = check setRequestOptions(request, requestOptions);
         }
         var response = self.azureCosmosClient->get(requestPath, request);
@@ -305,7 +305,7 @@ public  client class Client {
         HeaderParameters header = mapParametersToHeaderType(PUT, requestPath);
         request = check setHeaders(request, self.host, self.keyOrResourceToken, self.keyType, self.tokenVersion, header);
         request = check setPartitionKeyHeader(request, document.partitionKey);
-        if requestOptions is RequestHeaderOptions{
+        if(requestOptions is RequestHeaderOptions) {
             request = check setRequestOptions(request, requestOptions);
         }
         json jsonPayload = {
@@ -577,7 +577,7 @@ public  client class Client {
     # + return - If successful, returns a User. Else returns error.
     public remote function createUser(@tainted ResourceProperties properties, string userId) returns @tainted 
     User|error {
-        if self.keyType == TOKEN_TYPE_RESOURCE {
+        if(self.keyType == TOKEN_TYPE_RESOURCE) {
             return prepareError("Enter a valid master key and token type should be master key");
         }
         http:Request request = new;
@@ -600,7 +600,7 @@ public  client class Client {
     # + return - If successful, returns a User. Else returns error.
     public remote function replaceUserId(@tainted ResourceProperties properties, string userId, string newUserId) returns 
     @tainted User|error {
-        if self.keyType == TOKEN_TYPE_RESOURCE {
+        if(self.keyType == TOKEN_TYPE_RESOURCE) {
             return prepareError("Enter a valid master key and token type should be master key");
         }
         http:Request request = new;
@@ -621,7 +621,7 @@ public  client class Client {
     # + userId - the id of user to get information
     # + return - If successful, returns a User. Else returns error.
     public remote function getUser(@tainted ResourceProperties properties, string userId) returns @tainted User|error {
-        if self.keyType == TOKEN_TYPE_RESOURCE {
+        if(self.keyType == TOKEN_TYPE_RESOURCE) {
             return prepareError("Enter a valid master key and token type should be master key");
         }
         http:Request request = new;
@@ -637,7 +637,7 @@ public  client class Client {
     # + properties - object of type ResourceProperties
     # + return - If successful, returns a UserList. Else returns error.
     public remote function listUsers(@tainted ResourceProperties properties) returns @tainted UserList|error {
-        if self.keyType == TOKEN_TYPE_RESOURCE {
+        if(self.keyType == TOKEN_TYPE_RESOURCE) {
             return prepareError("Enter a valid master key and token type should be master key");
         }
         http:Request request = new;
@@ -655,7 +655,7 @@ public  client class Client {
     # + return - If successful, returns boolean specifying 'true' if delete is sucessful. Else returns error. 
     public remote function deleteUser(@tainted ResourceProperties properties, string userId) returns @tainted 
     boolean|error {
-        if self.keyType == TOKEN_TYPE_RESOURCE {
+        if(self.keyType == TOKEN_TYPE_RESOURCE) {
             return prepareError("Enter a valid master key and token type should be master key");
         }
         http:Request request = new;
@@ -674,7 +674,7 @@ public  client class Client {
     # + return - If successful, returns a Permission. Else returns error.
     public remote function createPermission(@tainted ResourceProperties properties, string userId, Permission permission, 
     int? validityPeriod = ()) returns @tainted Permission|error {
-        if self.keyType == TOKEN_TYPE_RESOURCE {
+        if(self.keyType == TOKEN_TYPE_RESOURCE) {
             return prepareError("Enter a valid master key and token type should be master key");
         }
         http:Request request = new;
@@ -682,7 +682,7 @@ public  client class Client {
         RESOURCE_PATH_PERMISSION]);       
         HeaderParameters header = mapParametersToHeaderType(POST, requestPath);
         request = check setHeaders(request, self.host, self.keyOrResourceToken, self.keyType, self.tokenVersion, header);
-        if validityPeriod is int {
+        if(validityPeriod is int) {
             request = check setExpiryHeader(request,validityPeriod);
         }
         json jsonPayload = {
@@ -704,7 +704,7 @@ public  client class Client {
     # + return - If successful, returns a Permission. Else returns error.
     public remote function replacePermission(@tainted ResourceProperties properties, string userId, @tainted 
     Permission permission, int? validityPeriod = ()) returns @tainted Permission|error {
-        if self.keyType == TOKEN_TYPE_RESOURCE {
+        if(self.keyType == TOKEN_TYPE_RESOURCE) {
             return prepareError("Enter a valid master key and token type should be master key");
         }
         http:Request request = new;
@@ -712,7 +712,7 @@ public  client class Client {
         RESOURCE_PATH_PERMISSION, permission.id]);       
         HeaderParameters header = mapParametersToHeaderType(PUT, requestPath);
         request = check setHeaders(request, self.host, self.keyOrResourceToken, self.keyType, self.tokenVersion, header);
-        if validityPeriod is int {
+        if(validityPeriod is int) {
             request = check setExpiryHeader(request,validityPeriod);
         }
         json jsonPayload = {
@@ -732,7 +732,7 @@ public  client class Client {
     # + return - If successful, returns a PermissionList. Else returns error.
     public remote function listPermissions(@tainted ResourceProperties properties, string userId) returns @tainted 
     PermissionList|error {
-        if self.keyType == TOKEN_TYPE_RESOURCE {
+        if(self.keyType == TOKEN_TYPE_RESOURCE) {
             return prepareError("Enter a valid master key and token type should be master key");
         }
         http:Request request = new;
@@ -752,7 +752,7 @@ public  client class Client {
     # + return - If successful, returns a Permission. Else returns error.
     public remote function getPermission(@tainted ResourceProperties properties, string userId, string permissionId)
     returns @tainted Permission|error {
-        if self.keyType == TOKEN_TYPE_RESOURCE {
+        if(self.keyType == TOKEN_TYPE_RESOURCE) {
             return prepareError("Enter a valid master key and token type should be master key");
         }
         http:Request request = new;
@@ -771,7 +771,7 @@ public  client class Client {
     # + return - If successful, returns boolean specifying 'true' if delete is sucessful. Else returns error. 
     public remote function deletePermission(@tainted ResourceProperties properties, string userId, string permissionId) 
     returns @tainted boolean|error {
-        if self.keyType == TOKEN_TYPE_RESOURCE {
+        if(self.keyType == TOKEN_TYPE_RESOURCE) {
             return prepareError("Enter a valid master key and token type should be master key");
         }
         http:Request request = new;
@@ -828,7 +828,7 @@ public  client class Client {
             "id": offer.id,
             "_rid": offer?.resourceId
         };
-        if (offerType is string && offer.offerVersion ==  "V1") {
+        if(offerType is string && offer.offerVersion ==  "V1") {
             json selectedType = {
                 "offerType": offerType
             };

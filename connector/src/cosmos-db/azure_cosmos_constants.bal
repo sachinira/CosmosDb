@@ -78,3 +78,6 @@ const string RESOURCE_PATH_PERMISSION = "permissions";
 const string RESOURCE_PATH_OFFER = "offers";
 
 const string API_VERSION = "2018-12-31";
+const string RESPONSE_HEADERS = "reponseHeaders";
+const string CONTENT_TYPE_QUERY = "application/query+json";
+const string ACTIVITY_ID = "ActivityId";

@@ -70,7 +70,6 @@ public type DatabaseList record {
     int count?;
 };
 
-
 //conflict resolution policy must be included
 public type Container record {|
     string id = "";
