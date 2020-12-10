@@ -195,12 +195,14 @@ function test_listAllDatabases(){
     log:printInfo("ACTION : listAllDatabases()");
 
     var result = AzureCosmosClient->getAllDatabases();
-    if(result is stream<json>) {
+    if(result is DatabaseIterator) {
         //databaseList = <@untainted>result;
         //io:println(result);
-            var database = result.next();
-            io:println(database);
-        
+            var database = result.getStream().next();
+            io:println(database?.value);
+            io:println(result.getCount());
+            io:println(result.getHeaders());
+
         
 
     } else {

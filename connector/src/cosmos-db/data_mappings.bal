@@ -38,15 +38,14 @@ function mapJsonToDatabaseType([json, Headers?] jsonPayload) returns Database {
     return database;
 }
 
-function mapJsonToDatabaseListType([json, Headers] jsonPayload) returns @tainted stream<Database> {
+function mapJsonToDatabaseListType([json, Headers] jsonPayload) returns @tainted DatabaseIterator {
     json payload;
     Headers headers;
     [payload,headers] = jsonPayload;
-    //DatabaseList databaseList = {};
-    stream<Database> db = convertToDatabaseArray(<json[]>payload.Databases);
-    //databaseList.reponseHeaders = headers;
-
-    return db;
+    stream<Database> db = convertToDatabaseStream(<json[]>payload.Databases);
+    int count = convertToInt(payload._count);
+    DatabaseIterator itr = new(db,count,headers);
+    return itr;
 }
 
 function mapJsonToContainerType([json, Headers?] jsonPayload) returns @tainted Container {
@@ -333,7 +332,7 @@ function mapJsonToOfferListType([json, Headers?] jsonPayload) returns @tainted O
     return offerList;
 }
 
-function convertToDatabaseArray(json[] sourceDatabaseArrayJsonObject) returns @tainted stream<Database> {
+function convertToDatabaseStream(json[] sourceDatabaseArrayJsonObject) returns @tainted stream<Database> {
     Database[] databases = [];
     int i = 0;
     foreach json jsonDatabase in sourceDatabaseArrayJsonObject {

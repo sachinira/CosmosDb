@@ -81,7 +81,7 @@ public  client class Client {
 
     # To list all databases inside a resource
     # + return - If successful, returns DatabaseList. else returns error.  
-    public remote function getAllDatabases() returns @tainted stream<json>|error {
+    public remote function getAllDatabases() returns @tainted DatabaseIterator|error {
         if(self.keyType == TOKEN_TYPE_RESOURCE) {
             return prepareError(MASTER_KEY_ERROR);
         }
