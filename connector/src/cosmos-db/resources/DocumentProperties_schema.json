@@ -1,1 +1,0 @@
-{"sachini/cosmos-db:0.1.0:DocumentProperties":{"databaseId":"string","containerId":"string","documentId":"string?","partitionKey":"any?"}}

@@ -4,3 +4,4 @@ Ballerina.lock
 src/cosmos-db/ballerina-internal.log
 /ballerina-internal.log
 /ballerina.conf
+src/cosmos-db/resources/*.json

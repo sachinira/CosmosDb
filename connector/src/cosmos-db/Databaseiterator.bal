@@ -11,12 +11,6 @@ class DatabaseIterator {
     }
 
     public function getStream() returns stream<Database> {
-        // record {| Database value; |}? db = self.st.next();
-        // if(db is ()){
-        //     return ();
-        // } else {
-        //     return db.value;
-        // }
         return self.st;
     }
 
