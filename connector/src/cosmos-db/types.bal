@@ -65,7 +65,7 @@ public type Database record {|
 
 public type DatabaseList record {
     *Common;
-    Database[] databases = [];
+    stream<json> databases;
     Headers? reponseHeaders = ();
     int count?;
 };

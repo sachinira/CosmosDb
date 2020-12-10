@@ -26,7 +26,7 @@ Database database = {};
 Database manual = {};
 Database auto = {};
 Database ifexist = {};
-DatabaseList databaseList = {};
+//DatabaseList databaseList = {};
 Container container = {};
 ContainerList containerList = {};
 Document document = {};
@@ -195,9 +195,14 @@ function test_listAllDatabases(){
     log:printInfo("ACTION : listAllDatabases()");
 
     var result = AzureCosmosClient->getAllDatabases();
-    if(result is DatabaseList) {
-        databaseList = <@untainted>result;
-        io:println(result);
+    if(result is stream<json>) {
+        //databaseList = <@untainted>result;
+        //io:println(result);
+            var database = result.next();
+            io:println(database);
+        
+        
+
     } else {
         test:assertFail(msg = result.message());
     }
@@ -724,7 +729,9 @@ function test_queryDocuments(){
         test:assertFail(msg = result.message());
     } else {
         var output = "";
-        io:println(result);
+        //io:println(result);
+        var doc = result.next();
+        io:println(doc);
     }   
 }
 
@@ -1428,8 +1435,8 @@ function test_queryOffer(){
         test:assertFail(msg = result.message());
     } else {
         var output = "";
-        io:println(result);
-    }  
+        var database = result.next();
+            io:println(database);    }  
 }
 
 @test:Config{

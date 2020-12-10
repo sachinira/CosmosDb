@@ -6,6 +6,7 @@ import ballerina/lang.'string as str;
 import ballerina/crypto;
 import ballerina/encoding;
 import ballerina/lang.array as array; 
+//import ballerina/io;
 
 function mapResponseToTuple(http:Response|http:ClientError httpResponse) returns @tainted [json, Headers]|error {
     var responseBody = check mapResponseToJson(httpResponse);
@@ -21,6 +22,30 @@ function mapResponseToJson(http:Response|http:ClientError httpResponse) returns 
                 return createResponseFailMessage(httpResponse, jsonResponse);
             }
             return jsonResponse;
+        } else {
+            return prepareError(JSON_PAYLOAD_ACCESS_ERROR);
+        }
+    } else {
+        return prepareError(REST_API_INVOKING_ERROR);
+    }
+}
+
+function mapResponseToJsonStream(http:Response|http:ClientError httpResponse) returns @tainted stream<json>|error { 
+    if(httpResponse is http:Response) {
+        var jsonResponse = httpResponse.getJsonPayload();
+        if(jsonResponse is json) {
+            if(httpResponse.statusCode != http:STATUS_OK && httpResponse.statusCode != http:STATUS_CREATED) {
+                return createResponseFailMessage(httpResponse, jsonResponse);
+            }
+            boolean jsonDocumentMap = (check jsonResponse.cloneWithType(JsonMap)).hasKey("Documents");//////////
+            boolean jsonOfferMap = (check jsonResponse.cloneWithType(JsonMap)).hasKey("Offers");//////////
+            if(jsonDocumentMap == true) {
+                return (<@untainted><json[]>jsonResponse.Documents).toStream();
+            } else if (jsonOfferMap == true) {
+                return (<@untainted><json[]>jsonResponse.Offers).toStream();
+            } else {
+                return prepareError(JSON_PAYLOAD_ACCESS_ERROR);/////
+            }
         } else {
             return prepareError(JSON_PAYLOAD_ACCESS_ERROR);
         }

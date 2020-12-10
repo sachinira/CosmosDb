@@ -81,7 +81,7 @@ public  client class Client {
 
     # To list all databases inside a resource
     # + return - If successful, returns DatabaseList. else returns error.  
-    public remote function getAllDatabases() returns @tainted DatabaseList|error {
+    public remote function getAllDatabases() returns @tainted stream<json>|error {
         if(self.keyType == TOKEN_TYPE_RESOURCE) {
             return prepareError(MASTER_KEY_ERROR);
         }
@@ -91,7 +91,7 @@ public  client class Client {
         request = check setHeaders(request, self.host, self.keyOrResourceToken, self.keyType, self.tokenVersion, header);
         var response = self.azureCosmosClient->get(requestPath, request);
         [json, Headers] jsonresponse = check mapResponseToTuple(response);
-        return mapJsonToDatabaseListType(jsonresponse); 
+        return mapJsonToDatabaseListType(<@untainted>jsonresponse); 
     }
 
     # To delete a given database inside a resource
@@ -341,7 +341,7 @@ public  client class Client {
     # + partitionKey - the value provided for the partition key specified in the document
     # + return - If successful, returns a json. Else returns error. 
     public remote function queryDocuments(@tainted ResourceProperties properties, any[] partitionKey, Query sqlQuery, 
-    RequestHeaderOptions? requestOptions = ()) returns @tainted json|error {
+    RequestHeaderOptions? requestOptions = ()) returns @tainted stream<json>|error {
         http:Request request = new;
         string requestPath = prepareUrl([RESOURCE_PATH_DATABASES, properties.databaseId, RESOURCE_PATH_COLLECTIONS, 
         properties.containerId, RESOURCE_PATH_DOCUMENTS]);
@@ -351,8 +351,8 @@ public  client class Client {
         request.setPayload(<json>sqlQuery.cloneWithType(json));
         request = check setHeadersForQuery(request);
         var response = self.azureCosmosClient->post(requestPath, request);
-        json jsonresponse = check mapResponseToJson(response);
-        return (jsonresponse);
+        stream<json> jsonresponse = check mapResponseToJsonStream(response);
+        return jsonresponse;
     }
 
     # To create a new stored procedure inside a collection
@@ -842,7 +842,7 @@ public  client class Client {
     # To get information of a user from a database
     # + sqlQuery - the SQL query to execute
     # + return - If successful, returns a json. Else returns error.
-    public remote function queryOffer(Query sqlQuery) returns @tainted json|error {
+    public remote function queryOffer(Query sqlQuery) returns @tainted stream<json>|error {
         http:Request request = new;
         string requestPath = prepareUrl([RESOURCE_PATH_OFFER]);
         HeaderParameters header = mapParametersToHeaderType(POST, requestPath);
@@ -850,7 +850,7 @@ public  client class Client {
         request.setJsonPayload(<json>sqlQuery.cloneWithType(json));
         request = check setHeadersForQuery(request);
         var response = self.azureCosmosClient->post(requestPath, request);
-        json jsonresponse = check mapResponseToJson(response);
+        stream<json> jsonresponse = check mapResponseToJsonStream(response);
         return (jsonresponse);
     }
 }

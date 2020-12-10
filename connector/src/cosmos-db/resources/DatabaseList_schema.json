@@ -1,1 +1,1 @@
-{"sachini/cosmos-db:0.1.0:DatabaseList":{"databases":"sachini/cosmos-db:0.1.0:Database[]","reponseHeaders":"sachini/cosmos-db:0.1.0:Headers?","count":"int"}}
+{"sachini/cosmos-db:0.1.0:DatabaseList":{"databases":"stream<json>","reponseHeaders":"sachini/cosmos-db:0.1.0:Headers?","count":"int"}}
