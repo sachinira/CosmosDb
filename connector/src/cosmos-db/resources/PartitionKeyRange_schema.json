@@ -1,1 +1,0 @@
-{"sachini/cosmos-db:0.1.0:PartitionKeyRange":{"id":"string","minInclusive":"string","maxExclusive":"string","ridPrefix":"int","throughputFraction":"int","status":"string","reponseHeaders":"sachini/cosmos-db:0.1.0:Headers"}}

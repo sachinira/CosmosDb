@@ -28,17 +28,16 @@ public  client class Client {
     # + return - If successful, returns Database. Else returns error.  
     public remote function createDatabase(string databaseId, ThroughputProperties? throughputProperties = ()) returns 
     @tainted Database|error {
-        if self.keyType == TOKEN_TYPE_RESOURCE {
-            return prepareError("Enter a valid master key and token type should be master key");
+        if(self.keyType == TOKEN_TYPE_RESOURCE) {
+            return prepareError(MASTER_KEY_ERROR);
         }
-        json jsonPayload;
         http:Request request = new;
-        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES]);
+        string requestPath = prepareUrl([RESOURCE_PATH_DATABASES]);
         HeaderParameters header = mapParametersToHeaderType(POST, requestPath);
-        json body = {
+        json jsonPayload = {
             id:databaseId
         };
-        request.setJsonPayload(body);
+        request.setJsonPayload(jsonPayload);
         request = check setHeaders(request, self.host, self.keyOrResourceToken, self.keyType, self.tokenVersion, header);
         request = check setThroughputOrAutopilotHeader(request, throughputProperties);
         var response = self.azureCosmosClient->post(requestPath, request);
@@ -53,11 +52,11 @@ public  client class Client {
     # + return - If successful, returns Database. Else returns error.  
     public remote function createDatabaseIfNotExist(string databaseId, ThroughputProperties? throughputProperties = ()) 
     returns @tainted Database?|error {
-        if self.keyType == TOKEN_TYPE_RESOURCE {
-            return prepareError("Enter a valid master key and token type should be master key");
+        if(self.keyType == TOKEN_TYPE_RESOURCE) {
+            return prepareError(MASTER_KEY_ERROR);
         }
         var result = self->getDatabase(databaseId);
-        if result is error {
+        if(result is error) {
             return self->createDatabase(databaseId, throughputProperties);
         }
         return ();  
@@ -67,11 +66,11 @@ public  client class Client {
     # + databaseId -  id/name of the database 
     # + return - If successful, returns Database. Else returns error.  
     public remote function getDatabase(string databaseId) returns @tainted Database|error {
-        if self.keyType == TOKEN_TYPE_RESOURCE {
-            return prepareError("Enter a valid master key and token type should be master key");
+        if(self.keyType == TOKEN_TYPE_RESOURCE) {
+            return prepareError(MASTER_KEY_ERROR);
         }
         http:Request request = new;
-        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES, databaseId]);
+        string requestPath = prepareUrl([RESOURCE_PATH_DATABASES, databaseId]);
         HeaderParameters header = mapParametersToHeaderType(GET, requestPath);
         request = check setHeaders(request, self.host, self.keyOrResourceToken, self.keyType, self.tokenVersion, header);
         var response = self.azureCosmosClient->get(requestPath, request);
@@ -81,28 +80,28 @@ public  client class Client {
 
     # To list all databases inside a resource
     # + return - If successful, returns DatabaseList. else returns error.  
-    public remote function getAllDatabases() returns @tainted DatabaseList|error {
-        if self.keyType == TOKEN_TYPE_RESOURCE {
-            return prepareError("Enter a valid master key and token type should be master key");
+    public remote function getAllDatabases() returns @tainted DatabaseIterator|error {
+        if(self.keyType == TOKEN_TYPE_RESOURCE) {
+            return prepareError(MASTER_KEY_ERROR);
         }
         http:Request request = new;
-        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES]);
+        string requestPath = prepareUrl([RESOURCE_PATH_DATABASES]);
         HeaderParameters header = mapParametersToHeaderType(GET, requestPath);
         request = check setHeaders(request, self.host, self.keyOrResourceToken, self.keyType, self.tokenVersion, header);
         var response = self.azureCosmosClient->get(requestPath, request);
         [json, Headers] jsonresponse = check mapResponseToTuple(response);
-        return mapJsonToDatabaseListType(jsonresponse); 
+        return mapJsonToDatabaseIteratorType(<@untainted>jsonresponse); 
     }
 
     # To delete a given database inside a resource
     # + databaseId -  id/name of the database to retrieve
     # + return - If successful, returns boolean specifying 'true' if delete is sucessful. Else returns error. 
     public remote function deleteDatabase(string databaseId) returns @tainted boolean|error {
-        if self.keyType == TOKEN_TYPE_RESOURCE {
-            return prepareError("Enter a valid master key and token type should be master key");
+        if(self.keyType == TOKEN_TYPE_RESOURCE) {
+            return prepareError(MASTER_KEY_ERROR);
         }
         http:Request request = new;
-        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES, databaseId]);
+        string requestPath = prepareUrl([RESOURCE_PATH_DATABASES, databaseId]);
         HeaderParameters header = mapParametersToHeaderType(DELETE, requestPath);
         request = check setHeaders(request, self.host, self.keyOrResourceToken, self.keyType, self.tokenVersion, header);
         var response = self.azureCosmosClient->delete(requestPath, request);
@@ -118,16 +117,22 @@ public  client class Client {
     public remote function createContainer(@tainted ResourceProperties properties, PartitionKey partitionKey, 
     IndexingPolicy? indexingPolicy = (), ThroughputProperties? throughputProperties = ()) returns @tainted Container|error {
         http:Request request = new;
-        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES, properties.databaseId, RESOURCE_PATH_COLLECTIONS]);
+        string requestPath = prepareUrl([RESOURCE_PATH_DATABASES, properties.databaseId, RESOURCE_PATH_COLLECTIONS]);
         HeaderParameters header = mapParametersToHeaderType(POST, requestPath);
-        json body = {
+        json jsonPayload = {
             "id": properties.containerId, 
-            "partitionKey": <json>partitionKey.cloneWithType(json)
+            "partitionKey": {
+                paths: <json>partitionKey.paths.cloneWithType(json),
+                kind : partitionKey.kind,
+                Version: partitionKey?.keyVersion
+            }
         };
-        json finalc = check body.mergeJson(<json>indexingPolicy.cloneWithType(json));
+        if(indexingPolicy != ()) {
+            jsonPayload = check jsonPayload.mergeJson({"indexingPolicy": <json>indexingPolicy.cloneWithType(json)});
+        }
         request = check setHeaders(request, self.host, self.keyOrResourceToken, self.keyType, self.tokenVersion, header);
         request = check setThroughputOrAutopilotHeader(request, throughputProperties);
-        request.setJsonPayload(<@untainted>finalc);
+        request.setJsonPayload(<@untainted>jsonPayload);
         var response = self.azureCosmosClient->post(requestPath, request);
         [json, Headers] jsonreponse = check mapResponseToTuple(response);
         return mapJsonToContainerType(jsonreponse);
@@ -142,7 +147,7 @@ public  client class Client {
     public remote function createContainerIfNotExist(@tainted ResourceProperties properties, PartitionKey partitionKey, 
     IndexingPolicy? indexingPolicy = (), ThroughputProperties? throughputProperties = ()) returns @tainted Container?|error {
         var result = self->getContainer(properties);
-        if result is error{
+        if(result is error) {
             return self->createContainer(properties, partitionKey);
         } else {
             return prepareError("The collection with specific id alrady exist");
@@ -163,7 +168,7 @@ public  client class Client {
     # + return - If successful, returns ContainerList. Else returns error.  
     public remote function getAllContainers(string databaseId) returns @tainted ContainerList|error {
         http:Request request = new;
-        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES, databaseId, RESOURCE_PATH_COLLECTIONS]);
+        string requestPath = prepareUrl([RESOURCE_PATH_DATABASES, databaseId, RESOURCE_PATH_COLLECTIONS]);
         HeaderParameters header = mapParametersToHeaderType(GET, requestPath);
         request = check setHeaders(request, self.host, self.keyOrResourceToken, self.keyType, self.tokenVersion, header);
         var response = self.azureCosmosClient->get(requestPath, request);
@@ -176,7 +181,7 @@ public  client class Client {
     # + return - If successful, returns Container. Else returns error.  
     public remote function getContainer(@tainted ResourceProperties properties) returns @tainted Container|error {
         http:Request request = new;
-        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES, properties.databaseId, RESOURCE_PATH_COLLECTIONS, 
+        string requestPath = prepareUrl([RESOURCE_PATH_DATABASES, properties.databaseId, RESOURCE_PATH_COLLECTIONS, 
         properties.containerId]);
         HeaderParameters header = mapParametersToHeaderType(GET, requestPath);
         request = check setHeaders(request, self.host, self.keyOrResourceToken, self.keyType, self.tokenVersion, header);
@@ -190,7 +195,7 @@ public  client class Client {
     # + return - If successful, returns boolean specifying 'true' if delete is sucessful. Else returns error. 
     public remote function deleteContainer(@tainted ResourceProperties properties) returns @tainted json|error {
         http:Request request = new;
-        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES, properties.databaseId, RESOURCE_PATH_COLLECTIONS, 
+        string requestPath = prepareUrl([RESOURCE_PATH_DATABASES, properties.databaseId, RESOURCE_PATH_COLLECTIONS, 
         properties.containerId]);
         HeaderParameters header = mapParametersToHeaderType(DELETE, requestPath);
         request = check setHeaders(request, self.host, self.keyOrResourceToken, self.keyType, self.tokenVersion, header);
@@ -204,7 +209,7 @@ public  client class Client {
     public remote function getPartitionKeyRanges(@tainted ResourceProperties properties) returns @tainted 
     PartitionKeyList|error {
         http:Request request = new;
-        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES, properties.databaseId, RESOURCE_PATH_COLLECTIONS, properties.containerId, 
+        string requestPath = prepareUrl([RESOURCE_PATH_DATABASES, properties.databaseId, RESOURCE_PATH_COLLECTIONS, properties.containerId, 
         RESOURCE_PATH_PK_RANGES]);
         HeaderParameters header = mapParametersToHeaderType(GET, requestPath);
         request = check setHeaders(request, self.host, self.keyOrResourceToken, self.keyType, self.tokenVersion, header);
@@ -221,19 +226,19 @@ public  client class Client {
     public remote function createDocument(@tainted ResourceProperties properties, Document document, 
     RequestHeaderOptions? requestOptions = ()) returns @tainted Document|error {
         http:Request request = new;
-        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES, properties.databaseId, RESOURCE_PATH_COLLECTIONS, 
+        string requestPath = prepareUrl([RESOURCE_PATH_DATABASES, properties.databaseId, RESOURCE_PATH_COLLECTIONS, 
         properties.containerId, RESOURCE_PATH_DOCUMENTS]);
         HeaderParameters header = mapParametersToHeaderType(POST, requestPath);
         request = check setHeaders(request, self.host, self.keyOrResourceToken, self.keyType, self.tokenVersion, header);
         request = check setPartitionKeyHeader(request, document.partitionKey);
-        if requestOptions is RequestHeaderOptions {
+        if(requestOptions is RequestHeaderOptions) {
             request = check setRequestOptions(request, requestOptions);
         }
-        json requestBodyId = {
+        json jsonPayload = {
             id: document.id
         };  
-        json Final = check requestBodyId.mergeJson(document.documentBody);     
-        request.setJsonPayload(Final);
+        jsonPayload = check jsonPayload.mergeJson(document.documentBody);     
+        request.setJsonPayload(jsonPayload);
         var response = self.azureCosmosClient->post(requestPath, request);
         [json, Headers] jsonreponse = check mapResponseToTuple(response);
         return mapJsonToDocumentType(jsonreponse);
@@ -248,12 +253,12 @@ public  client class Client {
     public remote function getDocument(@tainted ResourceProperties properties, string documentId, any[] partitionKey, 
     RequestHeaderOptions? requestOptions = ()) returns @tainted Document|error {
         http:Request request = new;
-        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES, properties.databaseId, RESOURCE_PATH_COLLECTIONS, 
+        string requestPath = prepareUrl([RESOURCE_PATH_DATABASES, properties.databaseId, RESOURCE_PATH_COLLECTIONS, 
         properties.containerId, RESOURCE_PATH_DOCUMENTS, documentId]);
         HeaderParameters header = mapParametersToHeaderType(GET, requestPath);
         request = check setHeaders(request, self.host, self.keyOrResourceToken, self.keyType, self.tokenVersion, header);
         request = check setPartitionKeyHeader(request, partitionKey);
-        if requestOptions is RequestHeaderOptions {
+        if(requestOptions is RequestHeaderOptions) {
             request = check setRequestOptions(request, requestOptions);
         }
         var response = self.azureCosmosClient->get(requestPath, request);
@@ -268,16 +273,16 @@ public  client class Client {
     public remote function getDocumentList(@tainted ResourceProperties properties, RequestHeaderOptions? requestOptions = ()) 
     returns @tainted DocumentList|error { 
         http:Request request = new;
-        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES, properties.databaseId, RESOURCE_PATH_COLLECTIONS, 
+        string requestPath = prepareUrl([RESOURCE_PATH_DATABASES, properties.databaseId, RESOURCE_PATH_COLLECTIONS, 
         properties.containerId, RESOURCE_PATH_DOCUMENTS]);
         HeaderParameters header = mapParametersToHeaderType(GET, requestPath);
         request = check setHeaders(request, self.host, self.keyOrResourceToken, self.keyType, self.tokenVersion, header);
-        if requestOptions is RequestHeaderOptions{
+        if(requestOptions is RequestHeaderOptions) {
             request = check setRequestOptions(request, requestOptions);
         }
         var response = self.azureCosmosClient->get(requestPath, request);
         [json, Headers] jsonreponse = check mapResponseToTuple(response);
-        DocumentList list =  check mapJsonToDocumentListType(jsonreponse); 
+        DocumentList list = check mapJsonToDocumentListType(jsonreponse); 
         return list;    
     }
 
@@ -290,19 +295,19 @@ public  client class Client {
     public remote function replaceDocument(@tainted ResourceProperties properties, @tainted Document document, 
     RequestHeaderOptions? requestOptions = ()) returns @tainted Document|error {         
         http:Request request = new;
-        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES, properties.databaseId, RESOURCE_PATH_COLLECTIONS, 
+        string requestPath = prepareUrl([RESOURCE_PATH_DATABASES, properties.databaseId, RESOURCE_PATH_COLLECTIONS, 
         properties.containerId, RESOURCE_PATH_DOCUMENTS, document.id]);
         HeaderParameters header = mapParametersToHeaderType(PUT, requestPath);
         request = check setHeaders(request, self.host, self.keyOrResourceToken, self.keyType, self.tokenVersion, header);
         request = check setPartitionKeyHeader(request, document.partitionKey);
-        if requestOptions is RequestHeaderOptions{
+        if(requestOptions is RequestHeaderOptions) {
             request = check setRequestOptions(request, requestOptions);
         }
-        json requestBodyId = {
+        json jsonPayload = {
             id: document.id
         };  
-        json Final = check requestBodyId.mergeJson(document.documentBody); 
-        request.setJsonPayload(<@untainted>Final);
+        jsonPayload = check jsonPayload.mergeJson(document.documentBody); 
+        request.setJsonPayload(<@untainted>jsonPayload);
         var response = self.azureCosmosClient->put(requestPath, request);
         [json, Headers] jsonreponse = check mapResponseToTuple(response);
         return mapJsonToDocumentType(jsonreponse);
@@ -316,7 +321,7 @@ public  client class Client {
     public remote function deleteDocument(@tainted ResourceProperties properties, string documentId, any[] partitionKey) 
     returns @tainted boolean|error {  
         http:Request request = new;
-        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES, properties.databaseId, RESOURCE_PATH_COLLECTIONS, 
+        string requestPath = prepareUrl([RESOURCE_PATH_DATABASES, properties.databaseId, RESOURCE_PATH_COLLECTIONS, 
         properties.containerId, RESOURCE_PATH_DOCUMENTS, documentId]);
         HeaderParameters header = mapParametersToHeaderType(DELETE, requestPath);
         request = check setHeaders(request, self.host, self.keyOrResourceToken, self.keyType, self.tokenVersion, header);
@@ -327,23 +332,23 @@ public  client class Client {
 
     # To query documents inside a collection
     # + properties - object of type ResourceProperties
-    # + cqlQuery - json object of type Query containing the CQL query
+    # + sqlQuery - json object of type Query containing the SQL query
     # + requestOptions - object of type RequestOptions
     # + partitionKey - the value provided for the partition key specified in the document
     # + return - If successful, returns a json. Else returns error. 
-    public remote function queryDocuments(@tainted ResourceProperties properties, any[] partitionKey, Query cqlQuery, 
-    RequestHeaderOptions? requestOptions = ()) returns @tainted json|error {
+    public remote function queryDocuments(@tainted ResourceProperties properties, any[] partitionKey, Query sqlQuery, 
+    RequestHeaderOptions? requestOptions = ()) returns @tainted stream<json>|error {
         http:Request request = new;
-        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES, properties.databaseId, RESOURCE_PATH_COLLECTIONS, 
+        string requestPath = prepareUrl([RESOURCE_PATH_DATABASES, properties.databaseId, RESOURCE_PATH_COLLECTIONS, 
         properties.containerId, RESOURCE_PATH_DOCUMENTS]);
         HeaderParameters header = mapParametersToHeaderType(POST, requestPath);
         request = check setHeaders(request, self.host, self.keyOrResourceToken, self.keyType, self.tokenVersion, header);
         request = check setPartitionKeyHeader(request, partitionKey);
-        request.setPayload(<json>cqlQuery.cloneWithType(json));
+        request.setPayload(<json>sqlQuery.cloneWithType(json));
         request = check setHeadersForQuery(request);
         var response = self.azureCosmosClient->post(requestPath, request);
-        json jsonresponse = check mapResponseToJson(response);
-        return (jsonresponse);
+        stream<json> jsonresponse = check mapResponseToJsonStream(response);
+        return jsonresponse;
     }
 
     # To create a new stored procedure inside a collection
@@ -355,7 +360,7 @@ public  client class Client {
     public remote function createStoredProcedure(@tainted ResourceProperties properties, StoredProcedure 
     storedProcedure) returns @tainted StoredProcedure|error {
         http:Request request = new;
-        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES, properties.databaseId, RESOURCE_PATH_COLLECTIONS, 
+        string requestPath = prepareUrl([RESOURCE_PATH_DATABASES, properties.databaseId, RESOURCE_PATH_COLLECTIONS, 
         properties.containerId, RESOURCE_PATH_STORED_POCEDURES]);
         HeaderParameters header = mapParametersToHeaderType(POST, requestPath);
         request = check setHeaders(request, self.host, self.keyOrResourceToken, self.keyType, self.tokenVersion, header);
@@ -372,7 +377,7 @@ public  client class Client {
     public remote function replaceStoredProcedure(@tainted ResourceProperties properties, @tainted StoredProcedure 
     storedProcedure) returns @tainted StoredProcedure|error {
         http:Request request = new;
-        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES, properties.databaseId, RESOURCE_PATH_COLLECTIONS, 
+        string requestPath = prepareUrl([RESOURCE_PATH_DATABASES, properties.databaseId, RESOURCE_PATH_COLLECTIONS, 
         properties.containerId, RESOURCE_PATH_STORED_POCEDURES, storedProcedure.id]);
         HeaderParameters header = mapParametersToHeaderType(PUT, requestPath);
         request = check setHeaders(request, self.host, self.keyOrResourceToken, self.keyType, self.tokenVersion, header);
@@ -388,7 +393,7 @@ public  client class Client {
     public remote function listStoredProcedures(@tainted ResourceProperties properties) returns @tainted 
     StoredProcedureList|error {
         http:Request request = new;
-        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES, properties.databaseId, RESOURCE_PATH_COLLECTIONS, 
+        string requestPath = prepareUrl([RESOURCE_PATH_DATABASES, properties.databaseId, RESOURCE_PATH_COLLECTIONS, 
         properties.containerId, RESOURCE_PATH_STORED_POCEDURES]);
         HeaderParameters header = mapParametersToHeaderType(GET, requestPath);
         request = check setHeaders(request, self.host, self.keyOrResourceToken, self.keyType, self.tokenVersion, header);
@@ -404,7 +409,7 @@ public  client class Client {
     public remote function deleteStoredProcedure(@tainted ResourceProperties properties, string storedProcedureId) returns 
     @tainted boolean|error {
         http:Request request = new;
-        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES, properties.databaseId, RESOURCE_PATH_COLLECTIONS, 
+        string requestPath = prepareUrl([RESOURCE_PATH_DATABASES, properties.databaseId, RESOURCE_PATH_COLLECTIONS, 
         properties.containerId, RESOURCE_PATH_STORED_POCEDURES, storedProcedureId]);        
         HeaderParameters header = mapParametersToHeaderType(DELETE, requestPath);
         request = check setHeaders(request, self.host, self.keyOrResourceToken, self.keyType, self.tokenVersion, header);
@@ -421,7 +426,7 @@ public  client class Client {
     public remote function executeStoredProcedure(@tainted ResourceProperties properties, string storedProcedureId, 
     any[]? parameters) returns @tainted json|error {
         http:Request request = new;
-        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES, properties.databaseId, RESOURCE_PATH_COLLECTIONS, 
+        string requestPath = prepareUrl([RESOURCE_PATH_DATABASES, properties.databaseId, RESOURCE_PATH_COLLECTIONS, 
         properties.containerId, RESOURCE_PATH_STORED_POCEDURES, storedProcedureId]);       
         HeaderParameters header = mapParametersToHeaderType(POST, requestPath);
         request = check setHeaders(request, self.host, self.keyOrResourceToken, self.keyType, self.tokenVersion, header);
@@ -439,7 +444,7 @@ public  client class Client {
     public remote function createUserDefinedFunction(@tainted ResourceProperties properties, 
     UserDefinedFunction userDefinedFunction) returns @tainted UserDefinedFunction|error {
         http:Request request = new;
-        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES, properties.databaseId, RESOURCE_PATH_COLLECTIONS, 
+        string requestPath = prepareUrl([RESOURCE_PATH_DATABASES, properties.databaseId, RESOURCE_PATH_COLLECTIONS, 
         properties.containerId, RESOURCE_PATH_UDF]);       
         HeaderParameters header = mapParametersToHeaderType(POST, requestPath);
         request = check setHeaders(request, self.host, self.keyOrResourceToken, self.keyType, self.tokenVersion, header);
@@ -456,7 +461,7 @@ public  client class Client {
     public remote function replaceUserDefinedFunction(@tainted ResourceProperties properties, 
     @tainted UserDefinedFunction userDefinedFunction) returns @tainted UserDefinedFunction|error {
         http:Request request = new;
-        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES, properties.databaseId, RESOURCE_PATH_COLLECTIONS, 
+        string requestPath = prepareUrl([RESOURCE_PATH_DATABASES, properties.databaseId, RESOURCE_PATH_COLLECTIONS, 
         properties.containerId, RESOURCE_PATH_UDF, userDefinedFunction.id]);      
         HeaderParameters header = mapParametersToHeaderType(PUT, requestPath);
         request = check setHeaders(request, self.host, self.keyOrResourceToken, self.keyType, self.tokenVersion, header);
@@ -472,7 +477,7 @@ public  client class Client {
     public remote function listUserDefinedFunctions(@tainted ResourceProperties properties) returns @tainted 
     UserDefinedFunctionList|error {
         http:Request request = new;
-        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES, properties.databaseId, RESOURCE_PATH_COLLECTIONS, 
+        string requestPath = prepareUrl([RESOURCE_PATH_DATABASES, properties.databaseId, RESOURCE_PATH_COLLECTIONS, 
         properties.containerId, RESOURCE_PATH_UDF]);
         HeaderParameters header = mapParametersToHeaderType(GET, requestPath);
         request = check setHeaders(request, self.host, self.keyOrResourceToken, self.keyType, self.tokenVersion, header);
@@ -488,7 +493,7 @@ public  client class Client {
     public remote function deleteUserDefinedFunction(@tainted ResourceProperties properties, string userDefinedFunctionid) 
     returns @tainted boolean|error {
         http:Request request = new;
-        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES, properties.databaseId, RESOURCE_PATH_COLLECTIONS, 
+        string requestPath = prepareUrl([RESOURCE_PATH_DATABASES, properties.databaseId, RESOURCE_PATH_COLLECTIONS, 
         properties.containerId, RESOURCE_PATH_UDF, userDefinedFunctionid]);        
         HeaderParameters header = mapParametersToHeaderType(DELETE, requestPath);
         request = check setHeaders(request, self.host, self.keyOrResourceToken, self.keyType, self.tokenVersion, header);
@@ -505,7 +510,7 @@ public  client class Client {
     public remote function createTrigger(@tainted ResourceProperties properties, Trigger trigger) returns @tainted 
     Trigger|error {
         http:Request request = new;
-        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES, properties.databaseId, RESOURCE_PATH_COLLECTIONS, 
+        string requestPath = prepareUrl([RESOURCE_PATH_DATABASES, properties.databaseId, RESOURCE_PATH_COLLECTIONS, 
         properties.containerId, RESOURCE_PATH_TRIGGER]);       
         HeaderParameters header = mapParametersToHeaderType(POST, requestPath);
         request = check setHeaders(request, self.host, self.keyOrResourceToken, self.keyType, self.tokenVersion, header);
@@ -522,7 +527,7 @@ public  client class Client {
     public remote function replaceTrigger(@tainted ResourceProperties properties, @tainted Trigger trigger) returns 
     @tainted Trigger|error {
         http:Request request = new;
-        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES, properties.databaseId, RESOURCE_PATH_COLLECTIONS, 
+        string requestPath = prepareUrl([RESOURCE_PATH_DATABASES, properties.databaseId, RESOURCE_PATH_COLLECTIONS, 
         properties.containerId, RESOURCE_PATH_TRIGGER, trigger.id]);       
         HeaderParameters header = mapParametersToHeaderType(PUT, requestPath);
         request = check setHeaders(request, self.host, self.keyOrResourceToken, self.keyType, self.tokenVersion, header);
@@ -537,7 +542,7 @@ public  client class Client {
     # + return - If successful, returns a TriggerList. Else returns error. 
     public remote function listTriggers(@tainted ResourceProperties properties) returns @tainted TriggerList|error {
         http:Request request = new;
-        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES, properties.databaseId, RESOURCE_PATH_COLLECTIONS, 
+        string requestPath = prepareUrl([RESOURCE_PATH_DATABASES, properties.databaseId, RESOURCE_PATH_COLLECTIONS, 
         properties.containerId, RESOURCE_PATH_TRIGGER]);
         HeaderParameters header = mapParametersToHeaderType(GET, requestPath);
         request = check setHeaders(request, self.host, self.keyOrResourceToken, self.keyType, self.tokenVersion, header);
@@ -553,7 +558,7 @@ public  client class Client {
     public remote function deleteTrigger(@tainted ResourceProperties properties, string triggerId) returns @tainted 
     boolean|error {
         http:Request request = new;
-        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES, properties.databaseId, RESOURCE_PATH_COLLECTIONS, 
+        string requestPath = prepareUrl([RESOURCE_PATH_DATABASES, properties.databaseId, RESOURCE_PATH_COLLECTIONS, 
         properties.containerId, RESOURCE_PATH_TRIGGER, triggerId]);       
         HeaderParameters header = mapParametersToHeaderType(DELETE, requestPath);
         request = check setHeaders(request, self.host, self.keyOrResourceToken, self.keyType, self.tokenVersion, header);
@@ -567,17 +572,17 @@ public  client class Client {
     # + return - If successful, returns a User. Else returns error.
     public remote function createUser(@tainted ResourceProperties properties, string userId) returns @tainted 
     User|error {
-        if self.keyType == TOKEN_TYPE_RESOURCE {
-            return prepareError("Enter a valid master key and token type should be master key");
+        if(self.keyType == TOKEN_TYPE_RESOURCE) {
+            return prepareError(MASTER_KEY_ERROR);
         }
         http:Request request = new;
-        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES, properties.databaseId, RESOURCE_PATH_USER]);       
+        string requestPath = prepareUrl([RESOURCE_PATH_DATABASES, properties.databaseId, RESOURCE_PATH_USER]);       
         HeaderParameters header = mapParametersToHeaderType(POST, requestPath);
         request = check setHeaders(request, self.host, self.keyOrResourceToken, self.keyType, self.tokenVersion, header);
-        json reqBody = {
+        json jsonPayload = {
             id:userId
         };
-        request.setJsonPayload(reqBody);
+        request.setJsonPayload(jsonPayload);
         var response = self.azureCosmosClient->post(requestPath, request);
         [json, Headers] jsonResponse = check mapResponseToTuple(response);
         return mapJsonToUserType(jsonResponse);     
@@ -590,17 +595,17 @@ public  client class Client {
     # + return - If successful, returns a User. Else returns error.
     public remote function replaceUserId(@tainted ResourceProperties properties, string userId, string newUserId) returns 
     @tainted User|error {
-        if self.keyType == TOKEN_TYPE_RESOURCE {
-            return prepareError("Enter a valid master key and token type should be master key");
+        if(self.keyType == TOKEN_TYPE_RESOURCE) {
+            return prepareError(MASTER_KEY_ERROR);
         }
         http:Request request = new;
-        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES, properties.databaseId, RESOURCE_PATH_USER, userId]);       
+        string requestPath = prepareUrl([RESOURCE_PATH_DATABASES, properties.databaseId, RESOURCE_PATH_USER, userId]);       
         HeaderParameters header = mapParametersToHeaderType(PUT, requestPath);
         request = check setHeaders(request, self.host, self.keyOrResourceToken, self.keyType, self.tokenVersion, header);
-        json reqBody = {
+        json jsonPayload = {
             id:newUserId
         };
-        request.setJsonPayload(reqBody);
+        request.setJsonPayload(jsonPayload);
         var response = self.azureCosmosClient->put(requestPath, request);
         [json, Headers] jsonResponse = check mapResponseToTuple(response);
         return mapJsonToUserType(jsonResponse); 
@@ -611,11 +616,11 @@ public  client class Client {
     # + userId - the id of user to get information
     # + return - If successful, returns a User. Else returns error.
     public remote function getUser(@tainted ResourceProperties properties, string userId) returns @tainted User|error {
-        if self.keyType == TOKEN_TYPE_RESOURCE {
-            return prepareError("Enter a valid master key and token type should be master key");
+        if(self.keyType == TOKEN_TYPE_RESOURCE) {
+            return prepareError(MASTER_KEY_ERROR);
         }
         http:Request request = new;
-        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES, properties.databaseId, RESOURCE_PATH_USER, userId]);
+        string requestPath = prepareUrl([RESOURCE_PATH_DATABASES, properties.databaseId, RESOURCE_PATH_USER, userId]);
         HeaderParameters header = mapParametersToHeaderType(GET, requestPath);
         request = check setHeaders(request, self.host, self.keyOrResourceToken, self.keyType, self.tokenVersion, header);
         var response = self.azureCosmosClient->get(requestPath, request);
@@ -627,11 +632,11 @@ public  client class Client {
     # + properties - object of type ResourceProperties
     # + return - If successful, returns a UserList. Else returns error.
     public remote function listUsers(@tainted ResourceProperties properties) returns @tainted UserList|error {
-        if self.keyType == TOKEN_TYPE_RESOURCE {
-            return prepareError("Enter a valid master key and token type should be master key");
+        if(self.keyType == TOKEN_TYPE_RESOURCE) {
+            return prepareError(MASTER_KEY_ERROR);
         }
         http:Request request = new;
-        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES, properties.databaseId, RESOURCE_PATH_USER]);
+        string requestPath = prepareUrl([RESOURCE_PATH_DATABASES, properties.databaseId, RESOURCE_PATH_USER]);
         HeaderParameters header = mapParametersToHeaderType(GET, requestPath);
         request = check setHeaders(request, self.host, self.keyOrResourceToken, self.keyType, self.tokenVersion, header);
         var response = self.azureCosmosClient->get(requestPath, request);
@@ -645,11 +650,11 @@ public  client class Client {
     # + return - If successful, returns boolean specifying 'true' if delete is sucessful. Else returns error. 
     public remote function deleteUser(@tainted ResourceProperties properties, string userId) returns @tainted 
     boolean|error {
-        if self.keyType == TOKEN_TYPE_RESOURCE {
-            return prepareError("Enter a valid master key and token type should be master key");
+        if(self.keyType == TOKEN_TYPE_RESOURCE) {
+            return prepareError(MASTER_KEY_ERROR);
         }
         http:Request request = new;
-        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES, properties.databaseId, RESOURCE_PATH_USER, userId]);       
+        string requestPath = prepareUrl([RESOURCE_PATH_DATABASES, properties.databaseId, RESOURCE_PATH_USER, userId]);       
         HeaderParameters header = mapParametersToHeaderType(DELETE, requestPath);
         request = check setHeaders(request, self.host, self.keyOrResourceToken, self.keyType, self.tokenVersion, header);
         var response = self.azureCosmosClient->delete(requestPath, request);
@@ -664,18 +669,23 @@ public  client class Client {
     # + return - If successful, returns a Permission. Else returns error.
     public remote function createPermission(@tainted ResourceProperties properties, string userId, Permission permission, 
     int? validityPeriod = ()) returns @tainted Permission|error {
-        if self.keyType == TOKEN_TYPE_RESOURCE {
-            return prepareError("Enter a valid master key and token type should be master key");
+        if(self.keyType == TOKEN_TYPE_RESOURCE) {
+            return prepareError(MASTER_KEY_ERROR);
         }
         http:Request request = new;
-        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES, properties.databaseId, RESOURCE_PATH_USER, userId, 
+        string requestPath = prepareUrl([RESOURCE_PATH_DATABASES, properties.databaseId, RESOURCE_PATH_USER, userId, 
         RESOURCE_PATH_PERMISSION]);       
         HeaderParameters header = mapParametersToHeaderType(POST, requestPath);
         request = check setHeaders(request, self.host, self.keyOrResourceToken, self.keyType, self.tokenVersion, header);
-        if validityPeriod is int {
+        if(validityPeriod is int) {
             request = check setExpiryHeader(request,validityPeriod);
         }
-        request.setJsonPayload(<@untainted><json>permission.cloneWithType(json));
+        json jsonPayload = {
+            "id" : permission.id,
+            "permissionMode" : permission.permissionMode,
+            "resource": permission.resourcePath
+        };
+        request.setJsonPayload(jsonPayload);
         var response = self.azureCosmosClient->post(requestPath, request);
         [json, Headers] jsonResponse = check mapResponseToTuple(response);
         return mapJsonToPermissionType(jsonResponse);
@@ -689,18 +699,23 @@ public  client class Client {
     # + return - If successful, returns a Permission. Else returns error.
     public remote function replacePermission(@tainted ResourceProperties properties, string userId, @tainted 
     Permission permission, int? validityPeriod = ()) returns @tainted Permission|error {
-        if self.keyType == TOKEN_TYPE_RESOURCE {
-            return prepareError("Enter a valid master key and token type should be master key");
+        if(self.keyType == TOKEN_TYPE_RESOURCE) {
+            return prepareError(MASTER_KEY_ERROR);
         }
         http:Request request = new;
-        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES, properties.databaseId, RESOURCE_PATH_USER, userId, 
+        string requestPath = prepareUrl([RESOURCE_PATH_DATABASES, properties.databaseId, RESOURCE_PATH_USER, userId, 
         RESOURCE_PATH_PERMISSION, permission.id]);       
         HeaderParameters header = mapParametersToHeaderType(PUT, requestPath);
         request = check setHeaders(request, self.host, self.keyOrResourceToken, self.keyType, self.tokenVersion, header);
-        if validityPeriod is int {
+        if(validityPeriod is int) {
             request = check setExpiryHeader(request,validityPeriod);
         }
-        request.setJsonPayload(<@untainted><json>permission.cloneWithType(json));
+        json jsonPayload = {
+            "id" : permission.id,
+            "permissionMode" : permission.permissionMode,
+            "resource": permission.resourcePath
+        };
+        request.setJsonPayload(<@untainted>jsonPayload);
         var response = self.azureCosmosClient->put(requestPath, request);
         [json, Headers] jsonResponse = check mapResponseToTuple(response);
         return mapJsonToPermissionType(jsonResponse);
@@ -712,11 +727,11 @@ public  client class Client {
     # + return - If successful, returns a PermissionList. Else returns error.
     public remote function listPermissions(@tainted ResourceProperties properties, string userId) returns @tainted 
     PermissionList|error {
-        if self.keyType == TOKEN_TYPE_RESOURCE {
-            return prepareError("Enter a valid master key and token type should be master key");
+        if(self.keyType == TOKEN_TYPE_RESOURCE) {
+            return prepareError(MASTER_KEY_ERROR);
         }
         http:Request request = new;
-        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES, properties.databaseId, RESOURCE_PATH_USER, userId, 
+        string requestPath = prepareUrl([RESOURCE_PATH_DATABASES, properties.databaseId, RESOURCE_PATH_USER, userId, 
         RESOURCE_PATH_PERMISSION]);       
         HeaderParameters header = mapParametersToHeaderType(GET, requestPath);
         request = check setHeaders(request, self.host, self.keyOrResourceToken, self.keyType, self.tokenVersion, header);
@@ -732,11 +747,11 @@ public  client class Client {
     # + return - If successful, returns a Permission. Else returns error.
     public remote function getPermission(@tainted ResourceProperties properties, string userId, string permissionId)
     returns @tainted Permission|error {
-        if self.keyType == TOKEN_TYPE_RESOURCE {
-            return prepareError("Enter a valid master key and token type should be master key");
+        if(self.keyType == TOKEN_TYPE_RESOURCE) {
+            return prepareError(MASTER_KEY_ERROR);
         }
         http:Request request = new;
-        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES, properties.databaseId, RESOURCE_PATH_USER, userId, RESOURCE_PATH_PERMISSION, permissionId]);       
+        string requestPath = prepareUrl([RESOURCE_PATH_DATABASES, properties.databaseId, RESOURCE_PATH_USER, userId, RESOURCE_PATH_PERMISSION, permissionId]);       
         HeaderParameters header = mapParametersToHeaderType(GET, requestPath);
         request = check setHeaders(request, self.host, self.keyOrResourceToken, self.keyType, self.tokenVersion, header);
         var response = self.azureCosmosClient->get(requestPath, request);
@@ -751,11 +766,11 @@ public  client class Client {
     # + return - If successful, returns boolean specifying 'true' if delete is sucessful. Else returns error. 
     public remote function deletePermission(@tainted ResourceProperties properties, string userId, string permissionId) 
     returns @tainted boolean|error {
-        if self.keyType == TOKEN_TYPE_RESOURCE {
-            return prepareError("Enter a valid master key and token type should be master key");
+        if(self.keyType == TOKEN_TYPE_RESOURCE) {
+            return prepareError(MASTER_KEY_ERROR);
         }
         http:Request request = new;
-        string requestPath =  prepareUrl([RESOURCE_PATH_DATABASES, properties.databaseId, RESOURCE_PATH_USER, userId, 
+        string requestPath = prepareUrl([RESOURCE_PATH_DATABASES, properties.databaseId, RESOURCE_PATH_USER, userId, 
         RESOURCE_PATH_PERMISSION, permissionId]);       
         HeaderParameters header = mapParametersToHeaderType(DELETE, requestPath);
         request = check setHeaders(request, self.host, self.keyOrResourceToken, self.keyType, self.tokenVersion, header);
@@ -770,7 +785,7 @@ public  client class Client {
     # + return - If successful, returns a OfferList. Else returns error.
     public remote function listOffers() returns @tainted OfferList|error {
         http:Request request = new;
-        string requestPath =  prepareUrl([RESOURCE_PATH_OFFER]);       
+        string requestPath = prepareUrl([RESOURCE_PATH_OFFER]);       
         HeaderParameters header = mapParametersToHeaderType(GET, requestPath);
         request = check setHeaders(request, self.host, self.keyOrResourceToken, self.keyType, self.tokenVersion, header);
         var response = self.azureCosmosClient->get(requestPath, request);
@@ -783,7 +798,7 @@ public  client class Client {
     # + return - If successful, returns a Offer. Else returns error.
     public remote function getOffer(string offerId) returns @tainted Offer|error {
         http:Request request = new;
-        string requestPath =  prepareUrl([RESOURCE_PATH_OFFER, offerId]);       
+        string requestPath = prepareUrl([RESOURCE_PATH_OFFER, offerId]);       
         HeaderParameters header = mapOfferHeaderType(GET, requestPath);
         request = check setHeaders(request, self.host, self.keyOrResourceToken, self.keyType, self.tokenVersion, header);
         var response = self.azureCosmosClient->get(requestPath, request);
@@ -792,31 +807,46 @@ public  client class Client {
     }
 
     # To replace an existing offer
-    # + offer - an object of type Offer
+    # + offer - an object of type Offer.
+    # + offerType - 
     # + return - If successful, returns a Offer. Else returns error.
-    public remote function replaceOffer(Offer offer) returns @tainted Offer|error {
+    public remote function replaceOffer(Offer offer, string? offerType = ()) returns @tainted Offer|error {
         http:Request request = new;
-        string requestPath =  prepareUrl([RESOURCE_PATH_OFFER, offer.id]);       
+        string requestPath = prepareUrl([RESOURCE_PATH_OFFER, offer.id]);       
         HeaderParameters header = mapOfferHeaderType(PUT, requestPath);
         request = check setHeaders(request, self.host, self.keyOrResourceToken, self.keyType, self.tokenVersion, header);
-        request.setJsonPayload(offer);
+        json jsonPaylod = {
+            "offerVersion": offer.offerVersion,
+            "content": offer.content,
+            "resource": offer.resourceSelfLink,
+            "offerResourceId": offer.offerResourceId,
+            "id": offer.id,
+            "_rid": offer?.resourceId
+        };
+        if(offerType is string && offer.offerVersion == "V1") {
+            json selectedType = {
+                "offerType": offerType
+            };
+            jsonPaylod = check jsonPaylod.mergeJson(selectedType);
+        }
+        request.setJsonPayload(jsonPaylod);
         var response = self.azureCosmosClient->put(requestPath, request);
         [json, Headers] jsonResponse = check mapResponseToTuple(response);
         return mapJsonToOfferType(jsonResponse);
     }
 
     # To get information of a user from a database
-    # + cqlQuery - the CQL query to execute
+    # + sqlQuery - the SQL query to execute
     # + return - If successful, returns a json. Else returns error.
-    public remote function queryOffer(Query cqlQuery) returns @tainted json|error {
+    public remote function queryOffer(Query sqlQuery) returns @tainted stream<json>|error {
         http:Request request = new;
-        string requestPath =  prepareUrl([RESOURCE_PATH_OFFER]);
+        string requestPath = prepareUrl([RESOURCE_PATH_OFFER]);
         HeaderParameters header = mapParametersToHeaderType(POST, requestPath);
         request = check setHeaders(request, self.host, self.keyOrResourceToken, self.keyType, self.tokenVersion, header);
-        request.setJsonPayload(<json>cqlQuery.cloneWithType(json));
+        request.setJsonPayload(<json>sqlQuery.cloneWithType(json));
         request = check setHeadersForQuery(request);
         var response = self.azureCosmosClient->post(requestPath, request);
-        json jsonresponse = check mapResponseToJson(response);
+        stream<json> jsonresponse = check mapResponseToJsonStream(response);
         return (jsonresponse);
     }
 }
