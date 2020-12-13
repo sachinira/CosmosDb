@@ -16,21 +16,35 @@ type HeaderParameters record {|
     string resourceId = "";
 |};
 
+// public type RequestHeaderOptions record {|
+//     boolean? isUpsertRequest = ();
+//     string? indexingDirective = ();
+//     int? maxItemCount = ();
+//     string? continuationToken = ();
+//     string? consistancyLevel = ();//This is the consistency level override. The override must be the same 
+//     //or weaker than the account’s configured consistency level.
+//     string? sessionToken = ();
+//     string? changeFeedOption = ();//Must be set to Incremental feed, or omitted otherwise. 
+//     string? ifNoneMatch = (); //No header: returns all changes from the beginning (collection creation)//"*": 
+//     //returns all new changes to data within the collection <etag>: If set to a collection ETag, returns all 
+//     //changes made since that logical timestamp.only for GET
+//     string? partitionKeyRangeId = ();
+//     boolean? enableCrossPartition = ();
+//     string? ifMatch = ();//Only for PUT and DELETE 
+// |};
+
 public type RequestHeaderOptions record {|
-    boolean? isUpsertRequest = ();
-    string? indexingDirective = ();
-    int? maxItemCount = ();
-    string? continuationToken = ();
-    string? consistancyLevel = ();//This is the consistency level override. The override must be the same 
-    //or weaker than the account’s configured consistency level.
-    string? sessionToken = ();
-    string? changeFeedOption = ();//Must be set to Incremental feed, or omitted otherwise. 
-    string? ifNoneMatch = (); //No header: returns all changes from the beginning (collection creation)//"*": 
-    //returns all new changes to data within the collection <etag>: If set to a collection ETag, returns all 
-    //changes made since that logical timestamp.only for GET
-    string? partitionKeyRangeId = ();
-    boolean? enableCrossPartition = ();
-    string? ifMatch = ();//Only for PUT and DELETE 
+    boolean isUpsertRequest?;
+    string indexingDirective?;
+    int maxItemCount?;
+    string continuationToken?;
+    string consistancyLevel?;
+    string sessionToken?;
+    string changeFeedOption?;
+    string ifNoneMatch?;
+    string partitionKeyRangeId?;
+    boolean enableCrossPartition?;
+    string ifMatch?;
 |};
 
 public type ResourceProperties record {|
@@ -60,7 +74,7 @@ public type Database record {|
     *Common;
     string collections?;
     string users?;
-    Headers?...;
+    Headers...;
 |};
 
 public type DatabaseList record {
@@ -178,7 +192,7 @@ public type Permission record {|
     string permissionMode = "";
     string resourcePath = "";
     int validityPeriod?;
-    string? token?;
+    string token?;
     Headers?...;
 |};
 

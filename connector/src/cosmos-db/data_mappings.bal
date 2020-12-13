@@ -38,14 +38,14 @@ function mapJsonToDatabaseType([json, Headers?] jsonPayload) returns Database {
     return database;
 }
 
-function mapJsonToDatabaseListType([json, Headers] jsonPayload) returns @tainted DatabaseIterator {
+function mapJsonToDatabaseIteratorType([json, Headers] jsonPayload) returns @tainted DatabaseIterator {
     json payload;
     Headers headers;
     [payload,headers] = jsonPayload;
-    stream<Database> db = convertToDatabaseStream(<json[]>payload.Databases);
+    stream<Database> databaseStream = convertToDatabaseStream(<json[]>payload.Databases);
     int count = convertToInt(payload._count);
-    DatabaseIterator itr = new(db,count,headers);
-    return itr;
+    DatabaseIterator iterator = new(databaseStream, count, headers);
+    return iterator;
 }
 
 function mapJsonToContainerType([json, Headers?] jsonPayload) returns @tainted Container {
@@ -58,7 +58,7 @@ function mapJsonToContainerType([json, Headers?] jsonPayload) returns @tainted C
     container.selfReference = payload._self != ()? payload._self.toString() : EMPTY_STRING;
     container.allowMaterializedViews = convertToBoolean(payload.allowMaterializedViews);
     container.indexingPolicy = mapJsonToIndexingPolicy(<json>payload.indexingPolicy);
-    container.partitionKey = convertJsonToPartitionKey(<json>payload.partitionKey);
+    container.partitionKey = convertJsonToPartitionKeyType(<json>payload.partitionKey);
     if(headers is Headers) {
         container[RESPONSE_HEADERS] = headers;
     }
@@ -93,7 +93,7 @@ function mapJsonToIndexType(json jsonPayload) returns Index {
     return index; 
 }
 
-function convertJsonToPartitionKey(json jsonPayload) returns @tainted PartitionKey {
+function convertJsonToPartitionKeyType(json jsonPayload) returns @tainted PartitionKey {
     PartitionKey partitionKey = {};
     partitionKey.paths = convertToStringArray(<json[]>jsonPayload.paths);
     partitionKey.kind = jsonPayload.kind != () ? jsonPayload.kind.toString(): EMPTY_STRING;
@@ -184,15 +184,15 @@ function mapJsonToStoredProcedureType([json, Headers?] jsonPayload) returns @tai
 }
 
 function mapJsonToStoredProcedureListType([json, Headers] jsonPayload) returns @tainted StoredProcedureList {
-    StoredProcedureList storedProcedurelist = {};
+    StoredProcedureList storedProcedureList = {};
     json payload;
     Headers headers;
     [payload,headers] = jsonPayload;
-    storedProcedurelist.resourceId = payload._rid != () ? payload._rid.toString(): EMPTY_STRING;
-    storedProcedurelist.storedProcedures = convertToStoredProcedureArray(<json[]>payload.StoredProcedures);
-    storedProcedurelist.count = convertToInt(payload._count);
-    storedProcedurelist[RESPONSE_HEADERS] = headers;
-    return storedProcedurelist;
+    storedProcedureList.resourceId = payload._rid != () ? payload._rid.toString(): EMPTY_STRING;
+    storedProcedureList.storedProcedures = convertToStoredProcedureArray(<json[]>payload.StoredProcedures);
+    storedProcedureList.count = convertToInt(payload._count);
+    storedProcedureList[RESPONSE_HEADERS] = headers;
+    return storedProcedureList;
 }
 
 function mapJsonToUserDefinedFunctionType([json, Headers?] jsonPayload) returns @tainted UserDefinedFunction {
@@ -420,13 +420,13 @@ function convertToStoredProcedureArray(json[] sourceSprocArrayJsonObject) return
 }
 
 function userDefinedFunctionArray(json[] sourceUdfArrayJsonObject) returns @tainted UserDefinedFunction[] { 
-    UserDefinedFunction[] udfs = [];
+    UserDefinedFunction[] userDefinedFunctions = [];
     int i = 0;
     foreach json userDefinedFunction in sourceUdfArrayJsonObject { 
-        udfs[i] = mapJsonToUserDefinedFunctionType([userDefinedFunction,()]);
+        userDefinedFunctions[i] = mapJsonToUserDefinedFunctionType([userDefinedFunction,()]);
         i = i + 1;
     }
-    return udfs;
+    return userDefinedFunctions;
 }
 
 function ConvertToTriggerArray(json[] sourceTriggerArrayJsonObject) returns @tainted Trigger[] { 

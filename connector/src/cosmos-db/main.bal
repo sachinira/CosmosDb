@@ -1,5 +1,4 @@
 import ballerina/http;
-import ballerina/io;
 
 # Azure Cosmos DB Client object.
 public  client class Client {
@@ -91,7 +90,7 @@ public  client class Client {
         request = check setHeaders(request, self.host, self.keyOrResourceToken, self.keyType, self.tokenVersion, header);
         var response = self.azureCosmosClient->get(requestPath, request);
         [json, Headers] jsonresponse = check mapResponseToTuple(response);
-        return mapJsonToDatabaseListType(<@untainted>jsonresponse); 
+        return mapJsonToDatabaseIteratorType(<@untainted>jsonresponse); 
     }
 
     # To delete a given database inside a resource
@@ -135,9 +134,6 @@ public  client class Client {
         request = check setThroughputOrAutopilotHeader(request, throughputProperties);
         request.setJsonPayload(<@untainted>jsonPayload);
         var response = self.azureCosmosClient->post(requestPath, request);
-        if(response is http:Response) {
-            io:println(response.getJsonPayload());
-        }
         [json, Headers] jsonreponse = check mapResponseToTuple(response);
         return mapJsonToContainerType(jsonreponse);
     }

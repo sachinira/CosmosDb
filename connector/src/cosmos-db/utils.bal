@@ -174,48 +174,48 @@ function setHeadersForQuery(http:Request request) returns http:Request|error {
 }
 
 function setRequestOptions(http:Request request, RequestHeaderOptions requestOptions) returns http:Request|error {
-    if(requestOptions.indexingDirective is string) {
-        if(requestOptions.indexingDirective == INDEXING_TYPE_INCLUDE || requestOptions.indexingDirective == INDEXING_TYPE_EXCLUDE) {
-            request.setHeader(INDEXING_DIRECTIVE_HEADER, requestOptions.indexingDirective.toString());
+    if(requestOptions?.indexingDirective is string) {
+        if(requestOptions?.indexingDirective == INDEXING_TYPE_INCLUDE || requestOptions?.indexingDirective == INDEXING_TYPE_EXCLUDE) {
+            request.setHeader(INDEXING_DIRECTIVE_HEADER, requestOptions?.indexingDirective.toString());
         } else {
             return prepareError(INDEXING_DIRECTIVE_ERROR);
         }
     }
-    if(requestOptions.isUpsertRequest == true) {
-        request.setHeader(IS_UPSERT_HEADER, requestOptions.isUpsertRequest.toString());
+    if(requestOptions?.isUpsertRequest == true) {
+        request.setHeader(IS_UPSERT_HEADER, requestOptions?.isUpsertRequest.toString());
     }
-    if(requestOptions.maxItemCount is int) {
-        request.setHeader(MAX_ITEM_COUNT_HEADER, requestOptions.maxItemCount.toString()); 
+    if(requestOptions?.maxItemCount is int) {
+        request.setHeader(MAX_ITEM_COUNT_HEADER, requestOptions?.maxItemCount.toString()); 
     }
-    if(requestOptions.continuationToken is string) {
-        request.setHeader(CONTINUATION_HEADER, requestOptions.continuationToken.toString());
+    if(requestOptions?.continuationToken is string) {
+        request.setHeader(CONTINUATION_HEADER, requestOptions?.continuationToken.toString());
     }
-    if(requestOptions.consistancyLevel is string) {
-        if(requestOptions.consistancyLevel == CONSISTANCY_LEVEL_STRONG || requestOptions.consistancyLevel == 
-        CONSISTANCY_LEVEL_BOUNDED || requestOptions.consistancyLevel == CONSISTANCY_LEVEL_SESSION || 
-        requestOptions.consistancyLevel == CONSISTANCY_LEVEL_EVENTUAL) {
-            request.setHeader(CONSISTANCY_LEVEL_HEADER, requestOptions.consistancyLevel.toString());
+    if(requestOptions?.consistancyLevel is string) {
+        if(requestOptions?.consistancyLevel == CONSISTANCY_LEVEL_STRONG || requestOptions?.consistancyLevel == 
+        CONSISTANCY_LEVEL_BOUNDED || requestOptions?.consistancyLevel == CONSISTANCY_LEVEL_SESSION || 
+        requestOptions?.consistancyLevel == CONSISTANCY_LEVEL_EVENTUAL) {
+            request.setHeader(CONSISTANCY_LEVEL_HEADER, requestOptions?.consistancyLevel.toString());
         } else {
             return prepareError(CONSISTANCY_LEVEL_ERROR);
         }
     }
-    if(requestOptions.sessionToken is string) {
-        request.setHeader(SESSION_TOKEN_HEADER, requestOptions.sessionToken.toString());
+    if(requestOptions?.sessionToken is string) {
+        request.setHeader(SESSION_TOKEN_HEADER, requestOptions?.sessionToken.toString());
     }
-    if(requestOptions.changeFeedOption is string) {
-        request.setHeader(A_IM_HEADER, requestOptions.changeFeedOption.toString()); 
+    if(requestOptions?.changeFeedOption is string) {
+        request.setHeader(A_IM_HEADER, requestOptions?.changeFeedOption.toString()); 
     }
-    if(requestOptions.ifNoneMatch is string) {
-        request.setHeader(NON_MATCH_HEADER, requestOptions.ifNoneMatch.toString());
+    if(requestOptions?.ifNoneMatch is string) {
+        request.setHeader(NON_MATCH_HEADER, requestOptions?.ifNoneMatch.toString());
     }
-    if(requestOptions.partitionKeyRangeId is string) {
-        request.setHeader(PARTITIONKEY_RANGE_HEADER, requestOptions.partitionKeyRangeId.toString());
+    if(requestOptions?.partitionKeyRangeId is string) {
+        request.setHeader(PARTITIONKEY_RANGE_HEADER, requestOptions?.partitionKeyRangeId.toString());
     }
-    if(requestOptions.ifMatch is string) {
-        request.setHeader(IF_MATCH_HEADER, requestOptions.ifMatch.toString());
+    if(requestOptions?.ifMatch is string) {
+        request.setHeader(IF_MATCH_HEADER, requestOptions?.ifMatch.toString());
     }
-    if(requestOptions.enableCrossPartition == true) {
-        request.setHeader(IS_ENABLE_CROSS_PARTITION_HEADER, requestOptions.enableCrossPartition.toString());
+    if(requestOptions?.enableCrossPartition == true) {
+        request.setHeader(IS_ENABLE_CROSS_PARTITION_HEADER, requestOptions?.enableCrossPartition.toString());
     }
     return request;
 }
